@@ -1,40 +1,24 @@
 {
   "main": {
-    "id": "731021e94be3c536",
+    "id": "c982222f0c870c86",
     "type": "split",
     "children": [
       {
-        "id": "01de1b71dd680211",
+        "id": "743bbdfe83ce3edc",
         "type": "tabs",
         "children": [
           {
-            "id": "b625912336dd2bcd",
+            "id": "03478e020e893a84",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Welcome.md",
+                "file": "wiki/sources/index.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Welcome"
-            }
-          }
-        ]
-      },
-      {
-        "id": "cb31057e67627e93",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "c047bd54ee28884a",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "title": "index"
             }
           }
         ]
@@ -43,15 +27,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "25f2875f6eec7fe5",
+    "id": "094ef547ad8efe6e",
     "type": "split",
     "children": [
       {
-        "id": "ccaa466472e63225",
+        "id": "3ae0312a68387508",
         "type": "tabs",
         "children": [
           {
-            "id": "7792a434c23df187",
+            "id": "8b2f90779dd04dfc",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -66,7 +50,7 @@
             }
           },
           {
-            "id": "da2f2bd2f57d2973",
+            "id": "b3ea466f26446c5a",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -83,7 +67,7 @@
             }
           },
           {
-            "id": "080e0edd937a75aa",
+            "id": "7262d698773db6c0",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -99,18 +83,18 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 369.5
   },
   "right": {
-    "id": "13cf938ba58ebca0",
+    "id": "cd09ced427b31f7b",
     "type": "split",
     "children": [
       {
-        "id": "e8a32f15536c876f",
+        "id": "9526c1cd0dc26845",
         "type": "tabs",
         "children": [
           {
-            "id": "d9f98301c8eb9985",
+            "id": "a0c9ab55ef9bcc01",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -129,7 +113,7 @@
             }
           },
           {
-            "id": "376c579d89400755",
+            "id": "16896971e237d236",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -143,7 +127,7 @@
             }
           },
           {
-            "id": "a8f959716854d2c2",
+            "id": "9a10447619dc79fe",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -158,7 +142,7 @@
             }
           },
           {
-            "id": "a4221aa6648bf3e7",
+            "id": "7e481cb4535016d4",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -172,7 +156,7 @@
             }
           },
           {
-            "id": "a9ddc65da58d7b8f",
+            "id": "23eed70d243f2b79",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -185,12 +169,23 @@
               "icon": "lucide-list",
               "title": "Outline"
             }
+          },
+          {
+            "id": "e955232e26c0815f",
+            "type": "leaf",
+            "state": {
+              "type": "smart-connections-view",
+              "state": {},
+              "icon": "smart-connections",
+              "title": "Connections"
+            }
           }
-        ]
+        ],
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 300,
+    "width": 200,
     "collapsed": true
   },
   "left-ribbon": {
@@ -203,19 +198,49 @@
       "command-palette:Open command palette": false,
       "bases:Create new base": false,
       "karpathywiki:Ingest current file": false,
-      "karpathywiki:Query wiki": false
+      "karpathywiki:Query wiki": false,
+      "smart-connections:Smart Connections: Open random connection": false,
+      "smart-connections:Smart Connections: Open connections view": false,
+      "smart-connections:Toggle Footer Connections": false
     }
   },
-  "active": "7792a434c23df187",
+  "active": "03478e020e893a84",
   "lastOpenFiles": [
-    "wiki/sources/game_design_doc.md",
-    "wiki/schema/config.md",
-    "wiki/schema",
-    "wiki/sources",
-    "wiki/concepts",
-    "wiki/entities",
-    "wiki/Welcome to Karpathy LLM Wiki.md",
-    "wiki",
-    "Welcome.md"
+    "wiki/sources/architecture/mcp-tool-table.md",
+    "wiki/sources/devlog-history/2026-09-05.md",
+    "wiki/sources/devlog-history",
+    "wiki/sources/conventions.md",
+    "wiki/sources/index.md",
+    "wiki/sources/code-snippets/LubanDataService.cs.md",
+    "wiki/sources/code-snippets/CardHandView.cs.md",
+    "wiki/sources/code-snippets/DeductionSystem.cs.md",
+    "wiki/sources/architecture/mcp-bridge.md",
+    "wiki/sources/architecture/mcp-bridge.md.tmp.3148.f45e9b0bb1dd",
+    "wiki/sources/mechanics/survival-stats.md",
+    "wiki/sources/mechanics/world-events.md",
+    "wiki/sources/mechanics/npc-director.md",
+    "wiki/sources/mechanics/exploration.md",
+    "wiki/sources/mechanics/chibi-avatar.md",
+    "wiki/sources/mechanics/card-inventory.md",
+    "wiki/sources/code-snippets/UIRoot.cs.md",
+    "wiki/sources/mechanics/deduction.md",
+    "wiki/sources/mechanics/crafting.md",
+    "wiki/sources/mechanics",
+    "wiki/sources/code-snippets/WorldEventSystem.cs.md",
+    "wiki/sources/code-snippets/SurvivalStatSystem.cs.md",
+    "wiki/sources/code-snippets/Data_Gen_game_TbLocationDef.cs.md",
+    "wiki/sources/code-snippets/Data_Gen_game_IllnessDef.cs.md",
+    "wiki/sources/code-snippets/ConditionOverlayView.cs.md",
+    "wiki/sources/code-snippets/CardInventorySystem.cs.md",
+    "wiki/sources/code-snippets/CardHandPresenter.cs.md",
+    "wiki/sources/code-snippets/ChibiAnimatedRenderer.cs.md",
+    "wiki/sources/code-snippets/NpcDirectorSystem.cs.md",
+    "wiki/sources/code-snippets/WorldEventSystem.cs.md.tmp",
+    "wiki/sources/code-snippets/UIRoot.cs.md.tmp",
+    "wiki/sources/code-snippets/SurvivalStatSystem.cs.md.tmp",
+    "wiki/sources/code-snippets/NpcDirectorSystem.cs.md.tmp",
+    "wiki/sources/code-snippets/MeetingVoteView.cs.md.tmp",
+    "wiki/sources/code-snippets/MeetingVotePresenter.cs.md.tmp",
+    "wiki/sources/code-snippets/McpRequestHandlers.cs.md.tmp"
   ]
 }

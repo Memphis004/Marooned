@@ -1,0 +1,110 @@
+---
+title: index
+type: index
+sources: []
+related: []
+folder: sources
+created: 2026-09-05
+tags:
+  - index
+  - marooned
+  - lab-a
+---
+
+# 📚 Marooned Wiki — สารบัญ
+
+> เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
+> อัปเดตล่าสุด: 2026-09-05
+
+## 🎮 Game Design
+- [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
+
+## 🏗️ Architecture
+- [[overview]] — ภาพรวม architecture ทั้งหมด (Composition Root, DI, Message Bus, Data Flow)
+- [[mcp-bridge]] — MCP Bridge architecture (build/run, TCP connection, วิธีเพิ่ม tool)
+- [[mcp-tool-table]] — ตาราง MCP tools ทั้งหมด พร้อมสถานะ
+
+## 📄 Code Snippets
+
+### Core
+- [[GameLifetimeScope.cs]] — Composition Root: ประกอบร่าง DI, MessagePipe, TCP server ทั้งหมด
+
+### Systems
+- [[SurvivalStatSystem.cs]] — drain stat 4 ค่า + roll illness เมื่อ stat วิกฤต
+- [[CardInventorySystem.cs]] — เพิ่ม/หัก/เช็คการ์ดใน inventory (พร้อม CraftingSystem ในไฟล์เดียว)
+- [[CraftingSystem.cs]] — ตรวจเงื่อนไข recipe แล้วคราฟการ์ด
+- [[ExplorationSystem.cs]] — สำรวจ location แบบ weighted loot ที่ deplete ได้
+- [[NpcDirectorSystem.cs]] — เจ้าของ ground truth NPC + killer AI + spawn clue
+- [[DeductionSystem.cs]] — information-hiding layer + ตัดสิน accusation
+- [[WorldEventSystem.cs]] — weighted random event queue (Survival/Social)
+- [[McpRequestHandlers.cs]] — ปลายทาง request จาก MCP Bridge 10 ตัว
+- [[LubanDataService.cs]] — GameStateProvider + LubanDataService (mock data รอ Luban จริง)
+
+### UI
+- [[UIRoot.cs]] — panel registry ของ UI (enum → Type mapping)
+- [[CardHandPresenter.cs]] — Presenter ของมือการ์ด (skeleton)
+- [[ClueBoardPresenter.cs]] — Presenter ของกระดานเบาะแส (skeleton)
+- [[MapExplorePresenter.cs]] — Presenter ของแผนที่สำรวจ (skeleton)
+- [[MeetingVotePresenter.cs]] — Presenter ของหน้าโหวตกล่าวหา (skeleton)
+- [[CardHandView.cs]] — View แสดงมือการ์ด (skeleton)
+- [[ClueBoardView.cs]] — View กระดานเบาะแสแบบ detective board (skeleton)
+- [[ConditionOverlayView.cs]] — HUD icon illness/injury ของผู้เล่น (skeleton)
+- [[MapExploreView.cs]] — View แผนที่ 2D sandbox (skeleton)
+- [[MeetingVoteView.cs]] — View หน้าประชุม + ปุ่ม Accuse/Abstain (skeleton)
+
+### Data
+- [[ChibiAnimatedRenderer.cs]] — chibi sprite-swap paperdoll renderer เดิน 4 ทิศ
+
+### Luban Generated (`Data/Gen/` — ห้ามแก้มือ)
+- [[Data_Gen_Tables.cs]] — root table manager ของทั้ง 6 ตาราง
+- [[Data_Gen_game_CardDef.cs]] — bean: การ์ด
+- [[Data_Gen_game_ClueDef.cs]] — bean: เบาะแส
+- [[Data_Gen_game_IllnessDef.cs]] — bean: โรค/บาดแผล
+- [[Data_Gen_game_LocationDef.cs]] — bean: location node
+- [[Data_Gen_game_RecipeDef.cs]] — bean: สูตรคราฟ
+- [[Data_Gen_game_WorldEventDef.cs]] — bean: world event
+- [[Data_Gen_game_TbCardDef.cs]] — table wrapper: การ์ด
+- [[Data_Gen_game_TbClueDef.cs]] — table wrapper: เบาะแส
+- [[Data_Gen_game_TbIllnessDef.cs]] — table wrapper: โรค
+- [[Data_Gen_game_TbLocationDef.cs]] — table wrapper: location
+- [[Data_Gen_game_TbRecipeDef.cs]] — table wrapper: recipe
+- [[Data_Gen_game_TbWorldEventDef.cs]] — table wrapper: world event
+
+## ⚙️ Game Mechanics
+- [[survival-stats]] — ระบบ Survival Stats (Hunger/Thirst/Mood/Fatigue + illness)
+- [[card-inventory]] — ระบบ Card Inventory และ hand management
+- [[crafting]] — ระบบ Crafting และ recipes
+- [[exploration]] — ระบบ Exploration และ map
+- [[npc-director]] — ระบบ NPC Director (behavior, killer, no-witness rule)
+- [[deduction]] — ระบบ Social Deduction (clues, accusation, win/lose)
+- [[world-events]] — ระบบ World Events (Survival/Social groups)
+- [[chibi-avatar]] — ระบบ Chibi sprite-swap avatar
+
+## 📋 Conventions & Logs
+- [[conventions]] — Coding conventions จากโค้ดจริง
+- [[2026-09-05]] — Dev Log วันแรก
+
+## 🗂️ โครงสร้าง Wiki
+
+```
+marooned-wiki/
+├── game-design-doc/          # GDD (ไฟล์ game_design_doc.md)
+└── wiki/
+    ├── sources/
+    │   ├── index.md              # สารบัญนี้
+    │   ├── conventions.md        # coding conventions
+    │   ├── architecture/         # overview, mcp-bridge, mcp-tool-table
+    │   ├── code-snippets/        # snippet รายไฟล์ (34 ไฟล์ — Systems/Core/Data/UI)
+    │   ├── mechanics/            # เอกสารระบบเกม 8 ระบบ
+    │   ├── game-design-doc/      # GDD (canonical location)
+    │   ├── bug-log/              # (ว่าง — ไว้บันทึก bug)
+    │   └── devlog-history/       # dev log รายวัน
+    ├── concepts/                 # auto-generated concept pages (Karpathy plugin)
+    └── entities/                 # auto-generated entity pages (Karpathy plugin)
+```
+
+- โครงสร้างยึดแบบ **Karpathy LLM Wiki** — `sources/` เก็บเอกสารที่เขียน/สร้างจากโค้ดจริง
+  `concepts/` กับ `entities/` เป็นของ plugin generate เอง
+- ทุกเอกสารใน `sources/` มี YAML frontmatter รูปแบบเดียวกัน (ดู [[conventions]])
+- เชื่อมโยงเนื้อหาด้วย `[[...]]` WikiLinks เสมอ เพื่อให้ Obsidian graph และ local LLM
+  (Smart Connections) ค้นหาความสัมพันธ์ได้
