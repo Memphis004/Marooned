@@ -1,0 +1,30 @@
+[
+  {
+    "id": "clue_blood_stain",
+    "displayName": "คราบเลือด",
+    "spritePath": "Sprites/Clues/blood_stain",
+    "reliability": "Strong",
+    "visibleToBystanders": true
+  },
+  {
+    "id": "clue_scratch_mark",
+    "displayName": "รอยขีดข่วน",
+    "spritePath": "Sprites/Clues/scratch_mark",
+    "reliability": "Weak",
+    "visibleToBystanders": true
+  },
+  {
+    "id": "clue_footprint_mud",
+    "displayName": "รอยเท้าเปื้อนโคลน",
+    "spritePath": "Sprites/Clues/footprint_mud",
+    "reliability": "Weak",
+    "visibleToBystanders": false
+  },
+  {
+    "id": "clue_torn_cloth",
+    "displayName": "ผ้าขาดติดกิ่งไม้",
+    "spritePath": "Sprites/Clues/torn_cloth",
+    "reliability": "RedHerring",
+    "visibleToBystanders": true
+  }
+]

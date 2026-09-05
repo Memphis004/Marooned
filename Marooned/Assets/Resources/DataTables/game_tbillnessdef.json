@@ -1,0 +1,23 @@
+[
+  {
+    "id": "illness_malnutrition",
+    "displayName": "ภาวะขาดสารอาหาร",
+    "visible": false,
+    "cureCardId": "cooked_fish",
+    "severityGrowthPerHour": 0.5
+  },
+  {
+    "id": "illness_dehydration",
+    "displayName": "ภาวะขาดน้ำ",
+    "visible": false,
+    "cureCardId": "water_bottle",
+    "severityGrowthPerHour": 0.8
+  },
+  {
+    "id": "injury_cut",
+    "displayName": "บาดแผล",
+    "visible": true,
+    "cureCardId": "bandage",
+    "severityGrowthPerHour": 0.2
+  }
+]

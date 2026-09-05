@@ -1,0 +1,30 @@
+[
+  {
+    "id": "event_storm",
+    "group": "Survival",
+    "weight": 10,
+    "displayText": "พายุเข้า ทำให้ Fatigue ลดเร็วขึ้นชั่วคราว",
+    "requiredLocationTag": ""
+  },
+  {
+    "id": "event_wild_animal",
+    "group": "Survival",
+    "weight": 8,
+    "displayText": "เจอสัตว์ป่า อาจได้ทรัพยากรหรือบาดเจ็บ",
+    "requiredLocationTag": "jungle"
+  },
+  {
+    "id": "event_npc_argument",
+    "group": "Social",
+    "weight": 6,
+    "displayText": "NPC สองคนทะเลาะกัน เผยข้อมูลความสัมพันธ์",
+    "requiredLocationTag": ""
+  },
+  {
+    "id": "event_npc_help_request",
+    "group": "Social",
+    "weight": 5,
+    "displayText": "NPC ขอความช่วยเหลือ (อาจเป็นกับดัก)",
+    "requiredLocationTag": ""
+  }
+]

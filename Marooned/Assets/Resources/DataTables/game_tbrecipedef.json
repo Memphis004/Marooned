@@ -1,0 +1,13 @@
+[
+  {
+    "id": "recipe_cook_fish",
+    "outputCardId": "cooked_fish",
+    "outputCount": 1,
+    "inputCard1": "raw_fish",
+    "inputCount1": 1,
+    "inputCard2": "",
+    "inputCount2": 0,
+    "requiredLocationId": "",
+    "requiredToolCardId": ""
+  }
+]

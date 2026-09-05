@@ -1,0 +1,68 @@
+[
+  {
+    "id": "beach",
+    "displayName": "ชายหาด",
+    "worldX": 0,
+    "worldY": 0,
+    "connectedLocationIds": [
+      "jungle_edge",
+      "cave_entrance"
+    ],
+    "lootCard1": "food_coconut",
+    "lootWeight1": 5,
+    "lootCard2": "water_bottle",
+    "lootWeight2": 2,
+    "lootCard3": "raw_fish",
+    "lootWeight3": 3,
+    "capacity": 6
+  },
+  {
+    "id": "jungle_edge",
+    "displayName": "ชายป่า",
+    "worldX": 10,
+    "worldY": 5,
+    "connectedLocationIds": [
+      "beach",
+      "deep_jungle"
+    ],
+    "lootCard1": "food_coconut",
+    "lootWeight1": 3,
+    "lootCard2": "",
+    "lootWeight2": 0,
+    "lootCard3": "",
+    "lootWeight3": 0,
+    "capacity": 4
+  },
+  {
+    "id": "deep_jungle",
+    "displayName": "ป่าลึก",
+    "worldX": 20,
+    "worldY": 10,
+    "connectedLocationIds": [
+      "jungle_edge"
+    ],
+    "lootCard1": "raw_fish",
+    "lootWeight1": 1,
+    "lootCard2": "",
+    "lootWeight2": 0,
+    "lootCard3": "",
+    "lootWeight3": 0,
+    "capacity": 3
+  },
+  {
+    "id": "cave_entrance",
+    "displayName": "ปากถ้ำ",
+    "worldX": -5,
+    "worldY": 8,
+    "connectedLocationIds": [
+      "beach"
+    ],
+    "lootCard1": "water_bottle",
+    "lootWeight1": 4,
+    "lootCard2": "",
+    "lootWeight2": 0,
+    "lootCard3": "",
+    "lootWeight3": 0,
+    "capacity": 3
+  }
+]

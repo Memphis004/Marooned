@@ -1,0 +1,12 @@
+Id,Slot,DrawOrder,SexTag,PivotX,PivotY,Note
+body_base_tan,body,10,,0,0,"FramesByAnimKey filled in via a separate JSON sidecar per part (path list per Direction_AnimState key) -- too nested for a flat CSV row, see README note on ChibiPartDef frame data"
+head_base_round,head,30,,0,40,
+hair_twin_tail,hair,40,Female,0,45,
+hair_topknot,hair,40,Male,0,45,
+arm_left_base,arm_left,20,,-18,20,
+arm_right_base,arm_right,45,,18,20,
+leg_left_base,leg_left,0,,-8,-30,
+leg_right_base,leg_right,15,,8,-30,
+overlay_bandage_arm,overlay,50,,-18,20,condition overlay
+overlay_blood_stain_torso,overlay,50,,0,10,condition overlay
+overlay_scratch_face,overlay,55,,0,42,condition overlay

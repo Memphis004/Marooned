@@ -1,0 +1,6 @@
+﻿##var,id,displayName,visible,cureCardId,severityGrowthPerHour
+##type,string,string,bool,string,float
+##,illness id,display name,visible,cure card,severity growth per hour
+,illness_malnutrition,ภาวะขาดสารอาหาร,false,cooked_fish,0.5
+,illness_dehydration,ภาวะขาดน้ำ,false,water_bottle,0.8
+,injury_cut,บาดแผล,true,bandage,0.2

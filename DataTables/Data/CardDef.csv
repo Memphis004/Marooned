@@ -1,0 +1,9 @@
+﻿##var,id,category,displayName,spritePath,stackLimit,hungerDelta,thirstDelta,moodDelta,fatigueDelta,explorePenalty,craftPenalty
+##type,string,string,string,string,int,float,float,float,float,float,float
+##,card id,category,display name,sprite path,stack limit,hunger effect,thirst effect,mood effect,fatigue effect,explore penalty,craft penalty
+,food_coconut,Resource,มะพร้าว,Sprites/Cards/food_coconut,10,15,0,0,0,0,0
+,water_bottle,Resource,น้ำขวด,Sprites/Cards/water_bottle,10,0,20,0,0,0,0
+,raw_fish,Resource,ปลาดิบ,Sprites/Cards/raw_fish,10,10,0,-5,0,0,0
+,cooked_fish,Craftable,ปลาย่าง,Sprites/Cards/cooked_fish,10,25,0,5,0,0,0
+,illness_malnutrition,Illness,ภาวะขาดสารอาหาร,Sprites/Cards/illness_malnutrition,1,0,0,0,0,-0.3,-0.2
+,illness_dehydration,Illness,ภาวะขาดน้ำ,Sprites/Cards/illness_dehydration,1,0,0,0,0,-0.4,0

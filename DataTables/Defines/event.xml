@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NOTE: filename kept as "event.xml" only because that's what luban.conf's
+  schemaFiles already points to: content here actually covers all tables,
+  not just world events. Rename and split into per-table files later if it
+  bothers you (edit luban.conf's schemaFiles list to match).
+
+  ChibiPartDef is intentionally NOT defined here yet: its FramesByAnimKey
+  field (Dictionary<string, List<string>>) is too nested to model cleanly as
+  flat CSV columns. Needs either a JSON sidecar per part or a second flat
+  "ChibiPartFrame.csv" (PartId, AnimKey, FrameIndex, SpritePath) aggregated at
+  codegen time. Deferred, not blocking this run.
+-->
+<module name="game">
+
+    <!-- ============ CardDef ============ -->
+    <!-- Flattened vs Shared/CardDef.cs's Dictionary<string,float> StatEffect,
+         to avoid map-type CSV syntax risk for the first working run. -->
+    <bean name="CardDef">
+        <var name="id" type="string"/>
+        <var name="category" type="string"/>
+        <var name="displayName" type="string"/>
+        <var name="spritePath" type="string"/>
+        <var name="stackLimit" type="int"/>
+        <var name="hungerDelta" type="float"/>
+        <var name="thirstDelta" type="float"/>
+        <var name="moodDelta" type="float"/>
+        <var name="fatigueDelta" type="float"/>
+        <var name="explorePenalty" type="float"/>
+        <var name="craftPenalty" type="float"/>
+    </bean>
+    <table name="TbCardDef" value="CardDef" mode="map" index="id" input="CardDef.csv" group="c"/>
+
+    <!-- ============ LocationDef ============ -->
+    <!-- LootTable flattened to 3 fixed (card,weight) slots instead of a map. -->
+    <bean name="LocationDef">
+        <var name="id" type="string"/>
+        <var name="displayName" type="string"/>
+        <var name="worldX" type="float"/>
+        <var name="worldY" type="float"/>
+        <var name="connectedLocationIds" type="(list#sep=;),string"/>
+        <var name="lootCard1" type="string"/>
+        <var name="lootWeight1" type="int"/>
+        <var name="lootCard2" type="string"/>
+        <var name="lootWeight2" type="int"/>
+        <var name="lootCard3" type="string"/>
+        <var name="lootWeight3" type="int"/>
+        <var name="capacity" type="int"/>
+    </bean>
+    <table name="TbLocationDef" value="LocationDef" mode="map" index="id" input="LocationDef.csv" group="c"/>
+
+    <!-- ============ RecipeDef ============ -->
+    <!-- Inputs flattened to 2 fixed (card,count) slots instead of a map. -->
+    <bean name="RecipeDef">
+        <var name="id" type="string"/>
+        <var name="outputCardId" type="string"/>
+        <var name="outputCount" type="int"/>
+        <var name="inputCard1" type="string"/>
+        <var name="inputCount1" type="int"/>
+        <var name="inputCard2" type="string"/>
+        <var name="inputCount2" type="int"/>
+        <var name="requiredLocationId" type="string"/>
+        <var name="requiredToolCardId" type="string"/>
+    </bean>
+    <table name="TbRecipeDef" value="RecipeDef" mode="map" index="id" input="RecipeDef.csv" group="c"/>
+
+    <!-- ============ ClueDef ============ -->
+    <bean name="ClueDef">
+        <var name="id" type="string"/>
+        <var name="displayName" type="string"/>
+        <var name="spritePath" type="string"/>
+        <var name="reliability" type="string"/>
+        <var name="visibleToBystanders" type="bool"/>
+    </bean>
+    <table name="TbClueDef" value="ClueDef" mode="map" index="id" input="ClueDef.csv" group="c"/>
+
+    <!-- ============ IllnessDef ============ -->
+    <bean name="IllnessDef">
+        <var name="id" type="string"/>
+        <var name="displayName" type="string"/>
+        <var name="visible" type="bool"/>
+        <var name="cureCardId" type="string"/>
+        <var name="severityGrowthPerHour" type="float"/>
+    </bean>
+    <table name="TbIllnessDef" value="IllnessDef" mode="map" index="id" input="IllnessDef.csv" group="c"/>
+
+    <!-- ============ WorldEventDef ============ -->
+    <bean name="WorldEventDef">
+        <var name="id" type="string"/>
+        <var name="group" type="string"/>
+        <var name="weight" type="int"/>
+        <var name="displayText" type="string"/>
+        <var name="requiredLocationTag" type="string"/>
+    </bean>
+    <table name="TbWorldEventDef" value="WorldEventDef" mode="map" index="id" input="WorldEventDef.csv" group="c"/>
+
+</module>

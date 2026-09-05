@@ -1,0 +1,80 @@
+[
+  {
+    "id": "food_coconut",
+    "category": "Resource",
+    "displayName": "มะพร้าว",
+    "spritePath": "Sprites/Cards/food_coconut",
+    "stackLimit": 10,
+    "hungerDelta": 15,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0
+  },
+  {
+    "id": "water_bottle",
+    "category": "Resource",
+    "displayName": "น้ำขวด",
+    "spritePath": "Sprites/Cards/water_bottle",
+    "stackLimit": 10,
+    "hungerDelta": 0,
+    "thirstDelta": 20,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0
+  },
+  {
+    "id": "raw_fish",
+    "category": "Resource",
+    "displayName": "ปลาดิบ",
+    "spritePath": "Sprites/Cards/raw_fish",
+    "stackLimit": 10,
+    "hungerDelta": 10,
+    "thirstDelta": 0,
+    "moodDelta": -5,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0
+  },
+  {
+    "id": "cooked_fish",
+    "category": "Craftable",
+    "displayName": "ปลาย่าง",
+    "spritePath": "Sprites/Cards/cooked_fish",
+    "stackLimit": 10,
+    "hungerDelta": 25,
+    "thirstDelta": 0,
+    "moodDelta": 5,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0
+  },
+  {
+    "id": "illness_malnutrition",
+    "category": "Illness",
+    "displayName": "ภาวะขาดสารอาหาร",
+    "spritePath": "Sprites/Cards/illness_malnutrition",
+    "stackLimit": 1,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": -0.3,
+    "craftPenalty": -0.2
+  },
+  {
+    "id": "illness_dehydration",
+    "category": "Illness",
+    "displayName": "ภาวะขาดน้ำ",
+    "spritePath": "Sprites/Cards/illness_dehydration",
+    "stackLimit": 1,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": -0.4,
+    "craftPenalty": 0
+  }
+]

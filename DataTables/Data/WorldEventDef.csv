@@ -1,0 +1,7 @@
+﻿##var,id,group,weight,displayText,requiredLocationTag
+##type,string,string,int,string,string
+##,event id,group,weight,display text,required location tag
+,event_storm,Survival,10,พายุเข้า ทำให้ Fatigue ลดเร็วขึ้นชั่วคราว,
+,event_wild_animal,Survival,8,เจอสัตว์ป่า อาจได้ทรัพยากรหรือบาดเจ็บ,jungle
+,event_npc_argument,Social,6,NPC สองคนทะเลาะกัน เผยข้อมูลความสัมพันธ์,
+,event_npc_help_request,Social,5,NPC ขอความช่วยเหลือ (อาจเป็นกับดัก),

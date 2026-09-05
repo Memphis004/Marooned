@@ -1,0 +1,4 @@
+﻿##var,id,outputCardId,outputCount,inputCard1,inputCount1,inputCard2,inputCount2,requiredLocationId,requiredToolCardId,
+##type,string,string,int,string,int,string,int,string,string,
+##,recipe id,output,output count,input1,count1,input2,count2,required location,required tool,
+,recipe_cook_fish,cooked_fish,1,raw_fish,1,,,,,tool_campfire

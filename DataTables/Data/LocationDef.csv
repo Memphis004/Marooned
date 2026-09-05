@@ -1,0 +1,7 @@
+﻿##var,id,displayName,worldX,worldY,connectedLocationIds,lootCard1,lootWeight1,lootCard2,lootWeight2,lootCard3,lootWeight3,capacity
+##type,string,string,float,float,"(list#sep=;),string",string,int,string,int,string,int,int
+##,location id,display name,world x,world y,connected ids,loot1,weight1,loot2,weight2,loot3,weight3,capacity
+,beach,ชายหาด,0,0,jungle_edge;cave_entrance,food_coconut,5,water_bottle,2,raw_fish,3,6
+,jungle_edge,ชายป่า,10,5,beach;deep_jungle,food_coconut,3,,,,,4
+,deep_jungle,ป่าลึก,20,10,jungle_edge,raw_fish,1,,,,,3
+,cave_entrance,ปากถ้ำ,-5,8,beach,water_bottle,4,,,,,3
