@@ -107,5 +107,12 @@ namespace Marooned.Core.Visual
             // Spine flip ผ่าน Skeleton.ScaleX ไม่แตะ Transform (กันพัง mesh bounds/sorting)
             _skeleton.Skeleton.ScaleX = facingRight ? 1f : -1f;
         }
+
+        /// <summary>IChibiVisual: Spine characters (Elena/Derek) ไม่มี animation pickup
+        /// ตรงชื่อ — player เป็น Student 1 (Animator) ตัวเดียวที่เก็บของ จึงเป็น no-op</summary>
+        public void PlayPickup()
+        {
+            Debug.Log($"[SpineVisualController] '{name}' ไม่มี animation pickup — ข้าม");
+        }
     }
 }

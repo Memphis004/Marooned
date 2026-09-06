@@ -286,7 +286,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1182431986}
   m_Father: {fileID: 612527674}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &578858543
@@ -497,9 +498,57 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.ChibiSpawnerView
   backend: 0
   genericCutePrefab: {fileID: 1908850870069242641, guid: ee14459f600f6ec4783a1f1bae436bcc, type: 3}
+  npcPrefabs:
+  - {fileID: 6528400308587160688, guid: 840e0d9e7de7123448fe4454627669c5, type: 3}
+  - {fileID: 2686469569641711548, guid: d146f11c82c0e6d46b338f581d5ba4ce, type: 3}
   spinePrefabs:
   - {fileID: 7342099114468804206, guid: 793ca76394a58e441969d6aa80c609ac, type: 3}
   - {fileID: 656045509588373927, guid: c3e68fa16c2fc594f83db62b69a163e8, type: 3}
+--- !u!1 &1182431985
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1182431986}
+  - component: {fileID: 1182431987}
+  m_Layer: 0
+  m_Name: PlayerCharacter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1182431986
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182431985}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 578858542}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1182431987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182431985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 815c1c657c7783348b1fdba450e54481, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.PlayerCharacterView
+  visualPrefab: {fileID: 1908850870069242641, guid: ee14459f600f6ec4783a1f1bae436bcc, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

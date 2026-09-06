@@ -1,0 +1,4 @@
+20:46:12 — Phase 0: variants + npcPrefabs + PlayerCharacter saved, backend=Spine (Phase 2 evidence)
+20:46:13 — เริ่ม Play Mode (mode=0)
+20:53:59 — Phase 1: backend=GenericCute restored → Phase 3 tests A–D
+20:55:29 — เริ่ม Play Mode (mode=1)

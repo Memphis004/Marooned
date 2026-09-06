@@ -37,10 +37,13 @@ namespace Marooned.Core
         [Header("Backend (default: GenericCute)")]
         [SerializeField] private ChibiBackend backend = ChibiBackend.GenericCute;
 
-        [Header("GenericCute backend — '001 Student 1 Character'")]
+        [Header("GenericCute fallback — '001 Student 1' (สงวนให้ Player; NPC ใช้เมื่อ npcPrefabs ว่าง)")]
         [SerializeField] private GameObject genericCutePrefab;
 
-        [Header("Spine backend (experimental) — เวียนสลับตาม index NPC เพื่อหน้าตาไม่ซ้ำกัน")]
+        [Header("NPC prefabs ตระกูล GenericCute — เวียนสลับตาม index NPC (WizardChibi, CollegeStudentChibi...)")]
+        [SerializeField] private GameObject[] npcPrefabs;
+
+        [Header("Spine backend (experimental) — เวียนสลับตาม index NPC (ElenaChibi, DerekChibi...)")]
         [SerializeField] private GameObject[] spinePrefabs;
 
         private NpcDirectorSystem _npcDirector;
@@ -54,6 +57,12 @@ namespace Marooned.Core
 
         /// <summary>อ่านค่า backend ปัจจุบัน (ให้ test script ใช้ยืนยัน config)</summary>
         public ChibiBackend Backend => backend;
+
+        /// <summary>สลับ backend ตอน runtime (ทดลอง backend ใน Play Mode โดยไม่แก้ scene)</summary>
+        public void SetBackend(ChibiBackend newBackend) => backend = newBackend;
+
+        /// <summary>บังคับ reconcile ทันที (เช่นหลังสลับ backend — ปกติ reconcile เกิดจาก message เท่านั้น)</summary>
+        public void RefreshNow() => ReconcileChibis();
 
         private void Start()
         {
@@ -117,20 +126,21 @@ namespace Marooned.Core
         }
 
         /// <summary>
-        /// เลือก prefab ตาม backend:
-        ///  - GenericCute → ใช้ตัวเดียวหมด (พฤติกรรมเดิม Phase 1)
-        ///  - Spine → เวียนสลับตามเลขท้าย npc id (npc_01→[0] Elena, npc_02→[1] Derek, ...)
-        ///    เพื่อให้หน้าตาไม่ซ้ำกัน; ถ้า array ว่าง fallback กลับ GenericCute
+        /// เลือก prefab ตาม backend (เวียนสลับตามเลขท้าย npc id — npc_01→[0], npc_02→[1], ...):
+        ///  - GenericCute → npcPrefabs (Wizard/CollegeStudent; Student 1 สงวนให้ Player)
+        ///  - Spine (experimental) → spinePrefabs (Elena/Derek)
+        /// ถ้า array ของ backend ว่าง → fallback genericCutePrefab
         /// </summary>
         private GameObject PickPrefab(string npcId)
         {
-            if (backend == ChibiBackend.Spine && spinePrefabs != null && spinePrefabs.Length > 0)
+            var rotationPool = backend == ChibiBackend.Spine ? spinePrefabs : npcPrefabs;
+            if (rotationPool != null && rotationPool.Length > 0)
             {
                 int npcNumber = ParseNpcNumber(npcId);
-                int index = npcNumber > 0 ? (npcNumber - 1) % spinePrefabs.Length : 0;
-                var picked = spinePrefabs[index];
+                int index = npcNumber > 0 ? (npcNumber - 1) % rotationPool.Length : 0;
+                var picked = rotationPool[index];
                 if (picked != null) return picked;
-                Debug.LogWarning($"[ChibiSpawnerView] spinePrefabs[{index}] ว่าง — fallback ไป GenericCute");
+                Debug.LogWarning($"[ChibiSpawnerView] rotationPool[{index}] ว่าง — fallback ไป genericCutePrefab");
             }
             return genericCutePrefab;
         }

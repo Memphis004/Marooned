@@ -14,7 +14,7 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-> อัปเดตล่าสุด: 2026-09-05
+> อัปเดตล่าสุด: 2026-09-06
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -23,11 +23,17 @@ tags:
 - [[overview]] — ภาพรวม architecture ทั้งหมด (Composition Root, DI, Message Bus, Data Flow)
 - [[mcp-bridge]] — MCP Bridge architecture (build/run, TCP connection, วิธีเพิ่ม tool)
 - [[mcp-tool-table]] — ตาราง MCP tools ทั้งหมด พร้อมสถานะ
+- [[chibi-visual-system]] — ระบบ spawn/คุม visual ตัวละคร Chibi แบบ event-driven
+  (MessagePipe + VContainer + MVP Lite)
+- [[player-system]] — ระบบผู้เล่น Lab B Phase 3: เดิน WASD 4 ทิศ + เก็บไอเท็มตามโซน
+  (PlayerInputService/Movement/WorldItem/Pickup + zone loot mock table)
 
 ## 📄 Code Snippets
 
 ### Core
 - [[GameLifetimeScope.cs]] — Composition Root: ประกอบร่าง DI, MessagePipe, TCP server ทั้งหมด
+- [[GameTickDriver.cs]] — MonoBehaviour เรียก `Tick()` ของระบบ gameplay ทุกเฟรม (game loop)
+- [[RoundInitializer.cs]] — เรียก `SetupRound()` อัตโนมัติตอน Scene โหลด ให้มี NPC เกิดในเกม
 
 ### Systems
 - [[SurvivalStatSystem.cs]] — drain stat 4 ค่า + roll illness เมื่อ stat วิกฤต
@@ -51,6 +57,12 @@ tags:
 - [[ConditionOverlayView.cs]] — HUD icon illness/injury ของผู้เล่น (skeleton)
 - [[MapExploreView.cs]] — View แผนที่ 2D sandbox (skeleton)
 - [[MeetingVoteView.cs]] — View หน้าประชุม + ปุ่ม Accuse/Abstain (skeleton)
+
+### Visual Layer (Chibi)
+- [[IChibiVisual.cs]] — interface กลางของ visual layer (backend-agnostic: Animator/Spine/paperdoll)
+- [[ChibiSpawnerView.cs]] — spawn/despawn chibi ของ NPC ตาม location แบบ event-driven
+- [[GenericCuteVisualController.cs]] — คุม Animator ของ asset "Generic Cute 2D Student" (PSB skeletal)
+- [[SpineVisualController.cs]] — Spine backend คุม SkeletonAnimation (Elena/Derek ใช้ร่วมกัน)
 
 ### Data
 - [[ChibiAnimatedRenderer.cs]] — chibi sprite-swap paperdoll renderer เดิน 4 ทิศ
@@ -93,8 +105,8 @@ marooned-wiki/
     ├── sources/
     │   ├── index.md              # สารบัญนี้
     │   ├── conventions.md        # coding conventions
-    │   ├── architecture/         # overview, mcp-bridge, mcp-tool-table
-    │   ├── code-snippets/        # snippet รายไฟล์ (34 ไฟล์ — Systems/Core/Data/UI)
+    │   ├── architecture/         # overview, mcp-bridge, mcp-tool-table, chibi-visual-system
+    │   ├── code-snippets/        # snippet รายไฟล์ (40 ไฟล์ — Systems/Core/Data/UI/Visual)
     │   ├── mechanics/            # เอกสารระบบเกม 8 ระบบ
     │   ├── game-design-doc/      # GDD (canonical location)
     │   ├── bug-log/              # (ว่าง — ไว้บันทึก bug)

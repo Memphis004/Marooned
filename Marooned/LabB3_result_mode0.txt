@@ -1,0 +1,7 @@
+[P2] backend=Spine
+[P2-A1] spawn ครั้งแรก: count=5 [ElenaChibi(Clone) DerekChibi(Clone) ElenaChibi(Clone) DerekChibi(Clone) ElenaChibi(Clone) ] (ต้องสลับ Elena/Derek, count=5)
+[P2-A2] move jungle_edge success=True: count=0 (ต้อง 0)
+[P2-A3] move beach success=True: count=5 (ต้อง 5)
+[P2-B] ElenaChibi(Clone): current=Idle → Traveling=Walking → Talking=Talking
+[P2-B] DerekChibi(Clone): current=Idle → Traveling=Walking → Talking=Talking
+DONE

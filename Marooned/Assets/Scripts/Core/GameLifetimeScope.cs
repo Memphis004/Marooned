@@ -65,6 +65,17 @@ namespace Marooned.Core
             builder.Register<WorldEventSystem>(Lifetime.Singleton).AsSelf();
             builder.Register<LubanDataService>(Lifetime.Singleton).AsSelf();
 
+            // --- Player system (Lab B Phase 3) ---
+            // input service (plain C# ticked by GameTickDriver) + movement + pickup
+            builder.Register<PlayerInputService>(Lifetime.Singleton).AsSelf();
+            builder.Register<PlayerMovementSystem>(Lifetime.Singleton).AsSelf();
+            builder.Register<ItemPickupSystem>(Lifetime.Singleton).AsSelf();
+            // WorldItemSystem เป็น IInitializable → EntryPoint เพื่อให้ spawn ชุดแรก
+            // หลัง container build เสร็จ (subscribe PlayerLocationChangedMessage ภายใน)
+            // .AsSelf() เพิ่มการ register ตัวคลาสเอง (RegisterEntryPoint พื้นฐาน
+            // register เฉพาะ implemented interfaces ทำให้ Resolve<WorldItemSystem> ไม่ได้)
+            builder.RegisterEntryPoint<WorldItemSystem>(Lifetime.Singleton).AsSelf();
+
             // --- State provider consumed by MCP query handlers ---
             builder.Register<GameStateProvider>(Lifetime.Singleton).AsSelf();
 

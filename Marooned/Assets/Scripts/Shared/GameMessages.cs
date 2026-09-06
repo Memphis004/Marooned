@@ -185,4 +185,13 @@ namespace Marooned.Shared
         [Key(1)] public string OldLocationId; // อาจเป็น null ตอนวาง NPC ครั้งแรกของรอบ
         [Key(2)] public string NewLocationId;
     }
+
+    // ---- Added in Lab B Phase 3 (Player System): item pickup broadcast ----
+
+    [MessagePackObject]
+    public class ItemPickedUpMessage
+    {
+        [Key(0)] public string ItemId;
+        [Key(1)] public string LocationId;
+    }
 }

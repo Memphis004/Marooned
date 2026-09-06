@@ -22,6 +22,9 @@ namespace Marooned.Core
         private NpcDirectorSystem _npcDirector;
         private WorldEventSystem _worldEvents;
         private GameStateProvider _stateProvider;
+        private PlayerInputService _playerInput;
+        private PlayerMovementSystem _playerMovement;
+        private ItemPickupSystem _itemPickup;
 
         private bool _resolved;
 
@@ -51,6 +54,9 @@ namespace Marooned.Core
             _npcDirector = scope.Container.Resolve<NpcDirectorSystem>();
             _worldEvents = scope.Container.Resolve<WorldEventSystem>();
             _stateProvider = scope.Container.Resolve<GameStateProvider>();
+            _playerInput = scope.Container.Resolve<PlayerInputService>();
+            _playerMovement = scope.Container.Resolve<PlayerMovementSystem>();
+            _itemPickup = scope.Container.Resolve<ItemPickupSystem>();
             _resolved = true;
             Debug.Log("[GameTickDriver] Resolve ระบบครบแล้ว — เริ่ม Tick ทุกเฟรม");
             return true;
@@ -62,9 +68,13 @@ namespace Marooned.Core
 
             float deltaSeconds = Time.deltaTime;
 
-            // ลำดับ: stat ผู้เล่น -> พฤติกรรม NPC -> world event
-            // (ลำดับนี้ยังไม่มีผลเชิงระบบตอนนี้ แต่ fix ไว้ให้ deterministic)
+            // 1) input ก่อน (ให้ movement/pickup อ่านค่าเฟรมนี้)
+            _playerInput.Tick();
+
+            // ลำดับ: stat ผู้เล่น -> เดิน -> เก็บของ -> พฤติกรรม NPC -> world event
             _survival.Tick(deltaSeconds);
+            _playerMovement.Tick(deltaSeconds);
+            _itemPickup.Tick(deltaSeconds);
             _npcDirector.Tick(deltaSeconds);
 
             // WorldEventSystem.Tick ต้องการ location tag ปัจจุบัน — ใช้ id ของ

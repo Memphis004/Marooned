@@ -28,5 +28,14 @@ namespace Marooned.Shared
         [Key(9)] public int WrongAccusations = 0;
 
         [Key(10)] public ChibiAppearance Avatar = new();
+
+        // ---- Added Lab B Phase 3 (Player System): world position for free movement ----
+        /// <summary>ตำแหน่งจริงบนโลก (top-down lite) — อัปเดตโดย PlayerMovementSystem เท่านั้น</summary>
+        [Key(11)] public float PositionX;
+        [Key(12)] public float PositionY;
+        [Key(13)] public bool FacingRight = true;
+
+        /// <summary>activity ปัจจุบันของผู้เล่น (Idle/Walking...) — ใช้เลือก animation (TODO: ย้ายไป enum ของ player เอง)</summary>
+        [Key(14)] public NpcActivityState Activity = NpcActivityState.Idle;
     }
 }

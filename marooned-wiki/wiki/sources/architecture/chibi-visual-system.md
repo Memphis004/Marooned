@@ -49,7 +49,10 @@ ChibiSpawnerView.ReconcileChibis
 - `GameLifetimeScope/GameManager` — RoundInitializer + GameTickDriver (Lab A)
 - `GameLifetimeScope/ChibiSystem` — ChibiSpawnerView, `backend` = GenericCute
   (default), `genericCutePrefab` = `001 Student 1 Character.prefab`,
-  `spinePrefabs[]` = [ElenaChibi, DerekChibi]
+  `npcPrefabs[]` = [WizardChibi, CollegeStudentChibi] (Lab B Phase 3 — Student 1
+  สงวนให้ Player เท่านั้น NPC ห้ามใช้), `spinePrefabs[]` = [ElenaChibi, DerekChibi]
+- `GameLifetimeScope/GameManager/PlayerCharacter` — PlayerCharacterView +
+  `visualPrefab` = `001 Student 1 Character.prefab` (ตัวผู้เล่น ไม่ใช่ NPC)
 - Prefab `001 Student 1 Character.prefab` — Animator ผูก `Basic.controller` +
   GenericCuteVisualController (แก้ไข prefab ของ asset โดยตรง)
 - Prefab variants `Assets/Scripts/Core/Visual/Prefabs/ElenaChibi.prefab` +
@@ -102,6 +105,14 @@ ChibiSpawnerView ──(IChibiVisual)──┬── GenericCuteVisualController
   ที่มากับ prefab ต้นทาง (variant)
 
 ### การ map NpcActivityState → animation (ของจริงจาก asset ทั้งสองฝั่ง)
+
+**Lab B Phase 3 update (2026-09-06):** state names ในตระกูล GenericCute **ไม่แชร์กัน** —
+Student 1 (`Basic.controller`) = idle/walk/interact/pick up (ตัวพิมพ์เล็ก) ส่วน
+Wizard (`Wizard Demo.controller`) และ CollegeStudent (`AnimationDemo.controller`)
+= Idle/Run/Attack/Hurt/Die/Jump/KickBoard (ไม่มี interact / pick up) จึงย้ายชื่อ
+state เป็น SerializeField ต่อ prefab ใน `GenericCuteVisualController` —
+wrapper `WizardChibi.prefab` / `CollegeStudentChibi.prefab` ตั้ง idleAnim=Idle,
+walkAnim=Run, interactAnim/pickupAnim ว่าง (`PlayIfAvailable` ข้าม state ที่ไม่มีให้เอง)
 | NpcActivityState | GenericCute (Animator state) | Spine (Elena=Derek, 29 ชื่อเหมือนกัน) |
 |---|---|---|
 | Idle | `idle` | `Idle` |
@@ -127,7 +138,9 @@ default ของเกมยังเป็น GenericCute และการ�
 ต้องผ่านการอัปเดต GDD ก่อน
 
 ## Known Issues / Next Steps
-- ยังไม่มี visual ของผู้เล่น + สภาพแวดล้อม (tilemap) — chibi ลอยบนพื้นสีพื้นหลังกล้อง
+- ~~ยังไม่มี visual ของผู้เล่น~~ (แก้แล้วใน Lab B Phase 3 — PlayerCharacterView +
+  PlayerMovementSystem เดินด้วย WASD ได้ ดู [[player-system]]) แต่ยังไม่มี
+  สภาพแวดล้อม (tilemap) — chibi ยังลอยบนพื้นสีพื้นหลังกล้อง
 - `NpcDirectorSystem.TickBehavior` ยังเป็น placeholder → NPC ยังไม่มีการเดินจริง
   (message การย้ายที่เกิดจริงตอนนี้มีจาก RoundInitializer + player movement)
 - Asset ใช้ PSB skeletal (GenericCute) / Spine skeletal (Elena, Derek) — ต่างจาก
@@ -137,4 +150,6 @@ default ของเกมยังเป็น GenericCute และการ�
   ผ่าน handler in-process เท่ากับ code path เดียวกันข้ามชั้น TCP)
 - Spine backend ยัง experimental — ยังไม่ผูก roster จริง (npc_01..05 ที่เวียนสลับ
   Elena/Derek เป็น mock จนกว่าจะมี Luban NpcDef table)
-- Facing ยังไม่มีใครเรียก `SetFacing` จริง (รอ movement/schedule system เป็นตัวกำหนดทิศ)
+- ~~Facing ยังไม่มีใครเรียก `SetFacing`~~ (แก้แล้วใน Lab B Phase 3 —
+  PlayerMovementSystem ตั้ง `FacingRight` ใน state แล้ว PlayerCharacterView เรียก
+  `SetFacing` ทุกเฟรม; ฝั่ง NPC ยังไม่มีใครเรียก)

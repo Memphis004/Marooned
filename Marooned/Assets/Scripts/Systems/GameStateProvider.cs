@@ -85,6 +85,18 @@ namespace Marooned.Systems
                     SpritePath = "Sprites/Cards/illness_dehydration", StackLimit = 1,
                     ActionPenalty = new Dictionary<string, float> { ["Explore"] = -0.4f },
                 },
+                // TODO Lab A+1: การ์ดวัสดุ mock สำหรับ WorldItemSystem (Lab B Phase 3) —
+                // เพิ่มเข้า DataTables/CardDef.csv จริงเมื่อเปิด pipeline Luban
+                ["mat_vine"] = new CardDef
+                {
+                    Id = "mat_vine", Category = CardCategory.Resource, DisplayName = "เถาวัลย์",
+                    SpritePath = "Sprites/Cards/mat_vine", StackLimit = 10,
+                },
+                ["mat_stone"] = new CardDef
+                {
+                    Id = "mat_stone", Category = CardCategory.Resource, DisplayName = "หิน",
+                    SpritePath = "Sprites/Cards/mat_stone", StackLimit = 10,
+                },
             };
 
             LocationDefs = new Dictionary<string, LocationDef>

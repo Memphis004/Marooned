@@ -76,3 +76,10 @@ documents, and development progress.
 - NpcDirectorSystem TickBehavior is placeholder
 - McpBridge tool methods are NotImplementedException
 - First milestone: "round trip" — bridge connects + GetGameState returns data
+
+## Wiki Maintenance Rules
+- ทุกครั้งที่สร้าง Wiki page ใหม่ใน marooned-wiki/wiki/sources/ 
+  ต้องอัปเดต marooned-wiki/wiki/sources/index.md ด้วยเสมอ:
+  1. เพิ่มลิงก์ + คำอธิบายสั้นภาษาไทย ในหมวดที่เหมาะสม
+  2. อัปเดตวันที่ "อัปเดตล่าสุด"
+- ทุกครั้งที่ลบหรือย้าย Wiki page ต้องเอาออกจาก index ด้วย

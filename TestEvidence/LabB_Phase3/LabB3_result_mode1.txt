@@ -1,0 +1,10 @@
+[A] KEYWINDOW-START (ส่ง WASD ผ่านคีย์บอร์ดจริง)
+[A] KEYWINDOW-END: pos (0.00,0.00) → (-3.40,-0.14) activity=Traveling (ต้องขยับ + Traveling)
+[D1] NPC rotation: count=5 [WizardChibi(Clone) CollegeStudentChibi(Clone) WizardChibi(Clone) CollegeStudentChibi(Clone) WizardChibi(Clone) ] (ต้องสลับ Wizard/CollegeStudent)
+[D2] move jungle_edge success=True: NPC count=0 (ต้อง 0), items=3 (โซน mat_vine, ต้อง 3)
+[D2] item ในโซนนี้: mat_vine (ต้องเป็น mat_vine)
+[D3] move beach success=True: NPC count=5 (ต้อง 5), items=3 (respawn food_coconut)
+[B] InteractKey: items 3→2 (ต้อง -1), food_coconut 1→2 (ต้อง +1)
+[C] WalkOver: items 2→1 (ต้อง -1)
+[D4] get_game_state inventory: {food_coconut=3}
+DONE
