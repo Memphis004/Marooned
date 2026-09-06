@@ -114,11 +114,14 @@ namespace Marooned.Systems
     {
         private readonly GameStateProvider _stateProvider;
         private readonly LubanDataService _data;
+        private readonly IPublisher<PlayerLocationChangedMessage> _playerLocationPublisher;
 
-        public MoveToLocationHandler(GameStateProvider stateProvider, LubanDataService data)
+        public MoveToLocationHandler(GameStateProvider stateProvider, LubanDataService data,
+            IPublisher<PlayerLocationChangedMessage> playerLocationPublisher)
         {
             _stateProvider = stateProvider;
             _data = data;
+            _playerLocationPublisher = playerLocationPublisher;
         }
 
         public UniTask<MoveToLocationResponse> InvokeAsync(MoveToLocationRequest request, CancellationToken cancellationToken = default)
@@ -136,6 +139,10 @@ namespace Marooned.Systems
             }
 
             _stateProvider.Player.CurrentLocationId = request.LocationId;
+
+            // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView) รู้ตัวแทนการ polling
+            _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = current, NewLocationId = request.LocationId });
+
             return UniTask.FromResult(new MoveToLocationResponse { Success = true });
         }
     }

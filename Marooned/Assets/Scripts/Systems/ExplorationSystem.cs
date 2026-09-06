@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Marooned.Shared;
+using MessagePipe;
 
 namespace Marooned.Systems
 {
@@ -17,13 +18,16 @@ namespace Marooned.Systems
         private readonly Dictionary<string, LocationRuntimeState> _runtime = new();
         private readonly CardInventorySystem _inventory;
         private readonly PlayerSurvivalState _player;
+        private readonly IPublisher<PlayerLocationChangedMessage> _playerLocationPublisher;
         private readonly Random _rng = new();
 
-        public ExplorationSystem(LubanDataService dataService, CardInventorySystem inventory, GameStateProvider stateProvider)
+        public ExplorationSystem(LubanDataService dataService, CardInventorySystem inventory,
+            GameStateProvider stateProvider, IPublisher<PlayerLocationChangedMessage> playerLocationPublisher)
         {
             _locations = dataService.LocationDefs;
             _inventory = inventory;
             _player = stateProvider.Player;
+            _playerLocationPublisher = playerLocationPublisher;
 
             foreach (var loc in _locations.Values)
                 _runtime[loc.Id] = new LocationRuntimeState { RemainingWeight = new Dictionary<string, int>(loc.LootTable) };
@@ -49,7 +53,13 @@ namespace Marooned.Systems
 
             runtime.RemainingWeight[picked] -= 1;
             _inventory.TryAdd(picked, 1);
+
+            // Lab B: publish PlayerLocationChangedMessage เมื่อ Explore ย้ายผู้เล่น
+            // (Visual layer เช่น ChibiSpawnerView subscribe แทนการ polling)
+            var oldLocationId = _player.CurrentLocationId;
             _player.CurrentLocationId = locationId;
+            if (oldLocationId != locationId)
+                _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = oldLocationId, NewLocationId = locationId });
 
             return (true, new List<string> { picked });
         }

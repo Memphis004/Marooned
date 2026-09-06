@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "wiki/sources/game-design-doc/game_design_doc.md",
-                "mode": "source",
+                "file": "wiki/sources/architecture/chibi-visual-system.md",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "game_design_doc"
+              "title": "chibi-visual-system"
             }
           }
         ]
@@ -79,7 +79,8 @@
               "title": "Bookmarks"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -206,6 +207,11 @@
   },
   "active": "03478e020e893a84",
   "lastOpenFiles": [
+    "wiki/sources/devlog-history/2026-09-05.md",
+    "wiki/sources/architecture/chibi-visual-system.md",
+    "wiki/sources/code-snippets/GenericCuteVisualController.cs.md",
+    "wiki/sources/code-snippets/ChibiSpawnerView.cs.md",
+    "wiki/sources/game-design-doc/game_design_doc.md",
     "wiki/sources/index.md",
     "wiki/sources/code-snippets/GameTickDriver.cs.md",
     "wiki/sources/code-snippets/RoundInitializer.cs.md",
@@ -219,7 +225,6 @@
     "sources/locationdef-cs.md",
     "sources",
     "wiki/sources/architecture/mcp-tool-table.md",
-    "wiki/sources/devlog-history/2026-09-05.md",
     "wiki/sources/devlog-history",
     "wiki/sources/conventions.md",
     "wiki/sources/code-snippets/CardHandView.cs.md",
@@ -231,11 +236,7 @@
     "wiki/sources/mechanics/chibi-avatar.md",
     "wiki/sources/mechanics/card-inventory.md",
     "wiki/sources/code-snippets/UIRoot.cs.md",
-    "wiki/sources/mechanics/deduction.md",
-    "wiki/sources/mechanics/crafting.md",
     "wiki/sources/mechanics",
-    "wiki/sources/code-snippets/WorldEventSystem.cs.md",
-    "wiki/sources/code-snippets/SurvivalStatSystem.cs.md",
     "wiki/sources/code-snippets/WorldEventSystem.cs.md.tmp",
     "wiki/sources/code-snippets/UIRoot.cs.md.tmp",
     "wiki/sources/code-snippets/SurvivalStatSystem.cs.md.tmp",

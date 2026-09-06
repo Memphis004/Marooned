@@ -71,30 +71,18 @@ namespace Marooned.Core
         /// SetupRound() ของ NpcDirectorSystem ยังไม่กำหนด CurrentLocationId — แต่
         /// DeductionSystem.GetObservableNpcsAt() กรองด้วย location ดังนั้นต้องวาง
         /// NPC ลง location ก่อน ไม่งั้น get_visible_npcs ยังว่างอยู่
-        /// วางครึ่งหนึ่งไว้ที่ location ของผู้เล่น ที่เหลือไล่ไปตาม location ที่เชื่อมกัน
+        /// (Lab B: ใช้ NpcDirectorSystem.MoveNpc แทนการ set ตรง เพื่อให้
+        /// publish NpcLocationChangedMessage ทุกครั้ง — Visual layer spawn chibi ตาม event)
         /// </summary>
         private void AssignStartingLocations()
         {
             var playerLocation = _stateProvider.Player.CurrentLocationId;
 
-            // ตำแหน่งที่ว่างๆ ได้ = location ของผู้เล่น + location ที่เชื่อมกันโดยตรง
-            var validLocations = new List<string> { playerLocation };
-            if (_data.LocationDefs.TryGetValue(playerLocation, out var def)
-                && def.ConnectedLocationIds != null)
-            {
-                validLocations.AddRange(def.ConnectedLocationIds.Where(id => _data.LocationDefs.ContainsKey(id)));
-            }
-
-            int i = 0;
             foreach (var npc in _npcDirector.Npcs.Values)
             {
-                // NPC แรกๆ อยู่ที่เดียวกับผู้เล่น (ให้ get_visible_npcs เจอคนทันที)
-                // ที่เหลือกระจายไป location อื่นแบบ round-robin
-                // npc.CurrentLocationId = i < 2 || validLocations.Count == 1
-                //     ? playerLocation
-                //     : validLocations[i % validLocations.Count];
-                // i++;
-                npc.CurrentLocationId = playerLocation; // ทุกตัวอยู่กับผู้เล่นเลย เทสง่าย
+                // ห้าม set CurrentLocationId ตรง — ให้ MoveNpc เป็นคน set + publish
+                // (ทุกตัวอยู่กับผู้เล่นเลย เทสง่าย)
+                _npcDirector.MoveNpc(npc.Id, playerLocation);
             }
         }
     }

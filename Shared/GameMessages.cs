@@ -166,4 +166,23 @@ namespace Marooned.Shared
         [Key(1)] public string LocationId;
         [Key(2)] public List<string> SpawnedClueCardIds = new();
     }
+
+    // ---- Added in Lab B (Chibi Sprite Integration): location-change broadcasts ----
+    // In-process only (MessagePipe) — ใช้โดย ChibiSpawnerView เพื่อ spawn/despawn
+    // chibi ตาม location ของผู้เล่น/NPC โดยไม่ต้อง polling ใน Update()
+
+    [MessagePackObject]
+    public class PlayerLocationChangedMessage
+    {
+        [Key(0)] public string OldLocationId;
+        [Key(1)] public string NewLocationId;
+    }
+
+    [MessagePackObject]
+    public class NpcLocationChangedMessage
+    {
+        [Key(0)] public string NpcId;
+        [Key(1)] public string OldLocationId; // อาจเป็น null ตอนวาง NPC ครั้งแรกของรอบ
+        [Key(2)] public string NewLocationId;
+    }
 }

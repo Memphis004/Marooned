@@ -19,14 +19,38 @@ namespace Marooned.Systems
         private readonly Dictionary<string, NpcState> _npcs = new();
         private readonly Dictionary<string, LocationDef> _locations;
         private readonly IPublisher<NpcEliminatedMessage> _eliminatedPublisher;
+        private readonly IPublisher<NpcLocationChangedMessage> _npcLocationPublisher;
         private readonly Random _rng = new();
 
         public IReadOnlyDictionary<string, NpcState> Npcs => _npcs;
 
-        public NpcDirectorSystem(LubanDataService dataService, IPublisher<NpcEliminatedMessage> eliminatedPublisher)
+        public NpcDirectorSystem(LubanDataService dataService, IPublisher<NpcEliminatedMessage> eliminatedPublisher,
+            IPublisher<NpcLocationChangedMessage> npcLocationPublisher)
         {
             _locations = dataService.LocationDefs;
             _eliminatedPublisher = eliminatedPublisher;
+            _npcLocationPublisher = npcLocationPublisher;
+        }
+
+        /// <summary>
+        /// ย้าย NPC ไป location ใหม่ + Publish NpcLocationChangedMessage (Lab B)
+        /// ให้ Visual layer (เช่น ChibiSpawnerView) subscribe แทนการ polling
+        /// เป็นจุดเดียวที่อนุญาตให้ mutate CurrentLocationId — ระบบอื่นต้องเรียก method นี้
+        /// </summary>
+        public void MoveNpc(string npcId, string newLocationId)
+        {
+            if (!_npcs.TryGetValue(npcId, out var npc)) return;
+
+            var oldLocationId = npc.CurrentLocationId;
+            if (oldLocationId == newLocationId) return;
+
+            npc.CurrentLocationId = newLocationId;
+            _npcLocationPublisher.Publish(new NpcLocationChangedMessage
+            {
+                NpcId = npcId,
+                OldLocationId = oldLocationId,
+                NewLocationId = newLocationId
+            });
         }
 
         /// <summary>
