@@ -1,5 +1,25 @@
-# [ชื่อเกมชั่วคราว] "Marooned" — Card Survival x Social Deduction
+# Marooned — Card Survival x Social Deduction
 สรุปการออกแบบเกม + สถาปัตยกรรม (อ้างอิง tech stack จากโปรเจก Cultivation Together)
+
+## 📋 Design Pivot Log
+
+> บันทึกการเปลี่ยนทิศทางเกมครั้งใหญ่ — อ่านก่อนส่วนอื่นเพื่อเข้าใจ Context ว่าทำไมเนื้อหาบางอย่างจึงไม่ตรงกับระบบเกมแบบดั้งเดิม
+
+### พบวันที่ 2026-09-06 — Design Pivot: จาก Point-and-Click → Real-time Walking Sandbox
+
+**เหตุผลที่เปลี่ยน:**
+- เกมเดิมออกแบบให้ผู้เล่นคลิกเลือกโซนเพื่อจัดการทรัพยากร (คล้าย Sect-management) — ไม่เหมาะกับ Social Deduction ที่ต้องมี "ตน้อง" ในโล Mage
+- ต้องการให้ผู้เล่นควบคุม Chibi Character เดินไปมาบนแผนที่ 2D แบบ Real-time (WASD/Keyboard) คล้าย Don't Starve / Among Us
+- การสำรวจเกิดจากการ "เดินเข้าไปในโซน" และ "เก็บไอเท็มบนพื้น" แทนการสุ่มจากการคลิก
+- ทำให้ Killer Mechanic น่าสนใจขึ้น: การซุ่มซ่อน/กำจัดมีความเสี่ยงจริงๆ เพราะผู้เล่นขยับตัวได้เอง
+
+**การเปลี่ยนแปลงที่ตามมา:**
+- Player-as-Killer: ผู้เล่นสามารถเป็น Killer ได้ โดยใช้การ์ด Weapon
+- Zone-based Loot: ไอเท็ม Spawn ตามโซน (ไม่สุ่มจาก UI)
+- Physical Pickup: ผู้เล่นต้องเดินไปเก็บของด้วยตัวเอง
+- Multiplayer-Ready Architecture: ระบบหลังบ้านรองรับหลาย Player (Dictionary-based GameStateProvider)
+
+---
 
 ## 1. แนวคิดเกม
 
@@ -21,13 +41,13 @@
 ## 2. Core Gameplay Loop
 
 ```
-สำรวจพื้นที่ (การ์ด Location) → เจอการ์ดทรัพยากร/เหตุการณ์/NPC
+เดินสำรวจแผนที่ 2D Sandbox (WASD + ปุ่ม Interact) → เจอไอเท็ม/เหตุการณ์/NPC บนพื้น
         ↓
-เก็บ/คราฟการ์ด → จัดการ Stat (Hunger/Thirst/Mood/Fatigue)
+เก็บของ (Pickup → เข้า Inventory → แปลงเป็นการ์ด) → คราฟ → จัดการ Stat (Hunger/Thirst/Mood/Fatigue)
         ↓
-พบเบาะแส (Clue Card) หรือเหตุการณ์ฆาตกรรม → สืบสวน
+พบเบาะแส (Clue Card) หรือศพ → สืบสวน
         ↓
-Day/Night Cycle จบวัน → ที่ประชุม (Meeting Phase) → กล่าวหา/โหวต หรือเงียบไว้ก่อน
+วัน/คืน ผ่านไป → Meeting Phase → กล่าวหา/โหวต หรือเงียบไว้ก่อน
         ↓
 วนกลับสำรวจต่อ จนกว่า (ก) หาฆาตกรเจอครบ (ข) ผู้เล่นตาย/ถูกฆ่า (ค) รอดจนครบเงื่อนไขเอาชีวิตรอด
 ```
@@ -37,20 +57,41 @@ Day/Night Cycle จบวัน → ที่ประชุม (Meeting Phase) 
 - Stat ตกต่ำ → เพิ่มโอกาสสุ่ม "Illness Card" (เจ็บป่วย) ติดตัวผู้เล่น เช่น ไข้, ท้องเสีย, นอนไม่หลับ
 - Illness/Injury Card มีผล debuff ต่อ action (เช่น สำรวจช้าลง, คราฟพลาดง่ายขึ้น) และต้องใช้การ์ดยา/พักผ่อนเพื่อรักษา
 
-### 2.2 Exploration & Crafting
-- แผนที่แบ่งเป็น Location Node (2D sandbox, เดินไปมาได้) แต่ละ node มี Loot Table (Luban table) กำหนดว่าเจออะไรได้บ้าง + weight
-- Crafting ใช้ Recipe Table (Luban) : input card(s) → output card, มีเงื่อนไข tool/สถานที่/skill
+### 2.2 Exploration & Zone-based Loot (Walking Sandbox)
+- **แผนที่เป็น 2D Sandbox แบบ Real-time** — ผู้เล่นควบคุม Chibi Character เดินไปมาด้วย WASD/Keyboard (ไม่ใช่คลิกเลือกโซน)
+- แผนที่แบ่งเป็น Location Zone แต่ละโซนมี **Loot Table (Luban table)** กำหนดว่ามีไอเท็มอะไรวางอยู่บนพื้น + weight
+  - Beach → มะพร้าว, น้ำขวด
+  - Jungle → เถาวัลย์, พืชสมุนไพร
+  - Cave → หิน, แร่
+- **การเก็บไอเท็ม (Physical Pickup):**
+  - **โหมดที่ 1:** เดินไปเด็ด/เก็บของโดยตรง (เดินทับไอเท็มแล้วมันเข้า inventory อัตโนมัติ)
+  - **โหมดที่ 2:** กดปุ่ม Interact เมื่ออยู่ใกล้ไอเท็ม → pickup
+- ไอเท็มที่เก็บได้ → เข้า Inventory → แปลงเป็น Card (Card System)
+- Crafting ใช้ Recipe Table (Luban): input card(s) → output card, มีเงื่อนไข tool/สถานที่/skill
 - ทรัพยากรจำกัด (finite nodes ค่อยๆ หมด) เพื่อบังคับให้ต้องแย่งชิงกับ NPC หรือย้ายโซน
 
 ### 2.3 NPC & Social Deduction
 - NPC มี Role: `Innocent`, `Killer`, อาจมี `Neutral` (เอาตัวรอดอย่างเดียว ไม่ช่วยใคร, เปิดใช้ทีหลังได้)
 - **สัดส่วน Killer:Innocent = ยึดตาม Among Us (~1:4 ถึง 1:8)** เช่น NPC 5 ตัว → 1 killer, NPC 10 ตัว → 2 killer — คำนวณจาก `killerCount = clamp(round(npcCount / 6), 1, npcCount/4)` เป็นค่าเริ่มต้น ปรับ balance ได้ภายหลังจาก playtest
 - NPC แต่ละตัวมี **Schedule/Behavior State** (กำลังหาน้ำ, นอนพัก, สำรวจโซน X) ที่ผู้เล่น query ได้บางส่วน (ไม่ full information — ต้องสังเกต/ตามดูจริง คล้าย Among Us "vent/task" pattern)
-- Killer NPC มี hidden action `Sabotage`/`Eliminate` ที่ทำได้เมื่อ (ก) อยู่กับเหยื่อสองต่อสองไม่มีพยาน (ข) ผ่าน cooldown
+- **Killer NPC มี hidden action `Sabotage`/`Eliminate` ที่ทำได้เมื่อ (ก) อยู่กับเหยื่อสองต่อสองไม่มีพยาน (ข) ผ่าน cooldown**
+- **กฎ "No Witness" ถูกบังคับใช้ทั้ง AI Killer และ Player (ผ่าน NpcDirectorSystem.TryEliminate ตัวกลาง)**
+  - ผู้เล่นไม่สามารถฆ่า NPC ได้ ถ้ามีคนอื่นอยู่ใน location เดียวกัน
+  - ระบบเช็คจากฟังก์ชันกลางเดียวกัน → ทั้ง AI Killer และ Player Killer ใช้กฎเดียวกัน
 - เมื่อมีการฆาตกรรม → เกิด **Clue Card** สุ่มติดที่ศพ/NPC ใกล้เคียง เช่น "คราบเลือด", "รอยขีดข่วน", "รอยเท้าเปื้อนโคลน" — การ์ดเหล่านี้เป็นข้อมูลให้ผู้เล่น (และ AI) ใช้ในการนิรนัยหาตัวคนร้าย
 - Meeting Phase: ผู้เล่นเลือก "กล่าวหา" NPC หรือ "งดออกเสียง" — ถ้ากล่าวหาผิด เสีย trust/mood ทั้งกลุ่ม, ถ้าปล่อยฆาตกรไว้นานเกินไป จำนวน NPC ที่รอดลดลงเรื่อยๆ
 
-### 2.4 Win / Lose Conditions
+### 2.4 Player-as-Killer (Design Pivot)
+- **เดิม:** มีแต่ NPC ที่เป็น Killer
+- **ใหม่:** ผู้เล่นสามารถเป็น Killer ได้!
+  - ใช้การ์ดประเภท **Weapon** (เช่น มีด, หินขว้าง) เพื่อ Eliminate NPC
+  - ต้องอยู่ใน Location เดียวกับเป้าหมาย และไม่มีพยาน (No Witness)
+  - ไอเท็ม Weapon ใช้แล้วไม่หาย (หรือหายตามเกมที่เลือก) — ถ้าใช้ไม่สำเร็จ (มีพยาน) การ์ดไม่เลือน
+- **กฎ No Witness ใช้ร่วมกัน** ระหว่าง AI Killer และ Player — ผ่านระบบตรวจสอบกลาง `NpcDirectorSystem.TryEliminate`
+  - ไม่ว่าจะใครก็ตามที่เรียก Eliminate, ระบบจะเช็คเงื่อนไขเดียวกัน: "ต้องมีแค่คนฆ่า + เหยื่อในรอบนั้น"
+- Player Killer ยังต้องดูแล Stat ของตัวเอง (Hunger/Thirst) — ไม่ใช่ omniscient
+
+### 2.5 Win / Lose Conditions
 - **Win:** จับฆาตกรได้ครบ (โหวตถูกตัว) หรือเอาชีวิตรอดจนครบจำนวนวันที่กำหนด (survival timer) โดยไม่ตาย
 - **Lose:** ผู้เล่นตายจาก stat ติดลบ/เจ็บป่วยรุนแรง/ถูกฆาตกรรม, หรือกล่าวหาผิดจนหมด "trust token" (โหวตผิดครบจำนวนครั้ง)
 
@@ -94,6 +135,17 @@ Twitch extension/multiplayer voting
 extension, ไม่ทำระบบโหวตผู้ชม, ไม่ทำ multiplayer — ทุกอย่างจบที่ single
 player + MCP ให้ AI VTuber เรียกเล่นได้เท่านั้น
 
+### 4.0 Technical Constraints — Multiplayer-Ready Architecture
+
+> แม้ปัจจุบันเกมเป็น Single-player แต่ระบบหลังบ้านออกแบบมาให้รองรับ Multiplayer ได้ในอนาคต
+
+- `GameStateProvider` ใช้ **Dictionary-based** structure เก็บ player state หลายตัว → รองรับหลาย player ในอนาคตได้โดยไม่ต้อง refactor
+- `CardDef` แยก `Target` และ `Effect` ออกจากกัน — รองรับทั้ง Self-target (ใช้กิน/ดื่ม) และ Single-target (ใช้ weapon โจมตี)
+- `NpcDirectorSystem.TryEliminate` เป็นฟังก์ชันกลางตรวจสอบกฎ "No Witness" — ทั้ง AI Killer และ Player Killer เรียกใช้งานผ่านฟังก์ชันเดียวกัน
+- `DeductionSystem` ทำ information-hiding ชั้นเดียวสำหรับทุก entity — ไม่ว่าจะเป็น AI player หรือ human player
+
+**หมายเหตุ:** Multiplayer จริงยังไม่ implement (อยู่ใน scope ตัดออกโดยตั้งใจ) — แต่ architecture เตรียมไว้ให้ expand ได้ง่าย
+
 ### 4.1 Avatar System — Chibi Sprite-Swap Paperdoll (เปลี่ยนจากโปรเจกอ้างอิง)
 
 โปรเจกอ้างอิงทำ `AvatarAppearance` เป็น **portrait-swap** เท่านั้น (โชว์หน้าตา/
@@ -109,6 +161,30 @@ player + MCP ให้ AI VTuber เรียกเล่นได้เท่�
 
 ---
 
+## 4.2 Card System — Categories และ Targeting
+
+#### Card Categories
+- `Resource` — ไอเท็มที่เก็บได้จากโซน (มะพร้าว, น้ำขวด, เถาวัลย์)
+- `Consumable` — ใช้กิน/ดื่ม เพื่อเติม Stat
+- `Tool` — ใช้สำหรับ Crafting (เช่น `tool_campfire`)
+- `Weapon` — ใช้โจมตี/Eliminate NPC (มีด, หินขว้าง)
+  - **ใช้การ์ด Weapon ได้ต้องระบุ targetId** (Single-target) — ไม่สามารถใช้กับตัวเองได้
+  - **Self-use ไม่ support** สำหรับ Weapon (ต่างจาก Consumable)
+- `Illness` — เจ็บป่วยติดตัว (ไข้, ท้องเสีย)
+- `Clue` — เบาะแสที่เก็บได้จากการสืบสวน
+- `Craftable` — การ์ดที่สร้างได้จาก Recipe
+
+#### Card Targeting Mechanism
+- แต่ละ Card Def มี `TargetType`: `SelfOnly | SingleTarget | Any`
+- `Weapon` cards ต้องมี `TargetType = SingleTarget` และระบุ `targetId` ในคำสั่งใช้การ์ด
+- ระบบตรวจสอบกฎ No Witness ก่อนอนุญาตให้ใช้ Weapon:
+  1. เช็ค targetId ว่ามี NPC อยู่ใน Location เดียวกันหรือไม่
+  2. เช็คจำนวน NPC ใน Location — ต้องถ้ามีแค่ target + player เท่านั้น (No Witness)
+  3. ถ้ามีพยาน → การ์ดไม่เลือน, eliminate ล้มเหลว
+  4. ถ้าไม่มีพยาน → สำเร็จ, NPC ตาย, cooldown เริ่ม
+
+---
+
 ## 5. Data Model (ร่าง, สไตล์เดียวกับ Shared/ เดิม)
 
 ```csharp
@@ -116,11 +192,21 @@ player + MCP ให้ AI VTuber เรียกเล่นได้เท่�
 public class CardDef
 {
     public string Id;
-    public CardCategory Category; // Resource, Consumable, Tool, Illness, Clue, Craftable
+    public CardCategory Category; // Resource, Consumable, Tool, Weapon, Illness, Clue, Craftable
     public string DisplayName;
     public string SpritePath;
     public int StackLimit;
     public Dictionary<string, float> StatEffect; // e.g. {"Hunger": +20}
+    public CardTargetType TargetType; // SelfOnly, SingleTarget, Any
+    public string? TargetRequired; // ถ้าเป็น Weapon จะระบุ targetId ที่จำเป็น
+}
+
+// Shared/CardTargetType.cs
+public enum CardTargetType
+{
+    SelfOnly,    // ใช้กับตัวเองได้เท่านั้น (Consumable, Medicine)
+    SingleTarget, // ใช้กับ NPC/Entity ตัวเดียวได้ (Weapon, Buff)
+    Any          // ใช้ได้ทั้งตัวเองหรือคนอื่น
 }
 
 // Shared/PlayerSurvivalState.cs
@@ -167,23 +253,41 @@ public class ClueDef
 
 ## 6. MCP Tool Design (สำหรับให้ AI VTuber เล่น)
 
-| Tool | ประเภท | หน้าที่ |
-| --- | --- | --- |
-| `get_game_state` | Query | คืน player stat, inventory, location, เวลาปัจจุบัน, NPC ที่มองเห็นได้ในโซนเดียวกัน (พร้อม visible condition cards เท่านั้น) |
-| `get_hand` / `get_inventory` | Query | รายการการ์ดที่ถืออยู่ |
-| `explore_location` | Action (Request-Response) | เดินสำรวจ node → คืนการ์ดที่พบ/เหตุการณ์ที่เจอ |
-| `craft_card` | Action | ใช้ recipe คราฟไอเท็ม, คืนผลสำเร็จ/ล้มเหลว |
-| `use_card` | Action | กินอาหาร/ดื่มน้ำ/ใช้ยา ฯลฯ |
-| `move_to_location` | Action | ย้ายโซน |
-| `talk_to_npc` / `observe_npc` | Action/Query | สังเกตพฤติกรรม NPC เพื่อเก็บข้อมูลเชิงสังคม |
-| `await_next_event` | Request-Response (คงแบบเดิมจาก Lab 6) | รอ event ถัดไป (survival หรือ social) แบบไม่ block TCP |
-| `report_body` / `call_meeting` | Action | เริ่ม Meeting Phase หลังพบศพ/สงสัย |
-| `accuse_npc` | Action | โหวตกล่าวหาใน Meeting Phase |
-| `get_clue_board` | Query | รวมเบาะแสทั้งหมดที่ "เก็บสะสมมาแล้ว" ให้ AI ใช้นิรนัย |
+### 6.1 การเพิ่มเติมจาก Design Pivot
+
+| Tool | ประเภท | หน้าที่ | หมายเหตุ |
+| --- | --- | --- | --- |
+| `get_game_state` | Query | คืน player stat, inventory, location, เวลาปัจจุบัน, NPC ที่มองเห็นได้ในโซนเดียวกัน (พร้อม visible condition cards เท่านั้น) | — |
+| `get_hand` / `get_inventory` | Query | รายการการ์ดที่ถืออยู่ | — |
+| `explore_location` | Action (Request-Response) | **เดินไปยัง location + สำรวจ node** → คืนการ์ดที่พบ/เหตุการณ์ที่เจอ | รวมการเดินและเก็บของ |
+| `pickup_item` | Action (ใหม่) | เก็บไอเท็มจากพื้น (Physical Pickup) | ใช้เมื่ออยู่ใกล้ไอเท็มบนพื้น |
+| `craft_card` | Action | ใช้ recipe คราฟไอเท็ม, คืนผลสำเร็จ/ล้มเหลว | — |
+| `use_card` | Action | กินอาหาร/ดื่มน้ำ/ใช้ยา **หรือใช้ Weapon โจมตี NPC** | Weapon ต้องระบุ targetId + ผ่าน No Witness check |
+| `move_to_location` | Action | ย้ายไป location ที่เชื่อมต่อถึง (Walking) | — |
+| `talk_to_npc` / `observe_npc` | Action/Query | สังเกตพฤติกรรม NPC เพื่อเก็บข้อมูลเชิงสังคม | — |
+| `await_next_event` | Request-Response (คงแบบเดิมจาก Lab 6) | รอ event ถัดไป (survival หรือ social) แบบไม่ block TCP | — |
+| `report_body` / `call_meeting` | Action | เริ่ม Meeting Phase หลังพบศพ/สงสัย | — |
+| `accuse_npc` | Action | โหวตกล่าวหาใน Meeting Phase | — |
+| `get_clue_board` | Query | รวมเบาะแสทั้งหมดที่ "เก็บสะสมมาแล้ว" ให้ AI ใช้นิรนัย | — |
+
+### 6.2 การ์ด Weapon และกฎ No Witness
+
+เมื่อใช้ `use_card` กับ Weapon:
+1. ระบบเช็ค targetId ว่ามี NPC อยู่หรือไม่
+2. ระบบเช็ค No Witness: มี NPC คนอื่นอยู่ใน Location เดียวกันหรือไม่
+3. ถ้ามีพยาน → ล้มเหลว (การ์ดไม่เลือน), คืน failureReason
+4. ถ้าไม่มีพยาน → สำเร็จ, NPC ตาย, cooldown เริ่ม
+
+### 6.3 Information Hiding (อัปเดต)
 
 ทุก tool ต้องออกแบบให้ตอบด้วยข้อมูลที่ **AI ตัดสินใจได้จากสิ่งที่ query ได้จริง**
 (หลักคิดกลางเดิมของโปรเจก) — ห้าม leak ground truth เช่น NPC role ที่แท้จริง
 ผ่าน tool ไหนเลยนอกจาก debug/GM-only tool ที่แยก namespace ชัดเจน
+
+เพิ่มเติมจากเดิม:
+- Player-as-Killer ต้องไม่รู้ว่า NPC ตัวไหนเป็น Killer จริงๆ (เหมือน Among Us)
+- AI ต้อง infer จากพฤติกรรมพวกลมหา (observe, clue, alibi)
+- `GetVisibleNpcs` ยังคงเป็นทางเดียวที่ปลอดภัย — ไม่ expose `NpcRole`
 
 ---
 
@@ -193,20 +297,26 @@ public class ClueDef
 Call สำหรับ in-process logic ตาม lesson จาก Lab 13):
 
 - `CardHandView/Presenter` — แสดงมือการ์ด, drag เพื่อ craft/ใช้
+  - **รองรับการ์ด Weapon** — แสดง target indicator เมื่อเลือก weapon
 - `MapExploreView/Presenter` — 2D sandbox map, node ที่สำรวจได้/หมดแล้ว
+  - **Display ไอเท็มบนพื้น** — แสดงตำแหน่ง item ที่สามารถ pickup ได้
 - `ClueBoardView/Presenter` — กระดานปะติดปะต่อเบาะแส (คล้าย detective board)
 - `MeetingVoteView/Presenter` — หน้าประชุม/โหวตกล่าวหา
-- `ConditionOverlayView` — แสดง illness/injury card เป็น overlay บน portrait (ใช้ `AvatarRenderer` ตัวเดิม, เพิ่ม layer สำหรับคราบเลือด/ผ้าพันแผล)
+- `ConditionOverlayView` — แสดง illness/injury card เป็น overlay บน Chibi (ใช้ `ChibiAnimatedRenderer` ตัวเดิม, เพิ่ม layer สำหรับคราบเลือด/ผ้าพันแผล)
+- `MovementController` (ใหม่) — WASD movement สำหรับ Chibi Character
+  - เดินไปมาบน 2D sandbox
+  - ปุ่ม Interact สำหรับ pickup ไอเท็ม
+  - ปุ่ม Attack สำหรับใช้ Weapon
 
 ---
 
 ## 8. Roadmap ที่แนะนำ (ต่อยอดจากรูปแบบ "Lab Round" เดิม)
 
-1. **Lab A — Survival Core:** Stat system, Card/Inventory data model, Luban table สำหรับ CardDef/LocationDef/RecipeDef, MCP tool อ่าน/คราฟพื้นฐาน
+1. **Lab A — Survival Core (Walking Sandbox):** Stat system, Card/Inventory data model, Zone-based Loot, Physical Pickup, MCP tool อ่าน/คราฟพื้นฐาน, Movement Controller (WASD)
 2. **Lab B — Illness/Injury Layer:** ConditionCard system + ChibiAppearance overlay integration + ChibiAnimatedRenderer เดิน 4 ทิศพร้อม overlay
 3. **Lab C — NPC Skeleton:** NpcState, schedule/behavior stub, visibility rule (สิ่งที่ query เห็น vs ไม่เห็น)
-4. **Lab D — Social Deduction Core:** Killer sabotage logic, Clue generation, Meeting/Vote flow
-5. **Lab E — MCP Full Tool Set + AI VTuber Playtest:** ต่อ Bridge ให้ AI เล่นครบ loop ได้จริงตั้งแต่สำรวจจนโหวตจับฆาตกร
+4. **Lab D — Social Deduction Core:** Killer sabotage logic, Clue generation, Meeting/Vote flow, **Player-as-Killer (Weapon cards + No Witness)**
+5. **Lab E — MCP Full Tool Set + AI VTuber Playtest:** ต่อ Bridge ให้ AI เล่นครบ loop ได้จริงตั้งแต่สำรวจจนโหวตจับฆาตกร (รวมทั้งเล่นเป็น Killer ได้)
 6. **Lab F (ถ้ามีเวลา) — Additive Scene migration** ตามแผน CoreScene/GameplayScene ที่ค้างไว้ในโปรเจกเดิม
 
 ---
@@ -217,3 +327,21 @@ Call สำหรับ in-process logic ตาม lesson จาก Lab 13):
 - ควรมี "Neutral role" (เอาตัวรอดอย่างเดียว ไม่ใช่ทั้งฝ่ายดี/ร้าย) หรือไม่ — เพิ่มความซับซ้อนแต่เพิ่ม replayability
 - Killer NPC ควรมี "hidden agenda card" ของตัวเอง (เช่นต้องฆ่าให้ครบ N คนก่อนวันที่ X) เพื่อให้ AI มี objective ที่ query ได้เหมือนฝั่งผู้เล่นหรือไม่ — ต้องเผื่อไว้ถ้าอนาคตอยากให้ AI สลับมาเล่นเป็นฆาตกรได้ด้วย
 - ระดับ information ที่ Meeting Phase เปิดเผย (ใครอยู่กับใครตอนไหน) ควรมาจาก log ที่ผู้เล่นสังเกตเองระหว่างเกม หรือมีระบบ "alibi" กลาง ๆ ให้ query
+
+---
+
+## 10. สรุปการเปลี่ยนแปลง (Design Pivot Summary)
+
+| หัวข้อ | ก่อน Design Pivot | หลัง Design Pivot |
+| --- | --- | --- |
+| Core Gameplay | Point-and-Click, คลิกเลือกโซนจัดการทรัพยากร | Real-time Walking Sandbox, WASD เดินไปมา + Physical Pickup |
+| Item Gathering | สุ่มจากการ์ดจาก UI | Zone-based Loot (ไอเท็มวางตามโซน), เก็บด้วยการเดิน/Interact |
+| Killer Role | มีแค่ NPC Killer | **ผู้เล่นเป็น Killer ได้ด้วย** ใช้การ์ด Weapon |
+| No Witness Rule | ใช้กับ AI Killer เท่านั้น | ใช้ร่วมกันทั้ง AI Killer และ Player (ผ่าน NpcDirectorSystem.TryEliminate) |
+| Card System | Categories พื้นฐาน | เพิ่ม **Weapon** category + CardTargetType (SelfOnly, SingleTarget) |
+| Architecture | Single-player เท่านั้น | **Multiplayer-ready** (Dictionary-based GameStateProvider, แยก Target/Effect) |
+
+**เหตุผลที่เปลี่ยน:**
+- ทำให้เกมมี dimension ของ "เล่นเป็นฆาตกร" เพิ่มขึ้น — ผู้เล่นไม่ใช่แค่เอาตัวรอด แต่สามารถเลือกเป็น Killer ได้
+- Walking Sandbox ทำให้การเดิน/สำรวจมีความเป็นเกมมากกว่าการคลิกเมาส์
+- Multiplayer-ready architecture เตรียมไว้สำหรับอนาคต (แม้ปัจจุบันไม่ implement)

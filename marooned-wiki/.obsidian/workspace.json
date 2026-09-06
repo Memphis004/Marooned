@@ -206,6 +206,7 @@
   },
   "active": "03478e020e893a84",
   "lastOpenFiles": [
+    "wiki/sources/devlog-history/2026-09-07-lab-a-closure-b-phases-architecture-refactor.md",
     "wiki/sources/architecture/card-system.md",
     "wiki/sources/devlog-history/2026-09-05.md",
     "wiki/sources/architecture/chibi-visual-system.md",
@@ -231,7 +232,6 @@
     "wiki/sources/code-snippets/ChibiAnimatedRenderer.cs.md",
     "wiki/sources/code-snippets/Data_Gen_game_ClueDef.cs.md",
     "wiki/sources/code-snippets/Data_Gen_game_LocationDef.cs.md",
-    "wiki/sources/code-snippets/LubanDataService.cs.md",
     "sources",
     "wiki/sources/devlog-history",
     "wiki/sources/architecture/mcp-bridge.md.tmp.3148.f45e9b0bb1dd",
