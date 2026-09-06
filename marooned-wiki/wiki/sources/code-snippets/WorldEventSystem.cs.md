@@ -105,4 +105,6 @@ namespace Marooned.Systems
 - Social event ยังไม่ผูกกับ NPC state machine (GDD §3 ต้องการให้ social event trigger
   ตามสถานะ NPC เช่น ทะเลาะกัน, พบศพ — ตอนนี้สุ่มอิสระทั้งหมด)
 - Event ที่ deque แล้วไม่มีผลต่อ stat/gameplay — แค่ข้อความ DisplayText
-- ไม่มีใครเรียก `Tick` (ยังไม่มี game loop)
+- ~~ไม่มีใครเรียก `Tick`~~ **แก้แล้ว 2026-09-06** — [[GameTickDriver.cs]] เรียก
+  `Tick(Time.deltaTime, Player.CurrentLocationId)` ทุกเฟรม (ส่ง location id เป็น
+  tag ชั่วคราว — ยังไม่มี location-tag mapping จริง)

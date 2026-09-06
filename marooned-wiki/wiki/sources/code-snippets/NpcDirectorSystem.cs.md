@@ -177,5 +177,9 @@ class นี้ห้าม expose `NpcState` ดิบออกนอก Unity 
   red-herring clue ทั้งที่ comment บอกว่าจะทำ
 - เหยื่อที่ตายแล้ว `CurrentLocationId` ค้างเดิม = "ศพนิ่ง" ตรวจสอบได้จาก
   `GetVisibleNpcs` (alive=false) — ยังไม่มี report_body flow ที่แท้จริง
-- **ไม่มีใครเรียก `SetupRound`/`Tick`** — ยังไม่มี game loop และยังไม่มีเนื้อเรื่องเริ่มรอบ
+- ~~ไม่มีใครเรียก `SetupRound`/`Tick`~~ **แก้แล้ว 2026-09-06** — [[RoundInitializer.cs]]
+  เรียก `SetupRound` ตอน Scene โหลด (วาง NPC 5 ตัว, 1 killer, กำหนด `CurrentLocationId`
+  เริ่มต้นให้ด้วยเพราะ `SetupRound()` เองยังไม่ทำ) และ [[GameTickDriver.cs]] เรียก
+  `Tick(Time.deltaTime)` ทุกเฟรม — ยืนยันผ่าน Play Mode test: `get_visible_npcs`
+  คืน 3 ตัวที่ beach
 - killerCount ยังไม่มี formula auto-calc ตาม GDD §2.3 (`clamp(round(n/6),1,n/4)`)

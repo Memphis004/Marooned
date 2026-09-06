@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "wiki/sources/index.md",
+                "file": "wiki/sources/game-design-doc/game_design_doc.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "index"
+              "title": "game_design_doc"
             }
           }
         ]
@@ -206,8 +206,10 @@
   },
   "active": "03478e020e893a84",
   "lastOpenFiles": [
-    "wiki/sources/mechanics/npc-director.md",
     "wiki/sources/index.md",
+    "wiki/sources/code-snippets/GameTickDriver.cs.md",
+    "wiki/sources/code-snippets/RoundInitializer.cs.md",
+    "wiki/sources/mechanics/npc-director.md",
     "wiki/sources/mechanics/exploration.md",
     "wiki/sources/code-snippets/CardHandPresenter.cs.md",
     "wiki/sources/code-snippets/ChibiAnimatedRenderer.cs.md",
@@ -234,8 +236,6 @@
     "wiki/sources/mechanics",
     "wiki/sources/code-snippets/WorldEventSystem.cs.md",
     "wiki/sources/code-snippets/SurvivalStatSystem.cs.md",
-    "wiki/sources/code-snippets/Data_Gen_game_TbLocationDef.cs.md",
-    "wiki/sources/code-snippets/Data_Gen_game_IllnessDef.cs.md",
     "wiki/sources/code-snippets/WorldEventSystem.cs.md.tmp",
     "wiki/sources/code-snippets/UIRoot.cs.md.tmp",
     "wiki/sources/code-snippets/SurvivalStatSystem.cs.md.tmp",

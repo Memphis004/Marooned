@@ -130,8 +130,8 @@ Tick สถานะเอาชีวิตรอดของผู้เล่
   `ConditionCardAppliedMessage` (TargetEntityId = `"player"`)
 
 ## TODO / Known Issues
-- **ไม่มีใครเรียก `Tick()`** — ยังไม่มี game loop/driver (ไม่มี IInitializable/MonoBehaviour
-  จับเวลา) ระบบจึงยังไม่ทำงานจริง
+- ~~ไม่มีใครเรียก `Tick()`~~ **แก้แล้ว 2026-09-06** — [[GameTickDriver.cs]] เรียก
+  `Tick(Time.deltaTime)` ทุกเฟรม (ยืนยันผ่าน Play Mode test: stat drain ตามเวลาจริง)
 - ไม่มีกลไกตายจาก Fatigue สูงสุด หรือผล debuff ของ Mood ต่ำ (แค่ drain/เพิ่มค่า)
 - ไม่มีการ heal/cure — `IllnessDef.CureCardId` ยังไม่มีใครอ่านใช้
 - ชื่อ illness card hardcode — ควรย้ายไป data-driven จาก Luban table
