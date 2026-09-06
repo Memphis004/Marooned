@@ -13,16 +13,17 @@ related:
   - "[[WorldEventDef]]"
   - "[[ChibiPartDef]]"
 folder: Systems
-lines: 158
+lines: 204
 created: 2026-09-05
 tags:
   - Systems
   - marooned
   - lab-a
+  - phase-4
 ---
 
 # LubanDataService.cs
-**Path:** `Marooned/Assets/Scripts/Systems/GameStateProvider.cs` (158 lines)
+**Path:** `Marooned/Assets/Scripts/Systems/GameStateProvider.cs` (204 lines)
 
 ## Source
 ```csharp
@@ -34,13 +35,38 @@ namespace Marooned.Systems
     /// <summary>Single live instance, same idea as the reference project's SectStateProvider (Lab 7) — no re-creating state every query.</summary>
     public class GameStateProvider
     {
-        public PlayerSurvivalState Player { get; } = new()
+        /// <summary>id ของผู้เล่นหลัก (single-player) — ทุก call site เดิมชี้ตัวนี้ผ่าน GetPlayer()</summary>
+        public const string LocalPlayerId = "player_local";
+
+        // Phase 4 (Multiplayer-ready): เก็บ player แบบ Dictionary แต่ API หน้าตาเดิม —
+        // ตัวละครทั้งหมดในเกมปัจจุบันยังใช้ตัวเดียว (player_local) เหมือนเดิมทุกอย่าง
+        private readonly Dictionary<string, PlayerSurvivalState> _players = new()
         {
             // Mock starting state so GetGameState has something to show immediately
             // in the first round-trip test. Move this into real save/new-game logic later.
-            CurrentLocationId = "beach",
-            Inventory = new Dictionary<string, int> { ["food_coconut"] = 1 },
+            [LocalPlayerId] = new PlayerSurvivalState
+            {
+                CurrentLocationId = "beach",
+                Inventory = new Dictionary<string, int> { ["food_coconut"] = 1 },
+            },
         };
+
+        /// <summary>API เดิม — เรียก GetPlayer() ไม่ใส่ param ได้ผลลัพธ์เดิม (ตัวละครผู้เล่นหลัก)</summary>
+        public PlayerSurvivalState GetPlayer(string playerId = LocalPlayerId) => _players[playerId];
+
+        /// <summary>Phase 4 (multiplayer-ready): ได้ player ตาม id โดยสร้างใหม่ให้ถ้ายังไม่มี</summary>
+        public PlayerSurvivalState GetOrCreatePlayer(string playerId)
+        {
+            if (!_players.TryGetValue(playerId, out var state))
+            {
+                state = new PlayerSurvivalState();
+                _players[playerId] = state;
+            }
+            return state;
+        }
+
+        /// <summary>Phase 4 (multiplayer-ready): player ทุกตัวในระบบ (อ่านอย่างเดียว)</summary>
+        public IReadOnlyDictionary<string, PlayerSurvivalState> AllPlayers => _players;
     }
 
     /// <summary>
@@ -112,6 +138,27 @@ namespace Marooned.Systems
                     Id = "illness_dehydration", Category = CardCategory.Illness, DisplayName = "ภาวะขาดน้ำ",
                     SpritePath = "Sprites/Cards/illness_dehydration", StackLimit = 1,
                     ActionPenalty = new Dictionary<string, float> { ["Explore"] = -0.4f },
+                },
+                // TODO Lab A+1: การ์ดวัสดุ mock สำหรับ WorldItemSystem (Lab B Phase 3) —
+                // เพิ่มเข้า DataTables/CardDef.csv จริงเมื่อเปิด pipeline Luban
+                ["mat_vine"] = new CardDef
+                {
+                    Id = "mat_vine", Category = CardCategory.Resource, DisplayName = "เถาวัลย์",
+                    SpritePath = "Sprites/Cards/mat_vine", StackLimit = 10,
+                },
+                ["mat_stone"] = new CardDef
+                {
+                    Id = "mat_stone", Category = CardCategory.Resource, DisplayName = "หิน",
+                    SpritePath = "Sprites/Cards/mat_stone", StackLimit = 10,
+                },
+                // Phase 4 (Player-as-Killer): weapon card ตัวแรก — ใช้กับ NPC target
+                // (CanEliminate ตรวจ same-location + no-witness ก่อน การ์ดจึงไม่หายฟรี)
+                ["knife_basic"] = new CardDef
+                {
+                    Id = "knife_basic", Category = CardCategory.Weapon, DisplayName = "มีด",
+                    SpritePath = "Sprites/Cards/knife_basic", StackLimit = 1,
+                    TargetType = CardTargetType.SingleTarget,
+                    EffectType = CardEffectType.Eliminate,
                 },
             };
 
@@ -188,7 +235,7 @@ namespace Marooned.Systems
 
 # LubanDataService
 
-บรรทัด 26-158 เป็นของ class นี้ (บรรทัด 7-16 คือ [[LubanDataService.cs|GameStateProvider]] อีก class หนึ่งในไฟล์เดียวกัน)
+บรรทัด 51-204 เป็นของ class นี้ (บรรทัด 7-49 คือ [[LubanDataService.cs|GameStateProvider]] อีก class หนึ่งในไฟล์เดียวกัน)
 
 ## Purpose
 ที่เดียวสำหรับอ่าน static definition tables (การ์ด/สถานที่/recipe/เบาะแส/โรค/event/chibi part)
@@ -198,7 +245,7 @@ mock data ที่พิมพ์มือ**ลอกจาก CSV drafts
 ## Public API
 | Member | คำอธิบาย |
 | --- | --- |
-| `Dictionary<string, CardDef> CardDefs` | นิยามการ์ดทั้งหมด (StatEffect, ActionPenalty, StackLimit) |
+| `Dictionary<string, CardDef> CardDefs` | นิยามการ์ดทั้งหมด (StatEffect, ActionPenalty, StackLimit + Phase 4: `TargetType`, `EffectType`) |
 | `Dictionary<string, LocationDef> LocationDefs` | Map node + LootTable + connectivity + Capacity |
 | `Dictionary<string, RecipeDef> RecipeDefs` | สูตรคราฟ |
 | `Dictionary<string, ClueDef> ClueDefs` | เบาะแส (Reliability, VisibleToBystanders) |
@@ -220,8 +267,9 @@ mock data ที่พิมพ์มือ**ลอกจาก CSV drafts
 - โหลด mock ใน **constructor** (ไม่ใช่ IInitializable) เพื่อ guarantee ว่าข้อมูลพร้อมทันทีที่
   VContainer resolve singleton — ไม่ต้องพึ่งลำดับ lifecycle ที่ยัง wire ไม่เสร็จ
 - ข้อมูล mock ลอกจาก `DataTables/Data/*.csv`:
-  - การ์ด 6 ชนิด: food_coconut, water_bottle, raw_fish, cooked_fish, illness_malnutrition,
-    illness_dehydration
+  - การ์ด 9 ชนิด: food_coconut, water_bottle, raw_fish, cooked_fish, illness_malnutrition,
+    illness_dehydration, mat_vine, mat_stone (วัสดุ Lab B Phase 3) และ **knife_basic**
+    (Phase 4 — Weapon ใบแรก: `TargetType=SingleTarget`, `EffectType=Eliminate`, StackLimit 1)
   - location 4 จุด: beach → jungle_edge → deep_jungle / cave_entrance (graph)
   - recipe 1 สูตร: `recipe_cook_fish` (raw_fish → cooked_fish — ไม่ใส่ required tool
     ทั้งที่ CSV มี `tool_campfire`)

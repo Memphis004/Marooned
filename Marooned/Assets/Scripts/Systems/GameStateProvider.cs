@@ -6,13 +6,38 @@ namespace Marooned.Systems
     /// <summary>Single live instance, same idea as the reference project's SectStateProvider (Lab 7) — no re-creating state every query.</summary>
     public class GameStateProvider
     {
-        public PlayerSurvivalState Player { get; } = new()
+        /// <summary>id ของผู้เล่นหลัก (single-player) — ทุก call site เดิมชี้ตัวนี้ผ่าน GetPlayer()</summary>
+        public const string LocalPlayerId = "player_local";
+
+        // Phase 4 (Multiplayer-ready): เก็บ player แบบ Dictionary แต่ API หน้าตาเดิม —
+        // ตัวละครทั้งหมดในเกมปัจจุบันยังใช้ตัวเดียว (player_local) เหมือนเดิมทุกอย่าง
+        private readonly Dictionary<string, PlayerSurvivalState> _players = new()
         {
             // Mock starting state so GetGameState has something to show immediately
             // in the first round-trip test. Move this into real save/new-game logic later.
-            CurrentLocationId = "beach",
-            Inventory = new Dictionary<string, int> { ["food_coconut"] = 1 },
+            [LocalPlayerId] = new PlayerSurvivalState
+            {
+                CurrentLocationId = "beach",
+                Inventory = new Dictionary<string, int> { ["food_coconut"] = 1 },
+            },
         };
+
+        /// <summary>API เดิม — เรียก GetPlayer() ไม่ใส่ param ได้ผลลัพธ์เดิม (ตัวละครผู้เล่นหลัก)</summary>
+        public PlayerSurvivalState GetPlayer(string playerId = LocalPlayerId) => _players[playerId];
+
+        /// <summary>Phase 4 (multiplayer-ready): ได้ player ตาม id โดยสร้างใหม่ให้ถ้ายังไม่มี</summary>
+        public PlayerSurvivalState GetOrCreatePlayer(string playerId)
+        {
+            if (!_players.TryGetValue(playerId, out var state))
+            {
+                state = new PlayerSurvivalState();
+                _players[playerId] = state;
+            }
+            return state;
+        }
+
+        /// <summary>Phase 4 (multiplayer-ready): player ทุกตัวในระบบ (อ่านอย่างเดียว)</summary>
+        public IReadOnlyDictionary<string, PlayerSurvivalState> AllPlayers => _players;
     }
 
     /// <summary>
@@ -96,6 +121,15 @@ namespace Marooned.Systems
                 {
                     Id = "mat_stone", Category = CardCategory.Resource, DisplayName = "หิน",
                     SpritePath = "Sprites/Cards/mat_stone", StackLimit = 10,
+                },
+                // Phase 4 (Player-as-Killer): weapon card ตัวแรก — ใช้กับ NPC target
+                // (CanEliminate ตรวจ same-location + no-witness ก่อน การ์ดจึงไม่หายฟรี)
+                ["knife_basic"] = new CardDef
+                {
+                    Id = "knife_basic", Category = CardCategory.Weapon, DisplayName = "มีด",
+                    SpritePath = "Sprites/Cards/knife_basic", StackLimit = 1,
+                    TargetType = CardTargetType.SingleTarget,
+                    EffectType = CardEffectType.Eliminate,
                 },
             };
 

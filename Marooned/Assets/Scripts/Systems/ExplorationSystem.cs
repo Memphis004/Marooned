@@ -26,7 +26,7 @@ namespace Marooned.Systems
         {
             _locations = dataService.LocationDefs;
             _inventory = inventory;
-            _player = stateProvider.Player;
+            _player = stateProvider.GetPlayer();
             _playerLocationPublisher = playerLocationPublisher;
 
             foreach (var loc in _locations.Values)

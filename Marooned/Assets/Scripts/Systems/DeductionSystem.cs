@@ -21,7 +21,7 @@ namespace Marooned.Systems
         public DeductionSystem(NpcDirectorSystem npcDirector, GameStateProvider stateProvider, LubanDataService dataService)
         {
             _npcDirector = npcDirector;
-            _player = stateProvider.Player;
+            _player = stateProvider.GetPlayer();
             _illnessDefs = dataService.IllnessDefs;
         }
 

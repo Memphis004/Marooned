@@ -25,7 +25,7 @@ namespace Marooned.Systems
         {
             _statPublisher = statPublisher;
             _conditionPublisher = conditionPublisher;
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
         }
 
         public void Tick(float deltaSeconds)

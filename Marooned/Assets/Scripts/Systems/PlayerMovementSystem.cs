@@ -24,7 +24,7 @@ namespace Marooned.Systems
         public PlayerMovementSystem(PlayerInputService input, GameStateProvider stateProvider)
         {
             _input = input;
-            _player = stateProvider.Player;
+            _player = stateProvider.GetPlayer();
         }
 
         public void Tick(float deltaSeconds)

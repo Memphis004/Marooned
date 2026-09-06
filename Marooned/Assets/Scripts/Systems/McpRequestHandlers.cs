@@ -77,7 +77,7 @@ namespace Marooned.Systems
 
         public UniTask<GetGameStateResponse> InvokeAsync(GetGameStateRequest request, CancellationToken cancellationToken = default)
         {
-            return UniTask.FromResult(new GetGameStateResponse { Player = _stateProvider.Player });
+            return UniTask.FromResult(new GetGameStateResponse { Player = _stateProvider.GetPlayer() });
         }
     }
 
@@ -94,7 +94,7 @@ namespace Marooned.Systems
 
         public UniTask<GetVisibleNpcsResponse> InvokeAsync(GetVisibleNpcsRequest request, CancellationToken cancellationToken = default)
         {
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.Player.CurrentLocationId);
+            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
             return UniTask.FromResult(new GetVisibleNpcsResponse { Npcs = npcs });
         }
     }
@@ -106,7 +106,7 @@ namespace Marooned.Systems
 
         public UniTask<GetClueBoardResponse> InvokeAsync(GetClueBoardRequest request, CancellationToken cancellationToken = default)
         {
-            return UniTask.FromResult(new GetClueBoardResponse { CollectedClueCardIds = _stateProvider.Player.CollectedClueCardIds });
+            return UniTask.FromResult(new GetClueBoardResponse { CollectedClueCardIds = _stateProvider.GetPlayer().CollectedClueCardIds });
         }
     }
 
@@ -129,7 +129,7 @@ namespace Marooned.Systems
             if (!_data.LocationDefs.TryGetValue(request.LocationId, out var targetDef))
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "unknown_location" });
 
-            var current = _stateProvider.Player.CurrentLocationId;
+            var current = _stateProvider.GetPlayer().CurrentLocationId;
             if (!string.IsNullOrEmpty(current)
                 && _data.LocationDefs.TryGetValue(current, out var currentDef)
                 && currentDef.ConnectedLocationIds != null
@@ -138,7 +138,7 @@ namespace Marooned.Systems
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "not_connected" });
             }
 
-            _stateProvider.Player.CurrentLocationId = request.LocationId;
+            _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
 
             // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView) รู้ตัวแทนการ polling
             _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = current, NewLocationId = request.LocationId });
@@ -147,17 +147,25 @@ namespace Marooned.Systems
         }
     }
 
+    /// <summary>
+    /// Phase 4 (Player-as-Killer): รองรับ weapon card ผ่าน NpcDirectorSystem.TryEliminate
+    /// Order of Operations: ตรวจ card → ตรวจ targeting → เช็คเงื่อนไข (dry-run) → ค่อยหักการ์ด
+    /// → ดำเนินการจริง — เช็คก่อนหักเสมอเพื่อกันการ์ดหายฟรี (Safe UX)
+    /// </summary>
     public class UseCardHandler : IAsyncRequestHandler<UseCardRequest, UseCardResponse>
     {
         private readonly GameStateProvider _stateProvider;
         private readonly CardInventorySystem _inventory;
         private readonly LubanDataService _data;
+        private readonly NpcDirectorSystem _npcDirector; // ใหม่ Phase 4 — inject ผ่าน constructor
 
-        public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory, LubanDataService data)
+        public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory,
+            LubanDataService data, NpcDirectorSystem npcDirector)
         {
             _stateProvider = stateProvider;
             _inventory = inventory;
             _data = data;
+            _npcDirector = npcDirector;
         }
 
         public UniTask<UseCardResponse> InvokeAsync(UseCardRequest request, CancellationToken cancellationToken = default)
@@ -165,25 +173,60 @@ namespace Marooned.Systems
             if (!_data.CardDefs.TryGetValue(request.CardId, out var def))
                 return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "unknown_card" });
 
+            // Phase 4: ตรวจ targeting requirement ก่อน
+            if (def.TargetType == CardTargetType.SingleTarget && string.IsNullOrEmpty(request.TargetId))
+                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "missing_target" });
+            if (def.TargetType == CardTargetType.Self && !string.IsNullOrEmpty(request.TargetId))
+                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "invalid_target_type" });
+
+            // Phase 4 (Safe UX): เช็คเงื่อนไข elimination ก่อนหักการ์ด — CanEliminate เป็น
+            // dry-run ไม่ mutate state ทำให้การ์ดไม่หายเมื่อลงมือไม่สำเร็จ (witnessed ฯลฯ)
+            if (def.EffectType == CardEffectType.Eliminate)
+            {
+                var player = _stateProvider.GetPlayer();
+                var (canEliminate, failReason) = _npcDirector.CanEliminate(
+                    GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                if (!canEliminate)
+                    return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = failReason });
+            }
+
+            // ผ่านเงื่อนไขทั้งหมดแล้วค่อยหักการ์ด
             if (!_inventory.TryConsume(request.CardId, 1))
                 return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "not_in_inventory" });
 
-            if (def.StatEffect != null)
+            // ดำเนินการจริง
+            switch (def.EffectType)
             {
-                var player = _stateProvider.Player;
-                foreach (var kv in def.StatEffect)
+                case CardEffectType.Eliminate:
                 {
-                    switch (kv.Key)
+                    var player = _stateProvider.GetPlayer();
+                    var (success, reason) = _npcDirector.TryEliminate(
+                        GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                    if (!success)
+                        return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = reason });
+                    return UniTask.FromResult(new UseCardResponse { Success = true, ResultText = $"eliminated_{request.TargetId}" });
+                }
+
+                case CardEffectType.StatDelta:
+                default:
+                {
+                    if (def.StatEffect != null)
                     {
-                        case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
-                        case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
-                        case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
-                        case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                        var player = _stateProvider.GetPlayer();
+                        foreach (var kv in def.StatEffect)
+                        {
+                            switch (kv.Key)
+                            {
+                                case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
+                                case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
+                                case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
+                                case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                            }
+                        }
                     }
+                    return UniTask.FromResult(new UseCardResponse { Success = true });
                 }
             }
-
-            return UniTask.FromResult(new UseCardResponse { Success = true });
         }
     }
 
@@ -202,7 +245,7 @@ namespace Marooned.Systems
         {
             // Lab A: meeting just snapshots whoever is currently visible; a real
             // "gather everyone" pause/summon step is a later lab.
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.Player.CurrentLocationId);
+            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
             return UniTask.FromResult(new CallMeetingResponse { Success = true, AttendingNpcs = npcs });
         }
     }

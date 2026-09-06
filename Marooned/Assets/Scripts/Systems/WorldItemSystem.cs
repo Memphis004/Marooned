@@ -72,7 +72,7 @@ namespace Marooned.Systems
             _labelFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             // spawn ชุดแรกตาม location เริ่มต้น + subscribe การย้ายโซน
-            SpawnForLocation(_stateProvider.Player.CurrentLocationId);
+            SpawnForLocation(_stateProvider.GetPlayer().CurrentLocationId);
             _subscription = _playerLocationSubscriber.Subscribe(msg => RespawnForLocation(msg.NewLocationId));
         }
 

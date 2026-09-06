@@ -1,0 +1,6 @@
+A: Success=True Reason=null Hunger 97->100 coconutLeft=0
+D: Success=False Reason=missing_target knifeLeft=1
+B: Move=True Success=True Reason=null Result=eliminated_npc_01 dead=True clue=True knifeLeft=0
+C: Success=False Reason=witnessed victimAlive=True knifeLeft=1
+E: roster=5 killers=1 allAlive=True moveOk=True loc=jungle_edge badMove=False badReason=not_connected locAfter=jungle_edge
+DONE

@@ -144,11 +144,14 @@ namespace Marooned.McpBridge
             return res.Success ? $"Moved to {locationId}." : $"Move failed: {res.FailureReason}";
         }
 
-        [McpServerTool, Description("Consume/use a card from inventory (food, water, medicine, etc).")]
-        public async Task<string> UseCard([Description("Card id to use")] string cardId)
+        [McpServerTool, Description("Consume/use a card from inventory (food, water, medicine, etc). For weapon cards (e.g. knife_basic) target_id is required -- the target NPC must be in the same location and there must be no other NPC witnessing, or the attempt fails and the card is not consumed.")]
+        public async Task<string> UseCard(
+            [Description("Card id to use")] string cardId,
+            [Description("ID of the target NPC (required for weapon cards, e.g. 'npc_03'); omit for self-use cards")] string targetId = null)
         {
-            var res = await _useCard.InvokeAsync(new UseCardRequest { CardId = cardId });
-            return res.Success ? $"Used {cardId}." : $"Could not use {cardId}: {res.FailureReason}";
+            var res = await _useCard.InvokeAsync(new UseCardRequest { CardId = cardId, TargetId = targetId });
+            if (!res.Success) return $"Could not use {cardId}: {res.FailureReason}";
+            return string.IsNullOrEmpty(res.ResultText) ? $"Used {cardId}." : $"Used {cardId}: {res.ResultText}";
         }
 
         [McpServerTool, Description("Block until the next world event fires (Survival or Social group), or time out.")]

@@ -121,13 +121,17 @@ namespace Marooned.Shared
     public class UseCardRequest
     {
         [Key(0)] public string CardId;
+
+        // Phase 4 (Player-as-Killer): null/empty = Self; npc id = SingleTarget (เช่น weapon)
+        [Key(1)] public string TargetId;
     }
 
     [MessagePackObject]
     public class UseCardResponse
     {
         [Key(0)] public bool Success;
-        [Key(1)] public string FailureReason;
+        [Key(1)] public string FailureReason; // "missing_target", "witnessed", etc.
+        [Key(2)] public string ResultText;    // เติมเฉพาะตอน Eliminate สำเร็จ
     }
 
     [MessagePackObject]

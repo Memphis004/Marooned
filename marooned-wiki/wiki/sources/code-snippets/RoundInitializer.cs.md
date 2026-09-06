@@ -100,7 +100,7 @@ namespace Marooned.Core
         /// </summary>
         private void AssignStartingLocations()
         {
-            var playerLocation = _stateProvider.Player.CurrentLocationId;
+            var playerLocation = _stateProvider.GetPlayer().CurrentLocationId;
 
             // ตำแหน่งที่ว่างๆ ได้ = location ของผู้เล่น + location ที่เชื่อมกันโดยตรง
             var validLocations = new List<string> { playerLocation };

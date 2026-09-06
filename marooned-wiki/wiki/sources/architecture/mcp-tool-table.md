@@ -37,7 +37,7 @@ implement แล้ว) เทียบกับแผนใน game_design_doc.
 | ExploreLocation | SurvivalAction | locationId | success + รายการ card id ที่พบ | สำรวจ node — สุ่ม loot แบบ deplete | ⚠️ |
 | CraftCard | SurvivalAction | recipeId | success/failureReason + outputCardId | คราฟการ์ดตามสูตร | ⚠️ |
 | MoveToLocation | SurvivalAction | locationId | success/failureReason | ย้ายไป location ที่เชื่อมถึงเท่านั้น | ✅ |
-| UseCard | SurvivalAction | cardId | success/failureReason | ใช้การ์ด (กิน/ดื่ม/ยา) เติม stat | ✅ |
+| UseCard | SurvivalAction | cardId, targetId (optional) | success/failureReason + ResultText (เมื่อ eliminate) | ใช้การ์ด — self-use เติม stat; weapon (Phase 4) ต้องระบุ targetId และผ่านเงื่อนไข no-witness จึงจะฆ่าสำเร็จ (การ์ดไม่หายถ้า fail) | ✅ |
 | AwaitNextEvent | SurvivalAction | timeoutSeconds (default 30) | TimedOut / Group + EventId + DisplayText | รอ world event ถัดไป (Survival หรือ Social) | ⚠️ |
 | CallMeeting | Deduction | - | success + รายชื่อ NPC เข้าร่วม | เรียกประชุมฉุกเฉินเมื่อพบศพ/สงสัย | ⚠️ |
 | AccuseNpc | Deduction | targetNpcId | WasCorrect + GameOverWin/Loss + ResultText | กล่าวหา NPC เป็น Killer — ตัดสินชนะ/แพ้ | ✅ |
@@ -67,7 +67,11 @@ implement แล้ว) เทียบกับแผนใน game_design_doc.
   เหตุผล machine-readable (`missing_ingredients`, `missing_tool`, `wrong_location`)
 - **MoveToLocation** — ใช้ย้ายโซนเพื่อหา loot ใหม่หรือตาม/หลีก NPC; ผิดกฎการเดินทางจะได้
   `not_connected`
-- **UseCard** — ใช้เมื่อ stat ต่ำ (ดูจาก GetGameState); การ์ดอาหารสุกให้ค่ามากกว่าของดิบ
+- **UseCard** — ใช้เมื่อ stat ต่ำ (ดูจาก GetGameState); การ์ดอาหารสุกให้ค่ามากกว่าของดิบ;
+  การ์ด weapon (เช่น `knife_basic`) ต้องส่ง `targetId` — ล้มเหลวแบบการ์ดไม่หายถ้า target
+  ไม่อยู่โซนเดียวกัน (`target_not_same_location`), มีคนเห็น (`witnessed`), ตายไปแล้ว
+  (`target_already_dead`) หรือไม่ระบุ target (`missing_target`); สำเร็จคืน
+  `eliminated_<npcId>` (สถาปัตยกรรม: [[card-system]])
 - **AwaitNextEvent** — ใช้เมื่อ "ไม่มีอะไรจะทำ" เพื่อรอเหตุการณ์แล้ววางแผนตอบสนอง;
   ปัจจุบันตอบ timeout ทันทีถ้าคิวว่าง
 - **CallMeeting** — ใช้เมื่อพบศพหรือเก็บหลักฐานพอแล้ว; ตอนนี้แค่ list ใครอยู่ตรงนั้น
@@ -96,6 +100,7 @@ AI เรียกผ่าน MCP client (stdio) — Bridge เป็น MCP se
 - `CraftCard(recipeId: "recipe_cook_fish")`
 - `MoveToLocation(locationId: "jungle_edge")`
 - `UseCard(cardId: "food_coconut")`
+- `UseCard(cardId: "knife_basic", targetId: "npc_03")` — weapon (Phase 4)
 - `AwaitNextEvent(timeoutSeconds: 30)`
 - `AccuseNpc(targetNpcId: "npc_03")`
 

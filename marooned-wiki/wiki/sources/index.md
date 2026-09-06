@@ -14,13 +14,15 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-> อัปเดตล่าสุด: 2026-09-06
+> อัปเดตล่าสุด: 2026-09-07
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
 
 ## 🏗️ Architecture
 - [[overview]] — ภาพรวม architecture ทั้งหมด (Composition Root, DI, Message Bus, Data Flow)
+- [[card-system]] — สถาปัตยกรรม Card System Phase 4 (Player-as-Killer, TryEliminate กลาง,
+  Multiplayer-ready GameStateProvider, Safe UX เช็คก่อนหักการ์ด)
 - [[mcp-bridge]] — MCP Bridge architecture (build/run, TCP connection, วิธีเพิ่ม tool)
 - [[mcp-tool-table]] — ตาราง MCP tools ทั้งหมด พร้อมสถานะ
 - [[chibi-visual-system]] — ระบบ spawn/คุม visual ตัวละคร Chibi แบบ event-driven
@@ -41,6 +43,7 @@ tags:
 - [[CraftingSystem.cs]] — ตรวจเงื่อนไข recipe แล้วคราฟการ์ด
 - [[ExplorationSystem.cs]] — สำรวจ location แบบ weighted loot ที่ deplete ได้
 - [[NpcDirectorSystem.cs]] — เจ้าของ ground truth NPC + killer AI + spawn clue
+  (Phase 4: `CanEliminate`/`TryEliminate` method กลางที่ player ใช้ร่วมกับ AI)
 - [[DeductionSystem.cs]] — information-hiding layer + ตัดสิน accusation
 - [[WorldEventSystem.cs]] — weighted random event queue (Survival/Social)
 - [[McpRequestHandlers.cs]] — ปลายทาง request จาก MCP Bridge 10 ตัว
@@ -48,7 +51,7 @@ tags:
 
 ### UI
 - [[UIRoot.cs]] — panel registry ของ UI (enum → Type mapping)
-- [[CardHandPresenter.cs]] — Presenter ของมือการ์ด (skeleton)
+- [[CardHandPresenter.cs]] — Presenter ของมือการ์ด + `GetLocalizedReason` แปลง failure reason เป็นไทย (Phase 4)
 - [[ClueBoardPresenter.cs]] — Presenter ของกระดานเบาะแส (skeleton)
 - [[MapExplorePresenter.cs]] — Presenter ของแผนที่สำรวจ (skeleton)
 - [[MeetingVotePresenter.cs]] — Presenter ของหน้าโหวตกล่าวหา (skeleton)
@@ -59,7 +62,8 @@ tags:
 - [[MeetingVoteView.cs]] — View หน้าประชุม + ปุ่ม Accuse/Abstain (skeleton)
 
 ### Visual Layer (Chibi)
-- [[IChibiVisual.cs]] — interface กลางของ visual layer (backend-agnostic: Animator/Spine/paperdoll)
+- [[IChibiVisual.cs]] — interface กลางของ visual layer (backend-agnostic: Animator/Spine/paperdoll,
+  Phase 4 เพิ่ม `PlayAction` one-shot)
 - [[ChibiSpawnerView.cs]] — spawn/despawn chibi ของ NPC ตาม location แบบ event-driven
 - [[GenericCuteVisualController.cs]] — คุม Animator ของ asset "Generic Cute 2D Student" (PSB skeletal)
 - [[SpineVisualController.cs]] — Spine backend คุม SkeletonAnimation (Elena/Derek ใช้ร่วมกัน)

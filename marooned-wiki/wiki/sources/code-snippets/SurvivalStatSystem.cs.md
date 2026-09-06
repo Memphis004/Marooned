@@ -49,7 +49,7 @@ namespace Marooned.Systems
         {
             _statPublisher = statPublisher;
             _conditionPublisher = conditionPublisher;
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
         }
 
         public void Tick(float deltaSeconds)
@@ -110,7 +110,7 @@ Tick สถานะเอาชีวิตรอดของผู้เล่
 | --- | --- |
 | `void Tick(float deltaSeconds)` | เรียกทุกเฟรม/ทุก tick — drain stats, สะสมเวลาวิกฤต, roll illness, เช็คตาย |
 
-(class ไม่มี public property — state ทั้งหมดอยู่ที่ `GameStateProvider.Player` ซึ่งถูก mutate ตรง)
+(class ไม่มี public property — state ทั้งหมดอยู่ที่ `GameStateProvider.GetPlayer()` ซึ่งถูก mutate ตรง)
 
 ## Dependencies
 - **GameStateProvider** (constructor injection) — เข้าถึง `PlayerSurvivalState` ตัวเดียวกลาง

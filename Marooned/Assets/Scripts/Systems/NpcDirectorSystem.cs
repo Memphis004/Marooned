@@ -11,6 +11,9 @@ namespace Marooned.Systems
     /// locations, lets the Killer NPC attempt eliminations when unwitnessed, and
     /// spawns Clue cards on the resulting body / nearby NPCs.
     ///
+    /// Phase 4 (Player-as-Killer): TryEliminate/CanEliminate เป็น method กลางที่ทั้ง
+    /// AI killer (Tick) และ player (weapon card ผ่าน UseCardHandler) ใช้ร่วมกัน
+    ///
     /// IMPORTANT: never hand out NpcState directly to MCP query handlers — always go
     /// through DeductionSystem.BuildObservableView (see DeductionVisibilityRules).
     /// </summary>
@@ -92,6 +95,52 @@ namespace Marooned.Systems
             // Replace with a proper daily-schedule table (Luban) in a later lab.
         }
 
+        /// <summary>
+        /// Phase 4 (Player-as-Killer): เช็คเงื่อนไขการ eliminate โดยไม่ mutate state ใดๆ (dry-run)
+        /// — UseCardHandler เรียกก่อนหักการ์ด เพื่อกันการ์ดหายฟรีเมื่อลงมือไม่สำเร็จ (Safe UX)
+        /// </summary>
+        public (bool success, string reason) CanEliminate(string killerEntityId, string victimNpcId, string killerLocationId)
+        {
+            if (!_npcs.TryGetValue(victimNpcId, out var victim))
+                return (false, "unknown_target");
+            if (!victim.IsAlive)
+                return (false, "target_already_dead");
+            if (victim.CurrentLocationId != killerLocationId)
+                return (false, "target_not_same_location");
+
+            // กฎ "no witness" — นับ NPC อื่นที่มีชีวิตใน location เดียวกัน (ยกเว้น killer + victim)
+            var witnessCount = _npcs.Values.Count(n =>
+                n.IsAlive && n.Id != victimNpcId && n.Id != killerEntityId
+                && n.CurrentLocationId == killerLocationId);
+            if (witnessCount > 0)
+                return (false, "witnessed");
+
+            return (true, null);
+        }
+
+        /// <summary>
+        /// Method กลางสำหรับ eliminate (ทั้ง AI killer และ player ผ่าน weapon card):
+        /// ตรวจเงื่อนไขผ่าน CanEliminate ก่อน แล้วค่อย mutate state + spawn clues + publish
+        /// NpcEliminatedMessage (event เดียวกันสำหรับทุก killer — visual layer ไม่ต้องรู้ต้นตอ)
+        /// </summary>
+        public (bool success, string reason) TryEliminate(string killerEntityId, string victimNpcId, string killerLocationId)
+        {
+            var (can, reason) = CanEliminate(killerEntityId, victimNpcId, killerLocationId);
+            if (!can) return (false, reason);
+
+            var victim = _npcs[victimNpcId]; // CanEliminate รับประกัน key มีอยู่แล้ว
+            victim.IsAlive = false;
+
+            var clueIds = SpawnClues(killerEntityId, victim);
+            _eliminatedPublisher.Publish(new NpcEliminatedMessage
+            {
+                VictimNpcId = victim.Id,
+                LocationId = victim.CurrentLocationId,
+                SpawnedClueCardIds = clueIds
+            });
+            return (true, null);
+        }
+
         private void TryAttemptElimination(NpcState killer, float deltaSeconds)
         {
             killer.KillCooldownRemaining = Math.Max(0, killer.KillCooldownRemaining - deltaSeconds);
@@ -107,19 +156,13 @@ namespace Marooned.Systems
             var victim = sameLocation[0];
             if (_rng.NextDouble() > 0.15) return; // small per-tick chance, tune later
 
-            victim.IsAlive = false;
-            killer.KillCooldownRemaining = 180f; // seconds
-
-            var clueIds = SpawnClues(killer, victim);
-            _eliminatedPublisher.Publish(new NpcEliminatedMessage
-            {
-                VictimNpcId = victim.Id,
-                LocationId = victim.CurrentLocationId,
-                SpawnedClueCardIds = clueIds
-            });
+            // Phase 4: ลงมือผ่าน TryEliminate กลาง (กฎ witness/clue/publish อยู่ที่เดียวกับ player)
+            var (success, _) = TryEliminate(killer.Id, victim.Id, killer.CurrentLocationId);
+            if (success)
+                killer.KillCooldownRemaining = 180f; // seconds
         }
 
-        private List<string> SpawnClues(NpcState killer, NpcState victim)
+        private List<string> SpawnClues(string killerEntityId, NpcState victim)
         {
             // Simple v1: always drop one visible clue on the victim's location, and a
             // weaker chance of a red herring clue somewhere else. Replace with

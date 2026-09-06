@@ -114,5 +114,30 @@ namespace Marooned.Core.Visual
         {
             Debug.Log($"[SpineVisualController] '{name}' ไม่มี animation pickup — ข้าม");
         }
+
+        /// <summary>
+        /// IChibiVisual (Phase 4 Step 8): one-shot action — ใช้ชื่อ animation จริงของ
+        /// skeleton (เช่น "Slash", "Stab") หรือ alias เชิง semantics ที่ Elena/Derek มีจริง:
+        /// "attack" → "Slash" (ชื่อจากการ inspect SkeletonData ทั้งสองตัว)
+        /// ไม่มี animation นั้น → log + ข้าม (ไม่ fallback Idle เพราะ one-shot ควรเงียบ)
+        /// </summary>
+        public void PlayAction(string actionName)
+        {
+            if (_skeleton == null) return;
+
+            var target = actionName switch
+            {
+                "attack" => "Slash",
+                _ => actionName,
+            };
+
+            if (_skeleton.skeletonDataAsset.GetSkeletonData(true).FindAnimation(target) == null)
+            {
+                Debug.Log($"[SpineVisualController] '{name}' ไม่มี animation '{target}' — ข้าม PlayAction");
+                return;
+            }
+
+            _skeleton.AnimationState.SetAnimation(0, target, loop: false);
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace Marooned.Systems
         {
             _locations = dataService.LocationDefs;
             _inventory = inventory;
-            _player = stateProvider.Player;
+            _player = stateProvider.GetPlayer();
 
             foreach (var loc in _locations.Values)
                 _runtime[loc.Id] = new LocationRuntimeState { RemainingWeight = new Dictionary<string, int>(loc.LootTable) };

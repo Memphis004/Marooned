@@ -36,7 +36,7 @@ namespace Marooned.Core
                 var worldItems = scope.Container.Resolve<WorldItemSystem>();
                 var input = scope.Container.Resolve<PlayerInputService>();
                 var pickup = scope.Container.Resolve<ItemPickupSystem>();
-                var state = scope.Container.Resolve<GameStateProvider>().Player;
+                var state = scope.Container.Resolve<GameStateProvider>().GetPlayer();
 
                 string ChildSummary()
                 {

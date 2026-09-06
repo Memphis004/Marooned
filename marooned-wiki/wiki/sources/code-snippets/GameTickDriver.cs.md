@@ -94,7 +94,7 @@ namespace Marooned.Core
 
             // WorldEventSystem.Tick ต้องการ location tag ปัจจุบัน — ใช้ id ของ
             // location ผู้เล่นเป็น tag ไปก่อน (mock events ไม่ได้กำหนด RequiredLocationTags)
-            _worldEvents.Tick(deltaSeconds, _stateProvider.Player.CurrentLocationId);
+            _worldEvents.Tick(deltaSeconds, _stateProvider.GetPlayer().CurrentLocationId);
         }
     }
 }

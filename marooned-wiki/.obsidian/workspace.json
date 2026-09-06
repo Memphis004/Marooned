@@ -13,32 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "wiki/sources/mechanics/deduction.md",
+                "file": "wiki/sources/game-design-doc/game_design_doc.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "deduction"
-            }
-          }
-        ]
-      },
-      {
-        "id": "609f1226c019067a",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "30bf07a41ec8801c",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "wiki/sources/architecture/chibi-visual-system.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "chibi-visual-system"
+              "title": "game_design_doc"
             }
           }
         ]
@@ -226,6 +206,10 @@
   },
   "active": "03478e020e893a84",
   "lastOpenFiles": [
+    "wiki/sources/architecture/card-system.md",
+    "wiki/sources/devlog-history/2026-09-05.md",
+    "wiki/sources/architecture/chibi-visual-system.md",
+    "wiki/sources/mechanics/deduction.md",
     "wiki/sources/architecture/player-system.md",
     "wiki/sources/mechanics/crafting.md",
     "wiki/sources/mechanics/chibi-avatar.md",
@@ -233,13 +217,11 @@
     "wiki/sources/mechanics/exploration.md",
     "wiki/sources/game-design-doc/game_design_doc.md",
     "wiki/sources/index.md",
-    "wiki/sources/architecture/chibi-visual-system.md",
     "wiki/sources/architecture/mcp-tool-table.md",
     "wiki/sources/chibi-visual-system.md",
     "wiki/sources/code-snippets/CardInventorySystem.cs.md",
     "wiki/sources/code-snippets/SpineVisualController.cs.md",
     "wiki/sources/code-snippets/IChibiVisual.cs.md",
-    "wiki/sources/devlog-history/2026-09-05.md",
     "wiki/sources/code-snippets/GenericCuteVisualController.cs.md",
     "wiki/sources/code-snippets/ChibiSpawnerView.cs.md",
     "wiki/sources/code-snippets/GameTickDriver.cs.md",
@@ -250,10 +232,8 @@
     "wiki/sources/code-snippets/Data_Gen_game_ClueDef.cs.md",
     "wiki/sources/code-snippets/Data_Gen_game_LocationDef.cs.md",
     "wiki/sources/code-snippets/LubanDataService.cs.md",
-    "sources/locationdef-cs.md",
     "sources",
     "wiki/sources/devlog-history",
-    "wiki/sources/conventions.md",
     "wiki/sources/architecture/mcp-bridge.md.tmp.3148.f45e9b0bb1dd",
     "wiki/sources/mechanics",
     "wiki/sources/code-snippets/WorldEventSystem.cs.md.tmp",

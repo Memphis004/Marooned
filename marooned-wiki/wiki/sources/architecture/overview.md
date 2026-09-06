@@ -552,7 +552,7 @@ namespace Marooned.Systems
         {
             _statPublisher = statPublisher;
             _conditionPublisher = conditionPublisher;
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
         }
 
         public void Tick(float deltaSeconds)
@@ -616,7 +616,7 @@ namespace Marooned.Systems
 
         public CardInventorySystem(GameStateProvider stateProvider, LubanDataService dataService)
         {
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
             _cardDefs = dataService.CardDefs;
         }
 
@@ -651,7 +651,7 @@ namespace Marooned.Systems
         public CraftingSystem(CardInventorySystem inventory, GameStateProvider stateProvider, LubanDataService dataService)
         {
             _inventory = inventory;
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
             _recipes = dataService.RecipeDefs;
         }
 
@@ -709,7 +709,7 @@ namespace Marooned.Systems
         {
             _locations = dataService.LocationDefs;
             _inventory = inventory;
-            _player = stateProvider.Player;
+            _player = stateProvider.GetPlayer();
 
             foreach (var loc in _locations.Values)
                 _runtime[loc.Id] = new LocationRuntimeState { RemainingWeight = new Dictionary<string, int>(loc.LootTable) };
@@ -885,7 +885,7 @@ namespace Marooned.Systems
         public DeductionSystem(NpcDirectorSystem npcDirector, GameStateProvider stateProvider, LubanDataService dataService)
         {
             _npcDirector = npcDirector;
-            _player = stateProvider.Player;
+            _player = stateProvider.GetPlayer();
             _illnessDefs = dataService.IllnessDefs;
         }
 
@@ -1004,13 +1004,38 @@ namespace Marooned.Systems
     /// <summary>Single live instance, same idea as the reference project's SectStateProvider (Lab 7) — no re-creating state every query.</summary>
     public class GameStateProvider
     {
-        public PlayerSurvivalState Player { get; } = new()
+        /// <summary>id ของผู้เล่นหลัก (single-player) — ทุก call site เดิมชี้ตัวนี้ผ่าน GetPlayer()</summary>
+        public const string LocalPlayerId = "player_local";
+
+        // Phase 4 (Multiplayer-ready): เก็บ player แบบ Dictionary แต่ API หน้าตาเดิม —
+        // ตัวละครทั้งหมดในเกมปัจจุบันยังใช้ตัวเดียว (player_local) เหมือนเดิมทุกอย่าง
+        private readonly Dictionary<string, PlayerSurvivalState> _players = new()
         {
             // Mock starting state so GetGameState has something to show immediately
             // in the first round-trip test. Move this into real save/new-game logic later.
-            CurrentLocationId = "beach",
-            Inventory = new Dictionary<string, int> { ["food_coconut"] = 1 },
+            [LocalPlayerId] = new PlayerSurvivalState
+            {
+                CurrentLocationId = "beach",
+                Inventory = new Dictionary<string, int> { ["food_coconut"] = 1 },
+            },
         };
+
+        /// <summary>API เดิม — เรียก GetPlayer() ไม่ใส่ param ได้ผลลัพธ์เดิม (ตัวละครผู้เล่นหลัก)</summary>
+        public PlayerSurvivalState GetPlayer(string playerId = LocalPlayerId) => _players[playerId];
+
+        /// <summary>Phase 4 (multiplayer-ready): ได้ player ตาม id โดยสร้างใหม่ให้ถ้ายังไม่มี</summary>
+        public PlayerSurvivalState GetOrCreatePlayer(string playerId)
+        {
+            if (!_players.TryGetValue(playerId, out var state))
+            {
+                state = new PlayerSurvivalState();
+                _players[playerId] = state;
+            }
+            return state;
+        }
+
+        /// <summary>Phase 4 (multiplayer-ready): player ทุกตัวในระบบ (อ่านอย่างเดียว)</summary>
+        public IReadOnlyDictionary<string, PlayerSurvivalState> AllPlayers => _players;
     }
 
     /// <summary>
@@ -1239,7 +1264,7 @@ namespace Marooned.Systems
 
         public UniTask<GetGameStateResponse> InvokeAsync(GetGameStateRequest request, CancellationToken cancellationToken = default)
         {
-            return UniTask.FromResult(new GetGameStateResponse { Player = _stateProvider.Player });
+            return UniTask.FromResult(new GetGameStateResponse { Player = _stateProvider.GetPlayer() });
         }
     }
 
@@ -1256,7 +1281,7 @@ namespace Marooned.Systems
 
         public UniTask<GetVisibleNpcsResponse> InvokeAsync(GetVisibleNpcsRequest request, CancellationToken cancellationToken = default)
         {
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.Player.CurrentLocationId);
+            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
             return UniTask.FromResult(new GetVisibleNpcsResponse { Npcs = npcs });
         }
     }
@@ -1268,7 +1293,7 @@ namespace Marooned.Systems
 
         public UniTask<GetClueBoardResponse> InvokeAsync(GetClueBoardRequest request, CancellationToken cancellationToken = default)
         {
-            return UniTask.FromResult(new GetClueBoardResponse { CollectedClueCardIds = _stateProvider.Player.CollectedClueCardIds });
+            return UniTask.FromResult(new GetClueBoardResponse { CollectedClueCardIds = _stateProvider.GetPlayer().CollectedClueCardIds });
         }
     }
 
@@ -1288,7 +1313,7 @@ namespace Marooned.Systems
             if (!_data.LocationDefs.TryGetValue(request.LocationId, out var targetDef))
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "unknown_location" });
 
-            var current = _stateProvider.Player.CurrentLocationId;
+            var current = _stateProvider.GetPlayer().CurrentLocationId;
             if (!string.IsNullOrEmpty(current)
                 && _data.LocationDefs.TryGetValue(current, out var currentDef)
                 && currentDef.ConnectedLocationIds != null
@@ -1297,22 +1322,28 @@ namespace Marooned.Systems
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "not_connected" });
             }
 
-            _stateProvider.Player.CurrentLocationId = request.LocationId;
+            _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
             return UniTask.FromResult(new MoveToLocationResponse { Success = true });
         }
-    }
-
+    }    /// <summary>
+    /// Phase 4 (Player-as-Killer): รองรับ weapon card ผ่าน NpcDirectorSystem.TryEliminate
+    /// Order of Operations: ตรวจ card → ตรวจ targeting → เช็คเงื่อนไข (dry-run) → ค่อยหักการ์ด
+    /// → ดำเนินการจริง — เช็คก่อนหักเสมอเพื่อกันการ์ดหายฟรี (Safe UX)
+    /// </summary>
     public class UseCardHandler : IAsyncRequestHandler<UseCardRequest, UseCardResponse>
     {
         private readonly GameStateProvider _stateProvider;
         private readonly CardInventorySystem _inventory;
         private readonly LubanDataService _data;
+        private readonly NpcDirectorSystem _npcDirector; // ใหม่ Phase 4 — inject ผ่าน constructor
 
-        public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory, LubanDataService data)
+        public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory,
+            LubanDataService data, NpcDirectorSystem npcDirector)
         {
             _stateProvider = stateProvider;
             _inventory = inventory;
             _data = data;
+            _npcDirector = npcDirector;
         }
 
         public UniTask<UseCardResponse> InvokeAsync(UseCardRequest request, CancellationToken cancellationToken = default)
@@ -1320,25 +1351,61 @@ namespace Marooned.Systems
             if (!_data.CardDefs.TryGetValue(request.CardId, out var def))
                 return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "unknown_card" });
 
+            // Phase 4: ตรวจ targeting requirement ก่อน
+            if (def.TargetType == CardTargetType.SingleTarget && string.IsNullOrEmpty(request.TargetId))
+                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "missing_target" });
+            if (def.TargetType == CardTargetType.Self && !string.IsNullOrEmpty(request.TargetId)
+            )
+                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "invalid_target_type" });
+
+            // Phase 4 (Safe UX): เช็คเงื่อนไข elimination ก่อนหักการ์ด — CanEliminate เป็น
+            // dry-run ไม่ mutate state ทำให้การ์ดไม่หายเมื่อลงมือไม่สำเร็จ (witnessed ฯลฯ)
+            if (def.EffectType == CardEffectType.Eliminate)
+            {
+                var player = _stateProvider.GetPlayer();
+                var (canEliminate, failReason) = _npcDirector.CanEliminate(
+                    GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                if (!canEliminate)
+                    return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = failReason });
+            }
+
+            // ผ่านเงื่อนไขทั้งหมดแล้วค่อยหักการ์ด
             if (!_inventory.TryConsume(request.CardId, 1))
                 return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "not_in_inventory" });
 
-            if (def.StatEffect != null)
+            // ดำเนินการจริง
+            switch (def.EffectType)
             {
-                var player = _stateProvider.Player;
-                foreach (var kv in def.StatEffect)
+                case CardEffectType.Eliminate:
                 {
-                    switch (kv.Key)
+                    var player = _stateProvider.GetPlayer();
+                    var (success, reason) = _npcDirector.TryEliminate(
+                        GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                    if (!success)
+                    return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = reason });
+                    return UniTask.FromResult(new UseCardResponse { Success = true, ResultText = $"eliminated_{request.TargetId}" });
+                }
+
+                case CardEffectType.StatDelta:
+                default:
+                {
+                    if (def.StatEffect != null)
                     {
-                        case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
-                        case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
-                        case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
-                        case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                        var player = _stateProvider.GetPlayer();
+                        foreach (var kv in def.StatEffect)
+                        {
+                            switch (kv.Key)
+                            {
+                                case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
+                                case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
+                                case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
+                                case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                            }
+                        }
                     }
+                    return UniTask.FromResult(new UseCardResponse { Success = true });
                 }
             }
-
-            return UniTask.FromResult(new UseCardResponse { Success = true });
         }
     }
 
@@ -1357,7 +1424,7 @@ namespace Marooned.Systems
         {
             // Lab A: meeting just snapshots whoever is currently visible; a real
             // "gather everyone" pause/summon step is a later lab.
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.Player.CurrentLocationId);
+            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
             return UniTask.FromResult(new CallMeetingResponse { Success = true, AttendingNpcs = npcs });
         }
     }
@@ -1366,7 +1433,7 @@ namespace Marooned.Systems
 
 ### Shared/ (canonical — sync ไป Unity + McpBridge)
 
-#### Shared/CardDef.cs (34 บรรทัด)
+#### Shared/CardDef.cs (66 บรรทัด)
 **Path:** `Shared/CardDef.cs` (copy: `Marooned/Assets/Scripts/Shared/CardDef.cs`, `McpBridge/Shared/CardDef.cs`)
 
 ```csharp
@@ -1382,7 +1449,24 @@ namespace Marooned.Shared
         Illness,
         Injury,
         Clue,
-        Craftable
+        Craftable,
+        Weapon // Phase 4: แยกจาก Tool ชัดเจน — การ์ดที่ใช้กับ target อื่น (เช่นฆ่า NPC)
+    }
+
+    /// <summary>Phase 4: การ์ดนี้ต้องการ target แบบไหน (ค่าเริ่มต้น Self = พฤติกรรมเดิม)</summary>
+    public enum CardTargetType
+    {
+        None,         // ไม่ต้องมี target
+        Self,         // ใช้กับตัวเอง (ค่าเริ่มต้น — backward compatible)
+        SingleTarget, // ต้องระบุ TargetId ตอนใช้ (มีด, ของขวัญ)
+    }
+
+    /// <summary>Phase 4: ผลของการ์ดเมื่อถูกใช้ (ค่าเริ่มต้น StatDelta = พฤติกรรมเดิม)</summary>
+    public enum CardEffectType
+    {
+        StatDelta,  // ค่าเริ่มต้น — ใช้ StatEffect dictionary เหมือนเดิม
+        Eliminate,  // Weapon: เรียก NpcDirectorSystem.TryEliminate(TargetId)
+        Cure,       // TODO Phase 4+: ลบ condition card — ยังไม่ implement
     }
 
     /// <summary>
@@ -1396,6 +1480,13 @@ namespace Marooned.Shared
         public string DisplayName;
         public string SpritePath;
         public int StackLimit;
+
+        // ---- Phase 4 (Player-as-Killer): targeting + effect ----
+        /// <summary>ค่าเริ่มต้น Self = การ์ดเดิมทุกใบทำงานเหมือนเดิม (backward compatible)</summary>
+        public CardTargetType TargetType = CardTargetType.Self;
+
+        /// <summary>ค่าเริ่มต้น StatDelta = ใช้ StatEffect dictionary เหมือนเดิม (backward compatible)</summary>
+        public CardEffectType EffectType = CardEffectType.StatDelta;
 
         /// <summary>Stat key -> delta applied when the card is used (Hunger/Thirst/Mood/Fatigue).</summary>
         public Dictionary<string, float> StatEffect;
@@ -1824,13 +1915,17 @@ namespace Marooned.Shared
     public class UseCardRequest
     {
         [Key(0)] public string CardId;
+
+        // Phase 4 (Player-as-Killer): null/empty = Self; npc id = SingleTarget (เช่น weapon)
+        [Key(1)] public string TargetId;
     }
 
     [MessagePackObject]
     public class UseCardResponse
     {
         [Key(0)] public bool Success;
-        [Key(1)] public string FailureReason;
+        [Key(1)] public string FailureReason; // "missing_target", "witnessed", etc.
+        [Key(2)] public string ResultText;    // เติมเฉพาะตอน Eliminate สำเร็จ
     }
 
     [MessagePackObject]

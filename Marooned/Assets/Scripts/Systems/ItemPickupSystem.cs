@@ -46,7 +46,7 @@ namespace Marooned.Systems
         {
             if (_worldItems.ActiveItems.Count == 0) return;
 
-            var player = _stateProvider.Player;
+            var player = _stateProvider.GetPlayer();
             var position = new Vector2(player.PositionX, player.PositionY);
 
             if (Mode == PickupMode.InteractKey)
@@ -73,7 +73,7 @@ namespace Marooned.Systems
                 return false;
             }
 
-            var locationId = _stateProvider.Player.CurrentLocationId;
+            var locationId = _stateProvider.GetPlayer().CurrentLocationId;
             Debug.Log($"[ItemPickupSystem] picked up '{item.CardId}' @ {locationId}");
             _worldItems.RemoveItem(item);
 

@@ -10,17 +10,20 @@ related:
   - "[[CraftingSystem.cs]]"
   - "[[WorldEventSystem.cs]]"
   - "[[LubanDataService.cs|GameStateProvider]]"
+  - "[[NpcDirectorSystem.cs]]"
+  - "[[card-system]]"
 folder: Systems
-lines: 202
+lines: 252
 created: 2026-09-05
 tags:
   - Systems
   - marooned
   - lab-a
+  - phase-4
 ---
 
 # McpRequestHandlers.cs
-**Path:** `Marooned/Assets/Scripts/Systems/McpRequestHandlers.cs` (202 lines)
+**Path:** `Marooned/Assets/Scripts/Systems/McpRequestHandlers.cs` (252 lines)
 
 ## Source
 ```csharp
@@ -103,7 +106,7 @@ namespace Marooned.Systems
 
         public UniTask<GetGameStateResponse> InvokeAsync(GetGameStateRequest request, CancellationToken cancellationToken = default)
         {
-            return UniTask.FromResult(new GetGameStateResponse { Player = _stateProvider.Player });
+            return UniTask.FromResult(new GetGameStateResponse { Player = _stateProvider.GetPlayer() });
         }
     }
 
@@ -120,7 +123,7 @@ namespace Marooned.Systems
 
         public UniTask<GetVisibleNpcsResponse> InvokeAsync(GetVisibleNpcsRequest request, CancellationToken cancellationToken = default)
         {
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.Player.CurrentLocationId);
+            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
             return UniTask.FromResult(new GetVisibleNpcsResponse { Npcs = npcs });
         }
     }
@@ -132,7 +135,7 @@ namespace Marooned.Systems
 
         public UniTask<GetClueBoardResponse> InvokeAsync(GetClueBoardRequest request, CancellationToken cancellationToken = default)
         {
-            return UniTask.FromResult(new GetClueBoardResponse { CollectedClueCardIds = _stateProvider.Player.CollectedClueCardIds });
+            return UniTask.FromResult(new GetClueBoardResponse { CollectedClueCardIds = _stateProvider.GetPlayer().CollectedClueCardIds });
         }
     }
 
@@ -140,11 +143,14 @@ namespace Marooned.Systems
     {
         private readonly GameStateProvider _stateProvider;
         private readonly LubanDataService _data;
+        private readonly IPublisher<PlayerLocationChangedMessage> _playerLocationPublisher;
 
-        public MoveToLocationHandler(GameStateProvider stateProvider, LubanDataService data)
+        public MoveToLocationHandler(GameStateProvider stateProvider, LubanDataService data,
+            IPublisher<PlayerLocationChangedMessage> playerLocationPublisher)
         {
             _stateProvider = stateProvider;
             _data = data;
+            _playerLocationPublisher = playerLocationPublisher;
         }
 
         public UniTask<MoveToLocationResponse> InvokeAsync(MoveToLocationRequest request, CancellationToken cancellationToken = default)
@@ -152,7 +158,7 @@ namespace Marooned.Systems
             if (!_data.LocationDefs.TryGetValue(request.LocationId, out var targetDef))
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "unknown_location" });
 
-            var current = _stateProvider.Player.CurrentLocationId;
+            var current = _stateProvider.GetPlayer().CurrentLocationId;
             if (!string.IsNullOrEmpty(current)
                 && _data.LocationDefs.TryGetValue(current, out var currentDef)
                 && currentDef.ConnectedLocationIds != null
@@ -161,22 +167,34 @@ namespace Marooned.Systems
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "not_connected" });
             }
 
-            _stateProvider.Player.CurrentLocationId = request.LocationId;
+            _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
+
+            // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView) รู้ตัวแทนการ polling
+            _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = current, NewLocationId = request.LocationId });
+
             return UniTask.FromResult(new MoveToLocationResponse { Success = true });
         }
     }
 
+    /// <summary>
+    /// Phase 4 (Player-as-Killer): รองรับ weapon card ผ่าน NpcDirectorSystem.TryEliminate
+    /// Order of Operations: ตรวจ card → ตรวจ targeting → เช็คเงื่อนไข (dry-run) → ค่อยหักการ์ด
+    /// → ดำเนินการจริง — เช็คก่อนหักเสมอเพื่อกันการ์ดหายฟรี (Safe UX)
+    /// </summary>
     public class UseCardHandler : IAsyncRequestHandler<UseCardRequest, UseCardResponse>
     {
         private readonly GameStateProvider _stateProvider;
         private readonly CardInventorySystem _inventory;
         private readonly LubanDataService _data;
+        private readonly NpcDirectorSystem _npcDirector; // ใหม่ Phase 4 — inject ผ่าน constructor
 
-        public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory, LubanDataService data)
+        public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory,
+            LubanDataService data, NpcDirectorSystem npcDirector)
         {
             _stateProvider = stateProvider;
             _inventory = inventory;
             _data = data;
+            _npcDirector = npcDirector;
         }
 
         public UniTask<UseCardResponse> InvokeAsync(UseCardRequest request, CancellationToken cancellationToken = default)
@@ -184,25 +202,60 @@ namespace Marooned.Systems
             if (!_data.CardDefs.TryGetValue(request.CardId, out var def))
                 return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "unknown_card" });
 
+            // Phase 4: ตรวจ targeting requirement ก่อน
+            if (def.TargetType == CardTargetType.SingleTarget && string.IsNullOrEmpty(request.TargetId))
+                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "missing_target" });
+            if (def.TargetType == CardTargetType.Self && !string.IsNullOrEmpty(request.TargetId))
+                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "invalid_target_type" });
+
+            // Phase 4 (Safe UX): เช็คเงื่อนไข elimination ก่อนหักการ์ด — CanEliminate เป็น
+            // dry-run ไม่ mutate state ทำให้การ์ดไม่หายเมื่อลงมือไม่สำเร็จ (witnessed ฯลฯ)
+            if (def.EffectType == CardEffectType.Eliminate)
+            {
+                var player = _stateProvider.GetPlayer();
+                var (canEliminate, failReason) = _npcDirector.CanEliminate(
+                    GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                if (!canEliminate)
+                    return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = failReason });
+            }
+
+            // ผ่านเงื่อนไขทั้งหมดแล้วค่อยหักการ์ด
             if (!_inventory.TryConsume(request.CardId, 1))
                 return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "not_in_inventory" });
 
-            if (def.StatEffect != null)
+            // ดำเนินการจริง
+            switch (def.EffectType)
             {
-                var player = _stateProvider.Player;
-                foreach (var kv in def.StatEffect)
+                case CardEffectType.Eliminate:
                 {
-                    switch (kv.Key)
+                    var player = _stateProvider.GetPlayer();
+                    var (success, reason) = _npcDirector.TryEliminate(
+                        GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                    if (!success)
+                        return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = reason });
+                    return UniTask.FromResult(new UseCardResponse { Success = true, ResultText = $"eliminated_{request.TargetId}" });
+                }
+
+                case CardEffectType.StatDelta:
+                default:
+                {
+                    if (def.StatEffect != null)
                     {
-                        case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
-                        case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
-                        case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
-                        case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                        var player = _stateProvider.GetPlayer();
+                        foreach (var kv in def.StatEffect)
+                        {
+                            switch (kv.Key)
+                            {
+                                case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
+                                case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
+                                case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
+                                case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                            }
+                        }
                     }
+                    return UniTask.FromResult(new UseCardResponse { Success = true });
                 }
             }
-
-            return UniTask.FromResult(new UseCardResponse { Success = true });
         }
     }
 
@@ -221,7 +274,7 @@ namespace Marooned.Systems
         {
             // Lab A: meeting just snapshots whoever is currently visible; a real
             // "gather everyone" pause/summon step is a later lab.
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.Player.CurrentLocationId);
+            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
             return UniTask.FromResult(new CallMeetingResponse { Success = true, AttendingNpcs = npcs });
         }
     }
@@ -247,7 +300,7 @@ system ที่เหมาะสม แล้วคืน response กลั�
 | `GetVisibleNpcsHandler` | `GetVisibleNpcsRequest/Response` | [[DeductionSystem.cs]].GetObservableNpcsAt ที่ตำแหน่งผู้เล่น |
 | `GetClueBoardHandler` | `GetClueBoardRequest/Response` | คืน `CollectedClueCardIds` |
 | `MoveToLocationHandler` | `MoveToLocationRequest/Response` | ตรวจ connectivity จาก `LocationDefs` แล้วย้าย |
-| `UseCardHandler` | `UseCardRequest/Response` | [[CardInventorySystem.cs]].TryConsume + apply `StatEffect` |
+| `UseCardHandler` | `UseCardRequest/Response` | ตรวจ targeting → [[NpcDirectorSystem.cs]].CanEliminate/TryEliminate (weapon, Phase 4) หรือ [[CardInventorySystem.cs]].TryConsume + apply `StatEffect` |
 | `CallMeetingHandler` | `CallMeetingRequest/Response` | Snapshot NPC ที่มองเห็น (Lab A placeholder) |
 
 ทุก method มี signature: `UniTask<TRes> InvokeAsync(TReq request, CancellationToken ct = default)`
@@ -268,8 +321,16 @@ system ที่เหมาะสม แล้วคืน response กลั�
   พารามิเตอร์) และกรองผ่าน `DeductionSystem` เสมอ — ground truth ไม่หลุด
 - `MoveToLocationHandler`: ปฏิเสธด้วย `unknown_location` ถ้า id ไม่มี และ `not_connected`
   ถ้าไม่อยู่ใน `ConnectedLocationIds` ของ location ปัจจุบัน (การเดินทางเป็น graph-based)
-- `UseCardHandler`: ตรวจ `unknown_card` → `not_in_inventory` → หัก 1 ใบ → วน `StatEffect`
-  dictionary apply ตาม key (Hunger/Thirst/Mood/Fatigue) ด้วย clamp 0–100
+- `UseCardHandler` (Phase 4): **Order of Operations — เช็คก่อนหักการ์ดเสมอ (Safe UX)**:
+  1. `unknown_card` — id ไม่มีใน CardDefs
+  2. targeting: `SingleTarget` ไม่มี `TargetId` → `missing_target`; `Self` แต่ส่ง `TargetId`
+     มา → `invalid_target_type`
+  3. ถ้า `EffectType == Eliminate` (weapon): dry-run `NpcDirectorSystem.CanEliminate` —
+     ไม่ผ่าน (`witnessed`, `target_not_same_location`, `target_already_dead`, `unknown_target`)
+     คืน fail **โดยการ์ดยังไม่หาย**
+  4. ผ่านทุกเงื่อนไขค่อย `TryConsume` → ลงมือจริงผ่าน `TryEliminate` (ผล `ResultText =
+     eliminated_<npcId>`) หรือวน `StatEffect` dictionary apply ตาม key (Hunger/Thirst/Mood/
+     Fatigue) ด้วย clamp 0–100
 
 ## TODO / Known Issues
 - `AwaitNextEventHandler` เป็น **naive poll** — ไม่มี async wait จริง (ควร signal จาก
@@ -278,5 +339,6 @@ system ที่เหมาะสม แล้วคืน response กลั�
 - `ExploreLocationResponse.TriggeredEventId` ส่งค่าว่างเสมอ (`McpRequestHandlers.cs:28`)
 - `CallMeetingHandler` แค่ snapshot คนที่มองเห็น — ไม่มี pause/summon จริง
   (`McpRequestHandlers.cs:194-197`)
-- `UseCardHandler` ไม่ลบ condition card / ไม่รักษา illness (CureCardId ยังไม่ถูกใช้)
+- `UseCardHandler`: `CardEffectType.Cure` ยังไม่ implement — ลง path StatDelta เดิม
+  (ลบ condition card / รักษา illness ด้วย CureCardId ยังไม่ถูกใช้)
 - Handler ยังไม่ validate สถานะเกม (เช่น explore ตอนตายแล้ว, accuse นอก meeting)

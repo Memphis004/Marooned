@@ -55,11 +55,27 @@ namespace Marooned.Core
                 Debug.LogError("[PlayerCharacterView] visual prefab ไม่มี component ที่ implement IChibiVisual");
         }
 
+        /// <summary>ระยะเวลาล็อค one-shot action (กัน Update ทับด้วย idle/walk ก่อนเล่นจบ)</summary>
+        private const float ActionAnimLockSeconds = 0.8f;
+
+        /// <summary>
+        /// Phase 4 Step 8 (MVP Lite): จุด hook สำหรับ presenter — เรียก direct หลังใช้การ์ด
+        /// สำเร็จ (เช่น CardHandPresenter หลัง UseCardResponse.Success) เพื่อเล่น one-shot
+        /// action ("attack", "use_item", ...) แล้วล็อคไม่ให้ Update ทับด้วย idle/walk
+        /// — หมด lock แล้วกลับ idle/walk เองผ่าน Bind ใน Update เดิม (pattern เดียวกับ PlayPickup)
+        /// </summary>
+        public void PlayActionAnimation(string actionName)
+        {
+            if (_visual == null) return;
+            _visual.PlayAction(actionName);
+            _animLockUntil = Time.time + ActionAnimLockSeconds;
+        }
+
         /// <summary>ทุกเฟรม: อ่าน state ตรงจาก PlayerSurvivalState (ไม่ polling ระบบอื่น)</summary>
         private void Update()
         {
             if (_stateProvider == null) return;
-            var player = _stateProvider.Player;
+            var player = _stateProvider.GetPlayer();
 
             transform.position = new Vector3(player.PositionX, player.PositionY, 0f);
 
@@ -73,7 +89,7 @@ namespace Marooned.Core
         {
             if (_visual == null) return;
             _visual.PlayPickup();
-            _animLockUntil = Time.time + 0.8f; // กัน Update ทับ one-shot anim
+            _animLockUntil = Time.time + ActionAnimLockSeconds; // กัน Update ทับ one-shot anim
         }
 
         private void OnDestroy()

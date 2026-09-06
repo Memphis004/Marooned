@@ -94,8 +94,9 @@ ChibiSpawnerView ──(IChibiVisual)──┬── GenericCuteVisualController
 ```
 
 - **IChibiVisual** (`Marooned.Core.Visual`) — interface กลาง `Bind(NpcActivityState)` /
-  `SetFacing(bool)` / `Transform`; spawner พึง interface เท่านั้น ไม่รู้จัก backend
-  concrete (`GetComponent<IChibiVisual>()` หลัง Instantiate)
+  `SetFacing(bool)` / `Transform` / `PlayPickup()` (Lab B Phase 3) /
+  `PlayAction(string)` (Phase 4 — one-shot action เช่น "attack", "use_item"; spawner
+  พึง interface เท่านั้น ไม่รู้จัก backend concrete (`GetComponent<IChibiVisual>()` หลัง Instantiate)
 - **ChibiBackend enum** — { GenericCute, Spine } SerializeField บน ChibiSpawnerView;
   default = GenericCute (ห้ามเปลี่ยนพฤติกรรมเดิม)
 - **Character rotation** — backend Spine วน prefab ตามเลขท้าย npc id:

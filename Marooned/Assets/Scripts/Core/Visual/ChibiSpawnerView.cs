@@ -107,7 +107,7 @@ namespace Marooned.Core
         {
             if (!_resolved) return;
 
-            var playerLocation = _stateProvider.Player.CurrentLocationId;
+            var playerLocation = _stateProvider.GetPlayer().CurrentLocationId;
 
             foreach (var npc in _npcDirector.Npcs.Values)
             {

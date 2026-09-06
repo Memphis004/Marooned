@@ -10,7 +10,7 @@ namespace Marooned.Systems
 
         public CardInventorySystem(GameStateProvider stateProvider, LubanDataService dataService)
         {
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
             _cardDefs = dataService.CardDefs;
         }
 
@@ -45,7 +45,7 @@ namespace Marooned.Systems
         public CraftingSystem(CardInventorySystem inventory, GameStateProvider stateProvider, LubanDataService dataService)
         {
             _inventory = inventory;
-            _state = stateProvider.Player;
+            _state = stateProvider.GetPlayer();
             _recipes = dataService.RecipeDefs;
         }
 

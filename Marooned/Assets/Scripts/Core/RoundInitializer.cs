@@ -76,7 +76,7 @@ namespace Marooned.Core
         /// </summary>
         private void AssignStartingLocations()
         {
-            var playerLocation = _stateProvider.Player.CurrentLocationId;
+            var playerLocation = _stateProvider.GetPlayer().CurrentLocationId;
 
             foreach (var npc in _npcDirector.Npcs.Values)
             {

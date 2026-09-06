@@ -59,6 +59,22 @@ namespace Marooned.Core
         /// <summary>IChibiVisual: เล่น animation เก็บของแบบ one-shot (ถ้า prefab นี้มี state)</summary>
         public void PlayPickup() => PlayIfAvailable(pickupAnim);
 
+        /// <summary>
+        /// IChibiVisual (Phase 4 Step 8): เล่น one-shot action ตามชื่อ state จริงของ
+        /// controller นี้ — แต่ละ prefab ในตระกูลไม่แชร์ state names (ดู header) จึงรับ
+        /// ชื่อตรงๆ และเงียบไว้ถ้าไม่มี state นั้น (กติกาเดียวกับ PlayIfAvailable)
+        /// alias พื้นฐาน: "use_item" → interactAnim (Student 1 ใช้ท่า interact เป็นท่าใช้ของ)
+        /// </summary>
+        public void PlayAction(string actionName)
+        {
+            var target = actionName switch
+            {
+                "use_item" => interactAnim,
+                _ => actionName,
+            };
+            PlayIfAvailable(target);
+        }
+
         /// <summary>IChibiVisual: หันซ้าย/ขวาด้วยการ flip localScale.x</summary>
         public void SetFacing(bool facingRight)
         {
