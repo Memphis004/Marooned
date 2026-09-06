@@ -8,7 +8,7 @@ related:
   - "[[ChibiAnimatedRenderer.cs]]"
   - NpcActivityState
 folder: Core/Visual
-lines: 71
+lines: 91
 created: 2026-09-06
 tags:
   - Core

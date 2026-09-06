@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f74f5e8f38964684a9c56be18dc61ca3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 400200
+  packageName: Elena - Free 2D Animated Spine Character
+  packageVersion: 1.0.0.1
+  assetPath: Assets/Gamelauncher Studio/Elena/Animation/Elena_Controller.controller
+  uploadId: 974352

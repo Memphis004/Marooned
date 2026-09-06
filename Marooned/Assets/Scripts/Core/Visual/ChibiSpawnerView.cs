@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Marooned.Core.Visual;
 using Marooned.Shared;
 using Marooned.Systems;
 using MessagePipe;
@@ -9,6 +10,13 @@ using VContainer;
 
 namespace Marooned.Core
 {
+    /// <summary>เลือก visual backend ของ chibi (Phase 2: เพิ่ม Spine เป็น experimental)</summary>
+    public enum ChibiBackend
+    {
+        GenericCute, // default — 001 Student 1 (Unity Animator)
+        Spine,       // experimental — Elena/Derek (Spine-Unity SkeletonAnimation)
+    }
+
     /// <summary>
     /// Lab B — Visual layer สำหรับ Chibi (MVP Lite: View แบบ passive)
     /// คอย spawn/despawn chibi ของ NPC ที่อยู่ location เดียวกับผู้เล่น
@@ -18,14 +26,22 @@ namespace Marooned.Core
     ///    ใน Start() — ห้าม [Inject]/ลาก System ใส่ Inspector
     ///  - MessagePipe: subscribe PlayerLocationChangedMessage / NpcLocationChangedMessage
     ///    — ห้าม polling ตำแหน่งใน Update()
-    ///  - ส่วนเดียวที่ใช้ SerializeField คือ chibiPrefab (asset ล้วนๆ ไม่ใช่ System)
+    ///  - SerializeField รับได้เฉพาะ asset ล้วนๆ (prefab) + backend toggle
+    ///  - Phase 2: พึง IChibiVisual แทน concrete controller และสลับ prefab ตาม
+    ///    character rotation (npc_01→spinePrefabs[0], npc_02→[1], ...) เมื่อใช้ Spine
     ///
     /// ติดตั้งบน GameObject ลูกของ GameLifetimeScope (เช่น ChibiSystem)
     /// </summary>
     public class ChibiSpawnerView : MonoBehaviour
     {
-        [Header("Prefab ล้วนๆ — ลาก '001 Student 1 Character' ใส่ตรงนี้")]
-        [SerializeField] private GameObject chibiPrefab;
+        [Header("Backend (default: GenericCute)")]
+        [SerializeField] private ChibiBackend backend = ChibiBackend.GenericCute;
+
+        [Header("GenericCute backend — '001 Student 1 Character'")]
+        [SerializeField] private GameObject genericCutePrefab;
+
+        [Header("Spine backend (experimental) — เวียนสลับตาม index NPC เพื่อหน้าตาไม่ซ้ำกัน")]
+        [SerializeField] private GameObject[] spinePrefabs;
 
         private NpcDirectorSystem _npcDirector;
         private GameStateProvider _stateProvider;
@@ -35,6 +51,9 @@ namespace Marooned.Core
         private readonly Dictionary<string, GameObject> _activeChibis = new();
         private readonly List<IDisposable> _subscriptions = new();
         private bool _resolved;
+
+        /// <summary>อ่านค่า backend ปัจจุบัน (ให้ test script ใช้ยืนยัน config)</summary>
+        public ChibiBackend Backend => backend;
 
         private void Start()
         {
@@ -60,8 +79,7 @@ namespace Marooned.Core
             _subscriptions.Add(npcLocationSubscriber.Subscribe(_ => ReconcileChibis()));
 
             // Start() ของ GameObject อื่น (RoundInitializer บน GameManager) อาจยังไม่รัน
-            // จึงเลื่อน sync ครั้งแรกไป 1 เฟรม หลัง Start ทุกตัวเสร็จ — เป็น one-shot sync
-            // ไม่ใช่ polling (จากนี้ spawn/despawn ตอบสนองต่อ message เท่านั้น)
+            // จึงเลื่อน sync ครั้งแรกไป 1 เฟรม — one-shot sync ไม่ใช่ polling
             SyncInitialOnceAsync().Forget();
         }
 
@@ -98,19 +116,48 @@ namespace Marooned.Core
             foreach (var npcId in staleIds) DespawnChibi(npcId);
         }
 
+        /// <summary>
+        /// เลือก prefab ตาม backend:
+        ///  - GenericCute → ใช้ตัวเดียวหมด (พฤติกรรมเดิม Phase 1)
+        ///  - Spine → เวียนสลับตามเลขท้าย npc id (npc_01→[0] Elena, npc_02→[1] Derek, ...)
+        ///    เพื่อให้หน้าตาไม่ซ้ำกัน; ถ้า array ว่าง fallback กลับ GenericCute
+        /// </summary>
+        private GameObject PickPrefab(string npcId)
+        {
+            if (backend == ChibiBackend.Spine && spinePrefabs != null && spinePrefabs.Length > 0)
+            {
+                int npcNumber = ParseNpcNumber(npcId);
+                int index = npcNumber > 0 ? (npcNumber - 1) % spinePrefabs.Length : 0;
+                var picked = spinePrefabs[index];
+                if (picked != null) return picked;
+                Debug.LogWarning($"[ChibiSpawnerView] spinePrefabs[{index}] ว่าง — fallback ไป GenericCute");
+            }
+            return genericCutePrefab;
+        }
+
+        private static int ParseNpcNumber(string npcId)
+        {
+            // npc_03 → 3
+            var underscore = npcId != null ? npcId.LastIndexOf('_') : -1;
+            return underscore >= 0 && int.TryParse(npcId.Substring(underscore + 1), out var n) ? n : 0;
+        }
+
         private void SpawnChibi(NpcState npc)
         {
-            if (chibiPrefab == null)
+            var prefab = PickPrefab(npc.Id);
+            if (prefab == null)
             {
-                Debug.LogWarning("[ChibiSpawnerView] chibiPrefab ยังไม่ถูก assign ใน Inspector — ข้ามการ spawn");
+                Debug.LogWarning("[ChibiSpawnerView] prefab ยังไม่ถูก assign ใน Inspector — ข้ามการ spawn");
                 return;
             }
 
-            var chibi = Instantiate(chibiPrefab, transform);
+            var chibi = Instantiate(prefab, transform);
 
-            // ผูก NpcState ให้ visual controller map เป็น animation state
-            var visual = chibi.GetComponent<GenericCuteVisualController>();
-            if (visual != null) visual.Bind(npc);
+            // ผูก NpcActivityState เข้ากับ visual ผ่าน interface กลาง
+            // (spawner ไม่รู้จัก backend ข้างใต้ — Animator หรือ Spine)
+            var visual = chibi.GetComponent<IChibiVisual>();
+            if (visual != null) visual.Bind(npc.Activity);
+            else Debug.LogWarning($"[ChibiSpawnerView] '{chibi.name}' ไม่มี component ที่ implement IChibiVisual");
 
             // วางตำแหน่งตาม WorldX/WorldY ของ location + ไล่ offset กัน chibi ซ้อนกัน
             var position = Vector3.zero;
@@ -120,7 +167,7 @@ namespace Marooned.Core
             chibi.transform.localPosition = position;
 
             _activeChibis[npc.Id] = chibi;
-            Debug.Log($"[ChibiSpawnerView] Spawn chibi {npc.Id} @ {npc.CurrentLocationId} (active={_activeChibis.Count})");
+            Debug.Log($"[ChibiSpawnerView] Spawn chibi {npc.Id} ({chibi.name}) @ {npc.CurrentLocationId} (active={_activeChibis.Count})");
         }
 
         private void DespawnChibi(string npcId)

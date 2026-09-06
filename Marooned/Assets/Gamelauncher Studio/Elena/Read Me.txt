@@ -1,0 +1,40 @@
+Thank You for Downloading!
+
+Thank you for downloading this FREE Unity Asset from Gamelauncher Studio.
+
+We hope this asset helps you save time and makes your game development process easier.
+
+This asset is distributed through the Unity Asset Store and is subject to the applicable Unity Asset Store Terms and EULA.
+
+You may use the asset in your games and projects according to the license provided through the Unity Asset Store.
+
+Please do not redistribute, resell, or upload the original asset files as a standalone asset package.
+
+Feedback
+
+If you find this free asset useful, we would greatly appreciate your rating and review on the Unity Asset Store.
+
+Your feedback helps us improve our assets and create more free resources for the game development community.
+
+About Gamelauncher Studio
+
+Gamelauncher Studio creates game assets, templates, characters, environments, animations, and ready-to-use game development resources for Unity and other game engines.
+
+Thank you for supporting our work.
+
+Happy Game Development!
+
+SUPPORT EMAIL: support@gamelauncher.net
+OFFICIAL WEBSITE: Gamelauncher.net
+FOR CUSTOM PROJECTS: hello@gamelauncher.net
+
+-------------------------------------------------------------------------------
+Important
+-------------------------------------------------------------------------------
+
+You do not need spine software to run this package, only the Spine-Unity Runtime 4.0 package is needed in your Unity project.
+
+You Can Downloaded From Here - https://esotericsoftware.com/spine-unity-download
+
+-------------------------------------------------------------------------------
+If You Face Color Releted Issue Go To Edit>Project Setting>Player>Others Setting>Set color Space To Gamma.

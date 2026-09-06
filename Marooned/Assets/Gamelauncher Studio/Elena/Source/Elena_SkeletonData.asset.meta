@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 233d89b9d6efadc40a62f931d8e0d487
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 400200
+  packageName: Elena - Free 2D Animated Spine Character
+  packageVersion: 1.0.0.1
+  assetPath: Assets/Gamelauncher Studio/Elena/Source/Elena_SkeletonData.asset
+  uploadId: 974352

@@ -1,0 +1,58 @@
+Elena.png
+size:2048,1024
+filter:Linear,Linear
+pma:true
+Body
+bounds:779,2,343,632
+offsets:0,199,374,1120
+rotate:90
+Head
+bounds:1787,316,248,249
+offsets:0,50,280,312
+rotate:90
+Head -1
+bounds:1682,566,248,249
+offsets:0,50,280,312
+rotate:90
+Head -2
+bounds:783,390,248,249
+offsets:0,50,280,312
+rotate:90
+Head -3
+bounds:1034,347,248,249
+offsets:0,50,280,312
+rotate:90
+Head -4
+bounds:1285,347,248,249
+offsets:0,50,280,312
+rotate:90
+Head -5
+bounds:1536,316,248,249
+offsets:0,50,280,312
+rotate:90
+Hip
+bounds:923,640,211,174
+offsets:9,17,237,191
+L hand
+bounds:2,713,101,159
+offsets:0,10,106,169
+rotate:90
+L hand knife
+bounds:163,681,316,133
+offsets:0,2,316,135
+L_arm
+bounds:481,660,154,440
+offsets:15,0,182,455
+rotate:90
+L_leg
+bounds:2,434,224,779
+offsets:6,0,235,802
+rotate:90
+R_arm
+bounds:1136,597,217,544
+offsets:9,6,226,554
+rotate:90
+R_leg
+bounds:2,176,256,775
+offsets:1,0,276,779
+rotate:90

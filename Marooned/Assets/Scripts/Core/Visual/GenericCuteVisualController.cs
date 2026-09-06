@@ -1,25 +1,29 @@
 using System.Collections.Generic;
+using Marooned.Core.Visual;
 using Marooned.Shared;
 using UnityEngine;
+using VContainer;
 
 namespace Marooned.Core
 {
     /// <summary>
     /// Lab B — Wrapper เฉพาะสำหรับ asset "Generic Cute 2D - 001 Student 1"
-    /// (Unity Animator/PSB skeletal) — แยกจาก ChibiAnimatedRenderer (frame-swap
-    /// paperdoll เดิม) เพื่อพิสูจน์ Lab B flow ก่อน
+    /// (Unity Animator/PSB skeletal) — backend เริ่มต้นของ ChibiSpawnerView
+    ///
+    /// Phase 2: implement IChibiVisual เพื่อให้ spawner สลับ backend ได้
+    /// (Spine backend ดูที่ SpineVisualController)
     ///
     /// หมายเหตุสำคัญจากการตรวจ asset จริง: Basic.controller ของ asset นี้
     /// **ไม่มี Animator Parameter เลย** (m_AnimatorParameters: []) แต่มี state
-    /// ชื่อ idle / walk / interact / run / dig ฯลฯ ดังนั้นการ map จึงใช้
-    /// Animator.Play("stateName") แทนการ set parameter int "State"
+    /// ชื่อ idle / walk / interact / run ฯลฯ ดังนั้นการ map จึงใช้
+    /// Animator.Play("stateName") แทนการ set parameter
     ///
-    /// เป็น View แบบ passive — รับ NpcState ผ่าน Bind() ไม่ Resolve ระบบใดๆ เอง
+    /// เป็น View แบบ passive — ไม่ Resolve ระบบใดๆ เอง
     /// (การ DI ทั้งหมดอยู่ที่ ChibiSpawnerView ผู้เดียว)
     /// </summary>
-    public class GenericCuteVisualController : MonoBehaviour
+    public class GenericCuteVisualController : MonoBehaviour, IChibiVisual
     {
-        // Map NpcState.Activity → ชื่อ state ใน Basic.controller (state จริงของ asset)
+        // Map NpcActivityState → ชื่อ state ใน Basic.controller (state จริงของ asset)
         // - Idle/Resting → "idle"
         // - Traveling/Gathering → "walk" (Gathering ยังไม่มี animation เฉพาะ รอ schedule system)
         // - Talking → "interact"
@@ -33,8 +37,9 @@ namespace Marooned.Core
         };
 
         private Animator _animator;
-        private NpcState _npc;
         private NpcActivityState _lastAppliedActivity = (NpcActivityState)(-1);
+
+        public Transform Transform => transform;
 
         private void Awake()
         {
@@ -43,26 +48,33 @@ namespace Marooned.Core
                 Debug.LogError($"[GenericCuteVisualController] '{name}' ไม่มี Animator component");
         }
 
-        /// <summary>ผูก NpcState (ground truth จาก NpcDirectorSystem) เข้ากับ visual นี้</summary>
-        public void Bind(NpcState npc)
+        /// <summary>IChibiVisual: apply animation ตาม activity (เล่นซ้ำเฉพาะเมื่อ state เปลี่ยน)</summary>
+        public void Bind(NpcActivityState state)
         {
-            _npc = npc;
-            _lastAppliedActivity = (NpcActivityState)(-1); // บังคับ apply ใหม่
-            ApplyActivity();
+            _lastAppliedActivity = (NpcActivityState)(-1); // บังคับ apply
+            ApplyActivity(state);
+        }
+
+        /// <summary>IChibiVisual: หันซ้าย/ขวาด้วยการ flip localScale.x</summary>
+        public void SetFacing(bool facingRight)
+        {
+            var scale = transform.localScale;
+            scale.x = Mathf.Abs(scale.x) * (facingRight ? 1f : -1f);
+            transform.localScale = scale;
         }
 
         /// <summary>
-        /// Map NpcState.Activity ปัจจุบัน → animation state ของ Basic.controller
+        /// Map activity → animation state ของ Basic.controller
         /// เรียกเมื่อ Bind() เท่านั้น (ไม่ polling ใน Update) — เมื่ออนาคตมี
         /// NpcActivityChangedMessage จะเปลี่ยนมา subscribe แทน
         /// </summary>
-        private void ApplyActivity()
+        private void ApplyActivity(NpcActivityState activity)
         {
-            if (_npc == null || _animator == null) return;
-            if (_npc.Activity == _lastAppliedActivity) return;
-            _lastAppliedActivity = _npc.Activity;
+            if (_animator == null) return;
+            if (activity == _lastAppliedActivity) return;
+            _lastAppliedActivity = activity;
 
-            if (!ActivityToAnimState.TryGetValue(_npc.Activity, out var stateName)) return;
+            if (!ActivityToAnimState.TryGetValue(activity, out var stateName)) return;
 
             // เช็คว่า state นี้มีอยู่จริงใน controller ก่อน Play กัน warning รัวๆ
             if (_animator.runtimeAnimatorController != null &&

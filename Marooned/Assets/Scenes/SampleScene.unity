@@ -495,7 +495,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e725ecdf5be296469a8c436d88a3bb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.ChibiSpawnerView
-  chibiPrefab: {fileID: 1908850870069242641, guid: ee14459f600f6ec4783a1f1bae436bcc, type: 3}
+  backend: 0
+  genericCutePrefab: {fileID: 1908850870069242641, guid: ee14459f600f6ec4783a1f1bae436bcc, type: 3}
+  spinePrefabs:
+  - {fileID: 7342099114468804206, guid: 793ca76394a58e441969d6aa80c609ac, type: 3}
+  - {fileID: 656045509588373927, guid: c3e68fa16c2fc594f83db62b69a163e8, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
