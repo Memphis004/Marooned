@@ -1,7 +1,7 @@
 ---
 title: LocationDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/LocationDef.cs]
+sources: ["[[sources/locationdef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

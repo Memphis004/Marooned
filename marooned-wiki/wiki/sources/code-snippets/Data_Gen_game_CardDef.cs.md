@@ -1,7 +1,7 @@
 ---
 title: CardDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/CardDef.cs]
+sources: ["[[sources/carddef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

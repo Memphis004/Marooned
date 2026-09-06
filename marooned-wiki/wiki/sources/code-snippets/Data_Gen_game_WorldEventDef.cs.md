@@ -1,7 +1,7 @@
 ---
 title: WorldEventDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/WorldEventDef.cs]
+sources: ["[[sources/worldeventdef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

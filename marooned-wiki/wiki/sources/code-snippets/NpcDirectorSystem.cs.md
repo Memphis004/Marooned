@@ -1,7 +1,7 @@
 ---
 title: NpcDirectorSystem
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/NpcDirectorSystem.cs]
+sources: ["[[sources/npcdirectorsystem-cs]]"]
 related:
   - "[[NpcState]]"
   - "[[DeductionSystem.cs]]"

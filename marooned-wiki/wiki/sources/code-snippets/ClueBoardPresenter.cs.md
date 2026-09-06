@@ -1,7 +1,7 @@
 ---
 title: ClueBoardPresenter
 type: snippet
-sources: [Marooned/Assets/Scripts/UI/Presenters/ClueBoardPresenter.cs]
+sources: ["[[sources/clueboardpresenter-cs]]"]
 related:
   - MVP-Lite
   - "[[ClueBoardView.cs]]"

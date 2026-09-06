@@ -1,7 +1,7 @@
 ---
 title: TbIllnessDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/TbIllnessDef.cs]
+sources: ["[[sources/tbillnessdef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

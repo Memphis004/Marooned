@@ -1,7 +1,7 @@
 ---
 title: Tables
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/Tables.cs]
+sources: ["[[sources/tables-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

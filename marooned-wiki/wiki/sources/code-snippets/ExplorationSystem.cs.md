@@ -1,7 +1,7 @@
 ---
 title: ExplorationSystem
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/ExplorationSystem.cs]
+sources: ["[[sources/explorationsystem-cs]]"]
 related:
   - "[[LocationDef]]"
   - "[[CardInventorySystem.cs]]"

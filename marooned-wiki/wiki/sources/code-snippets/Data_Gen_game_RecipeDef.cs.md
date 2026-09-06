@@ -1,7 +1,7 @@
 ---
 title: RecipeDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/RecipeDef.cs]
+sources: ["[[sources/recipedef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

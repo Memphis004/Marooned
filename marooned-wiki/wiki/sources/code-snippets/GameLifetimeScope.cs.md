@@ -1,7 +1,7 @@
 ---
 title: GameLifetimeScope
 type: snippet
-sources: [Marooned/Assets/Scripts/Core/GameLifetimeScope.cs]
+sources: ["[[sources/gamelifetimescope-cs]]"]
 related:
   - VContainer
   - MessagePipe

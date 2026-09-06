@@ -1,7 +1,7 @@
 ---
 title: LubanDataService
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/GameStateProvider.cs]
+sources: ["[[sources/gamestateprovider-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs|GameStateProvider]]"

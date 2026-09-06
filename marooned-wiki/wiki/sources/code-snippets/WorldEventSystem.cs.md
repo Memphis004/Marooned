@@ -1,7 +1,7 @@
 ---
 title: WorldEventSystem
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/WorldEventSystem.cs]
+sources: ["[[sources/worldeventsystem-cs]]"]
 related:
   - "[[WorldEventDef]]"
   - "[[LubanDataService.cs]]"

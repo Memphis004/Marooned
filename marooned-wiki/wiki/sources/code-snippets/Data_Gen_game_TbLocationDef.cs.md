@@ -1,7 +1,7 @@
 ---
 title: TbLocationDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/TbLocationDef.cs]
+sources: ["[[sources/tblocationdef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

@@ -1,7 +1,7 @@
 ---
 title: DeductionSystem
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/DeductionSystem.cs]
+sources: ["[[sources/deductionsystem-cs]]"]
 related:
   - "[[NpcDirectorSystem.cs]]"
   - "[[NpcState]]"

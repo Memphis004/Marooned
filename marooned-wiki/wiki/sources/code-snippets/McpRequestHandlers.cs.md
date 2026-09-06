@@ -1,7 +1,7 @@
 ---
 title: McpRequestHandlers
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/McpRequestHandlers.cs]
+sources: ["[[sources/mcprequesthandlers-cs]]"]
 related:
   - MessagePipe-Interprocess
   - "[[mcp-bridge]]"

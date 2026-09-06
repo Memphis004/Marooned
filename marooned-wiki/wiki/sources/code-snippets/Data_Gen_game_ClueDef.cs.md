@@ -1,7 +1,7 @@
 ---
 title: ClueDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/ClueDef.cs]
+sources: ["[[sources/cluedef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

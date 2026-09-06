@@ -1,7 +1,7 @@
 ---
 title: ChibiAnimatedRenderer
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/ChibiAnimatedRenderer.cs]
+sources: ["[[sources/chibianimatedrenderer-cs]]"]
 related:
   - "[[ChibiAppearance]]"
   - "[[ChibiPartDef]]"

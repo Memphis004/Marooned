@@ -1,7 +1,7 @@
 ---
 title: TbCardDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/TbCardDef.cs]
+sources: ["[[sources/tbcarddef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

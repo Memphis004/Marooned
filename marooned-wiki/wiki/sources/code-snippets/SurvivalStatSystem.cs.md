@@ -1,7 +1,7 @@
 ---
 title: SurvivalStatSystem
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/SurvivalStatSystem.cs]
+sources: ["[[sources/survivalstatsystem-cs]]"]
 related:
   - "[[PlayerSurvivalState]]"
   - "[[LubanDataService.cs|GameStateProvider]]"

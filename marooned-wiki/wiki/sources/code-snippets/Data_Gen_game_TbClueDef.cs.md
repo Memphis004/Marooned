@@ -1,7 +1,7 @@
 ---
 title: TbClueDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/TbClueDef.cs]
+sources: ["[[sources/tbcluedef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"

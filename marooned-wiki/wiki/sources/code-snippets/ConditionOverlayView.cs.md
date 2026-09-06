@@ -1,7 +1,7 @@
 ---
 title: ConditionOverlayView
 type: snippet
-sources: [Marooned/Assets/Scripts/UI/Views/ConditionOverlayView.cs]
+sources: ["[[sources/conditionoverlayview-cs]]"]
 related:
   - MVP-Lite
   - "[[UIRoot.cs]]"

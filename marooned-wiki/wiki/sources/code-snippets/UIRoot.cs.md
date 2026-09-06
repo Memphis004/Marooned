@@ -1,7 +1,7 @@
 ---
 title: UIRoot
 type: snippet
-sources: [Marooned/Assets/Scripts/UI/Core/UIRoot.cs]
+sources: ["[[sources/uiroot-cs]]"]
 related:
   - MVP-Lite
   - VContainer

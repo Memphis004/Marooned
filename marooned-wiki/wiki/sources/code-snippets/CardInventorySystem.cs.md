@@ -1,7 +1,7 @@
 ---
 title: CardInventorySystem
 type: snippet
-sources: [Marooned/Assets/Scripts/Systems/CardInventorySystem.cs]
+sources: ["[[sources/cardinventorysystem-cs]]"]
 related:
   - "[[CraftingSystem.cs]]"
   - "[[CardDef]]"

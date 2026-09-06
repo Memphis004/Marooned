@@ -1,7 +1,7 @@
 ---
 title: MapExploreView
 type: snippet
-sources: [Marooned/Assets/Scripts/UI/Views/MapExploreView.cs]
+sources: ["[[sources/mapexploreview-cs]]"]
 related:
   - MVP-Lite
   - "[[MapExplorePresenter.cs]]"

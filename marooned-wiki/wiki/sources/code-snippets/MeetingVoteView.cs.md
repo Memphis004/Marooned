@@ -1,7 +1,7 @@
 ---
 title: MeetingVoteView
 type: snippet
-sources: [Marooned/Assets/Scripts/UI/Views/MeetingVoteView.cs]
+sources: ["[[sources/meetingvoteview-cs]]"]
 related:
   - MVP-Lite
   - "[[MeetingVotePresenter.cs]]"

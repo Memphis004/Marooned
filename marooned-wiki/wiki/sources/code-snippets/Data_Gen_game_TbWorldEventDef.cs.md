@@ -1,7 +1,7 @@
 ---
 title: TbWorldEventDef
 type: snippet
-sources: [Marooned/Assets/Scripts/Data/Gen/game/TbWorldEventDef.cs]
+sources: ["[[sources/tbworldeventdef-cs]]"]
 related:
   - Luban
   - "[[LubanDataService.cs]]"
