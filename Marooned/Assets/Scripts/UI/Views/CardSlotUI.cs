@@ -1,5 +1,7 @@
+using System;
 using Marooned.Shared;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Marooned.UI.Views
@@ -7,8 +9,11 @@ namespace Marooned.UI.Views
     /// <summary>
     /// Placeholder card visual (ยังไม่มี art): พื้นหลังสีตาม CardCategory +
     /// ไอคอนกล่องขาว + ป้ายชื่อที่ขอบล่าง (โชว์ count เมื่อซ้อน) — pop/pulse ด้วย local scale
+    ///
+    /// Lab B Phase 5 (click-to-use): ติด IPointerClickHandler — คลิกซ้าย → ส่งต่อ cardId
+    /// ผ่าน event Clicked (View passive — Presenter เป็นคนตัดสินใจว่าจะใช้การ์ดยังไง)
     /// </summary>
-    public class CardSlotUI : MonoBehaviour
+    public class CardSlotUI : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private Image background;
         [SerializeField] private Image icon;
@@ -17,12 +22,19 @@ namespace Marooned.UI.Views
         /// <summary>จำนวนปัจจุบันที่แสดง — CardHandView ใช้เทียบว่าต้อง pulse ไหม</summary>
         public int Count { get; private set; }
 
+        /// <summary>cardId ที่ slot นี้กำลังแสดง (null = pooled slot ว่าง — คลิกแล้วเฉยๆ)</summary>
+        public string CardId { get; private set; }
+
+        /// <summary>MVP Lite: คลิก → ส่งต่อ cardId ให้ผู้ subscribe (Presenter) ตัดสินใจเอง</summary>
+        public event Action<string> Clicked;
+
         private float _animT = -1f; // <0 = idle
         private const float PopDuration = 0.18f;
         private const float PopScale = 0.25f;
 
         public void SetCard(string cardId, string displayName, CardCategory category, int count)
         {
+            CardId = cardId;
             Count = count;
             if (background != null) background.color = ColorFor(category);
             if (label != null)
@@ -34,6 +46,17 @@ namespace Marooned.UI.Views
                 label.text = count > 1 ? $"{shown} x{count}" : shown;
             }
             // icon sprite: รอ SpritePath จริงจาก art pipeline (Lab A ยังไม่มี art)
+        }
+
+        /// <summary>
+        /// IPointerClickHandler: คลิกซ้ายบนการ์ด → ยิง event Clicked(cardId)
+        /// (event จาก child Graphic เช่น Icon bubble ขึ้นมาถึง root ได้เองตาม EventSystem)
+        /// </summary>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (string.IsNullOrEmpty(CardId)) return; // pooled slot ว่าง — ไม่ตอบสนอง
+            Clicked?.Invoke(CardId);
         }
 
         /// <summary>เด้ง 1 ครั้ง (การ์ดใหม่ หรือ count เพิ่ม)</summary>

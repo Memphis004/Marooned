@@ -48,6 +48,11 @@ namespace Marooned.Systems
         public float ZoneSpread = 2.5f;
 
         private readonly List<WorldItem> _activeItems = new();
+
+        // Patch: กัน respawn ซ้ำในรอบเดียวกัน — location ที่เคย spawn แล้วจะไม่ spawn อีก
+        // (ของที่ถูกเก็บไปหายถาวรจนจบรอบ) — ClearItems() ห้ามล้าง Set นี้
+        private readonly HashSet<string> _spawnedLocations = new();
+
         private IDisposable _subscription;
         private Transform _itemLayer;
         private Sprite _itemSprite;
@@ -72,7 +77,10 @@ namespace Marooned.Systems
             _labelFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             // spawn ชุดแรกตาม location เริ่มต้น + subscribe การย้ายโซน
-            SpawnForLocation(_stateProvider.GetPlayer().CurrentLocationId);
+            // (จด location เริ่มต้นไว้ใน Set ด้วย — กลับมาซ้ำตอนหลังต้องไม่ respawn)
+            var initialLocation = _stateProvider.GetPlayer().CurrentLocationId;
+            _spawnedLocations.Add(initialLocation);
+            SpawnForLocation(initialLocation);
             _subscription = _playerLocationSubscriber.Subscribe(msg => RespawnForLocation(msg.NewLocationId));
         }
 
@@ -80,6 +88,13 @@ namespace Marooned.Systems
 
         private void RespawnForLocation(string locationId)
         {
+            // Patch: เคย spawn โซนนี้ไปแล้วในรอบนี้ → ข้าม (กลับมาใหม่ไม่ spawn ซ้ำ)
+            // Add() คืน false เมื่อ id อยู่ใน Set อยู่แล้ว — ใช้เป็น check+จดพร้อมกัน
+            if (!_spawnedLocations.Add(locationId))
+            {
+                Debug.Log($"[WorldItemSystem] skip respawn @ {locationId} (เคย spawn แล้วในรอบนี้)");
+                return;
+            }
             ClearItems();
             SpawnForLocation(locationId);
         }

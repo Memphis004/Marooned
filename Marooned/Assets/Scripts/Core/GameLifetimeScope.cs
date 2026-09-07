@@ -118,8 +118,13 @@ namespace Marooned.Core
             // Assets/Editor/UiSetupAutomation.cs) ไม่งั้น RegisterComponentInHierarchy
             // จะ throw ตอน container build
             builder.RegisterComponentInHierarchy<CardHandView>();
+            // Lab B Phase 5 (click-to-use): ChibiSpawnerView ให้ event NpcClicked/WorldClicked
+            // + SetTargetSelectionMode — CardHandPresenter ใช้เป็น "เลือกเป้าหมาย" ของ weapon card
+            builder.RegisterComponentInHierarchy<ChibiSpawnerView>();
             // Presenter เป็น plain C# (IInitializable) — subscribe CardInventoryChangedMessage
             // แล้ว push RenderHand ให้ view; CardHandView ถูก inject จาก hierarchy registration บน
+            // UseCardHandler resolve ผ่าน IAsyncRequestHandler<UseCardRequest, UseCardResponse>
+            // (register ไว้แล้วด้านบน) — ผลลัพธ์ Success/Failure แสดงผ่าน CardHandView.ShowFeedback
             builder.RegisterEntryPoint<CardHandPresenter>(Lifetime.Singleton).AsSelf();
         }
     }

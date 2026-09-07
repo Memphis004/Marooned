@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "wiki/sources/devlog-history/2026-09-07-lab-a-closure-b-phases-architecture-refactor.md",
+                "file": "wiki/sources/architecture/card-system.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-09-07-lab-a-closure-b-phases-architecture-refactor"
+              "title": "card-system"
             }
           }
         ]
@@ -206,17 +206,22 @@
   },
   "active": "03478e020e893a84",
   "lastOpenFiles": [
-    "wiki/sources/devlog-history/2026-09-05.md",
-    "wiki/sources/architecture/card-system.md",
-    "wiki/sources/game-design-doc/game_design_doc.md",
-    "wiki/sources/devlog-history/2026-09-07-lab-a-closure-b-phases-architecture-refactor.md",
-    "wiki/sources/architecture/chibi-visual-system.md",
-    "wiki/sources/mechanics/deduction.md",
-    "wiki/sources/architecture/player-system.md",
+    "wiki/sources/mechanics/card-inventory.md",
+    "wiki/sources/mechanics/exploration.md",
+    "wiki/sources/mechanics/npc-director.md",
+    "wiki/sources/mechanics/survival-stats.md",
+    "wiki/sources/mechanics/world-events.md",
     "wiki/sources/mechanics/crafting.md",
     "wiki/sources/mechanics/chibi-avatar.md",
-    "wiki/sources/mechanics/world-events.md",
-    "wiki/sources/mechanics/exploration.md",
+    "wiki/sources/architecture/mcp-bridge.md",
+    "wiki/sources/architecture/chibi-visual-system.md",
+    "wiki/sources/architecture/card-system.md",
+    "wiki/sources/architecture/player-system.md",
+    "wiki/sources/architecture/overview.md",
+    "wiki/sources/devlog-history/2026-09-07-lab-a-closure-b-phases-architecture-refactor.md",
+    "wiki/sources/devlog-history/2026-09-05.md",
+    "wiki/sources/game-design-doc/game_design_doc.md",
+    "wiki/sources/mechanics/deduction.md",
     "wiki/sources/index.md",
     "wiki/sources/architecture/mcp-tool-table.md",
     "wiki/sources/chibi-visual-system.md",
@@ -227,11 +232,6 @@
     "wiki/sources/code-snippets/ChibiSpawnerView.cs.md",
     "wiki/sources/code-snippets/GameTickDriver.cs.md",
     "wiki/sources/code-snippets/RoundInitializer.cs.md",
-    "wiki/sources/mechanics/npc-director.md",
-    "wiki/sources/code-snippets/CardHandPresenter.cs.md",
-    "wiki/sources/code-snippets/ChibiAnimatedRenderer.cs.md",
-    "wiki/sources/code-snippets/Data_Gen_game_ClueDef.cs.md",
-    "wiki/sources/code-snippets/Data_Gen_game_LocationDef.cs.md",
     "sources",
     "wiki/sources/devlog-history",
     "wiki/sources/architecture/mcp-bridge.md.tmp.3148.f45e9b0bb1dd",

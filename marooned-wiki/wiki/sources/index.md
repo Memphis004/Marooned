@@ -99,6 +99,7 @@ tags:
 ## 📋 Conventions & Logs
 - [[conventions]] — Coding conventions จากโค้ดจริง
 - [[2026-09-05]] — Dev Log วันแรก
+- [[2026-09-07-lab-a-closure-b-phases-architecture-refactor]] — Dev Log: ปิด Lab A (MCP round trip) + Lab B Phase 1-4 (Chibi, Player, Player-as-Killer, refactor) + patch WorldItemSystem กัน item respawn ซ้ำ
 
 ## 🗂️ โครงสร้าง Wiki
 

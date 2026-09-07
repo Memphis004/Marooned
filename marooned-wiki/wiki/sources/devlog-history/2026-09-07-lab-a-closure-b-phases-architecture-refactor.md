@@ -201,6 +201,55 @@ tags:
 
 ---
 
+### 6. Patch — WorldItemSystem: กัน Item Respawn เมื่อกลับมาโซนเดิม ✅
+
+#### 6.1 ปัญหา
+- จาก Phase 3 (Zone-based Loot): `WorldItemSystem` spawn ไอเท็มใหม่ทุกครั้งที่ player ย้ายเข้าโซน
+  (`RespawnForLocation` ถูกเรียกจาก `PlayerLocationChangedMessage` ทุกครั้ง)
+- ผลคือ: เดินออกจาก beach แล้วกลับเข้ามา → มะพร้าว spawn ใหม่ทั้งก้อน ทั้งที่เก็บไปแล้ว
+  → **farm ไอเท็มได้ไม่จำกัดในรอบเดียว** (ทำลาย economy ของ survival loop)
+
+#### 6.2 วิธีแก้ (แก้แค่ `WorldItemSystem.cs` 3 จุด)
+- เพิ่ม field `HashSet<string> _spawnedLocations` — จดว่าโซนไหนเคย spawn แล้วในรอบนี้
+- `Initialize()` — เพิ่ม location เริ่มต้นเข้า Set **ก่อน** spawn ชุดแรก (กันกลับมาซ้ำตอนหลัง)
+- `RespawnForLocation()` — ใช้ `_spawnedLocations.Add(locationId)` เป็น check+จดพร้อมกัน
+  (`Add()` คืน `false` เมื่อ id อยู่แล้ว → log "skip respawn" แล้ว return)
+- `ClearItems()` — **ไม่แก้** (ห้ามล้าง Set) — ยืนยันด้วย search ว่า Set ถูกอ้างอิงแค่ 3 จุด:
+  ประกาศ field / Initialize / RespawnForLocation
+
+```csharp
+private void RespawnForLocation(string locationId)
+{
+    // เคย spawn โซนนี้ไปแล้วในรอบนี้ → ข้าม (Add() คืน false = มีอยู่ใน Set แล้ว)
+    if (!_spawnedLocations.Add(locationId))
+    {
+        Debug.Log($"[WorldItemSystem] skip respawn @ {locationId} (เคย spawn แล้วในรอบนี้)");
+        return;
+    }
+    ClearItems();
+    SpawnForLocation(locationId);
+}
+```
+
+#### 6.3 พฤติกรรมใหม่
+
+| สถานการณ์ | เดิม | หลัง patch |
+|---|---|---|
+| เข้า beach ครั้งแรก | spawn 3 มะพร้าว | spawn 3 มะพร้าว (เหมือนเดิม) |
+| ออกจาก beach แล้วกลับมา | spawn ใหม่ทั้งหมด ❌ | "skip respawn" — โซนว่าง ✅ |
+| เก็บไป 2 ผล แล้วออก-กลับ | spawn ครบ 3 ผล ❌ | หายถาวรทั้งก้อนจนจบรอบ ✅ |
+| เข้าโซนใหม่ครั้งแรก (jungle_edge) | spawn | spawn (เหมือนเดิม) |
+
+#### 6.4 Known Trade-off
+- โซนที่ "เคยเข้าแล้วออก" โดยยังไม่ได้เก็บ — ไอเท็ม despawn ตอนออก และจะ**ไม่กลับมาอีกจนจบรอบ**
+  (ตรง spec "ไม่ respawn ซ้ำในรอบเดียวกัน" แต่อาจรู้สึกว่างผิดคาด)
+- ถ้าอนาคตอยากให้ของคงอยู่ข้ามการ revisit → เปลี่ยนจาก despawn-on-leave เป็น persist visual
+  (เก็บ GameObject ไว้ ไม่ต้องรอ respawn) — ต่างจาก patch นี้ ต้องตัดสินใจแยก
+- Set นี้ reset ตอนเริ่มรอบใหม่ (ระบบเป็น Singleton ต่อ Play session — round reset จริงจัง
+  ควรมาพร้อม `ResetRoundState()` ใน Lab ถัดไปถ้ามี restart flow)
+
+---
+
 ## ⚠️ ปัญหาที่เจอและวิธีแก้
 
 | ปัญหา | Solution |
@@ -209,6 +258,7 @@ tags:
 | Spine asset ยังไม่พร้อม | สร้าง Interface `IChibiVisual` รอ swap เมื่อ art ready |
 | อยากให้ player เป็น killer ได้ | Refactor `CardDef` + สร้าง `TryEliminate` method กลาง |
 | กลัวเปลี่ยน structure แล้วต้อง refactor ทุกที่ | Refactor `GameStateProvider` แบบ backward compatible |
+| กลับโซนเดิมแล้วของ spawn ใหม่ (farm ไม่จำกัด) | `HashSet<string> _spawnedLocations` จดโซนที่เคย spawn — `ClearItems()` ไม่ล้าง Set |
 
 ---
 
@@ -216,6 +266,8 @@ tags:
 
 - [ ] ทำ UI Setup Automation สำหรับ `CardHandView` (Canvas, Container, Prefab)
 - [ ] ทดสอบ Runtime การเด้งของการ์ดและ Animation เมื่อ Inventory เป็น
+- [ ] ตัดสินใจว่าจะให้ไอเท็ม persist ข้ามการ revisit ไหม (ดู Patch 6.4 trade-off)
+- [ ] ถ้ามี restart/replay flow → เพิ่ม `ResetRoundState()` ให้ `WorldItemSystem` เคลียร์ `_spawnedLocations`
 
 ---
 
