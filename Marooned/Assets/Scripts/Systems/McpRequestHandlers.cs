@@ -16,16 +16,28 @@ namespace Marooned.Systems
     public class ExploreLocationHandler : IAsyncRequestHandler<ExploreLocationRequest, ExploreLocationResponse>
     {
         private readonly ExplorationSystem _exploration;
-        public ExploreLocationHandler(ExplorationSystem exploration) => _exploration = exploration;
+        private readonly McpMainThreadDispatcher _mainThread;
 
-        public UniTask<ExploreLocationResponse> InvokeAsync(ExploreLocationRequest request, CancellationToken cancellationToken = default)
+        public ExploreLocationHandler(ExplorationSystem exploration, McpMainThreadDispatcher mainThread)
         {
-            var (success, found) = _exploration.Explore(request.LocationId);
-            return UniTask.FromResult(new ExploreLocationResponse
+            _exploration = exploration;
+            _mainThread = mainThread;
+        }
+
+        public async UniTask<ExploreLocationResponse> InvokeAsync(ExploreLocationRequest request, CancellationToken cancellationToken = default)
+        {
+            // Test C fix: handler ถูก invoke บน TCP background thread — body ต้อง
+            // รันบน main thread เพราะ publish chain (inventory → UI re-render,
+            // location → chibi spawn) แตะ Unity API
+            return await _mainThread.EnqueueAsync(() =>
             {
-                Success = success,
-                FoundCardIds = found,
-                TriggeredEventId = "" // wire up WorldEventSystem roll here in Lab A
+                var (success, found) = _exploration.Explore(request.LocationId);
+                return new ExploreLocationResponse
+                {
+                    Success = success,
+                    FoundCardIds = found,
+                    TriggeredEventId = "" // wire up WorldEventSystem roll here in Lab A
+                };
             });
         }
     }
@@ -33,12 +45,21 @@ namespace Marooned.Systems
     public class CraftCardHandler : IAsyncRequestHandler<CraftCardRequest, CraftCardResponse>
     {
         private readonly CraftingSystem _crafting;
-        public CraftCardHandler(CraftingSystem crafting) => _crafting = crafting;
+        private readonly McpMainThreadDispatcher _mainThread;
 
-        public UniTask<CraftCardResponse> InvokeAsync(CraftCardRequest request, CancellationToken cancellationToken = default)
+        public CraftCardHandler(CraftingSystem crafting, McpMainThreadDispatcher mainThread)
         {
-            var (success, reason, output) = _crafting.TryCraft(request.RecipeId);
-            return UniTask.FromResult(new CraftCardResponse { Success = success, FailureReason = reason, OutputCardId = output });
+            _crafting = crafting;
+            _mainThread = mainThread;
+        }
+
+        public async UniTask<CraftCardResponse> InvokeAsync(CraftCardRequest request, CancellationToken cancellationToken = default)
+        {
+            return await _mainThread.EnqueueAsync(() =>
+            {
+                var (success, reason, output) = _crafting.TryCraft(request.RecipeId);
+                return new CraftCardResponse { Success = success, FailureReason = reason, OutputCardId = output };
+            });
         }
     }
 
@@ -61,12 +82,21 @@ namespace Marooned.Systems
     public class AccuseNpcHandler : IAsyncRequestHandler<AccuseNpcRequest, AccuseNpcResponse>
     {
         private readonly DeductionSystem _deduction;
-        public AccuseNpcHandler(DeductionSystem deduction) => _deduction = deduction;
+        private readonly McpMainThreadDispatcher _mainThread;
 
-        public UniTask<AccuseNpcResponse> InvokeAsync(AccuseNpcRequest request, CancellationToken cancellationToken = default)
+        public AccuseNpcHandler(DeductionSystem deduction, McpMainThreadDispatcher mainThread)
         {
-            var (correct, win, loss, text) = _deduction.Accuse(request.TargetNpcId);
-            return UniTask.FromResult(new AccuseNpcResponse { WasCorrect = correct, GameOverWin = win, GameOverLoss = loss, ResultText = text });
+            _deduction = deduction;
+            _mainThread = mainThread;
+        }
+
+        public async UniTask<AccuseNpcResponse> InvokeAsync(AccuseNpcRequest request, CancellationToken cancellationToken = default)
+        {
+            return await _mainThread.EnqueueAsync(() =>
+            {
+                var (correct, win, loss, text) = _deduction.Accuse(request.TargetNpcId);
+                return new AccuseNpcResponse { WasCorrect = correct, GameOverWin = win, GameOverLoss = loss, ResultText = text };
+            });
         }
     }
 
@@ -115,35 +145,41 @@ namespace Marooned.Systems
         private readonly GameStateProvider _stateProvider;
         private readonly LubanDataService _data;
         private readonly IPublisher<PlayerLocationChangedMessage> _playerLocationPublisher;
+        private readonly McpMainThreadDispatcher _mainThread;
 
         public MoveToLocationHandler(GameStateProvider stateProvider, LubanDataService data,
-            IPublisher<PlayerLocationChangedMessage> playerLocationPublisher)
+            IPublisher<PlayerLocationChangedMessage> playerLocationPublisher, McpMainThreadDispatcher mainThread)
         {
             _stateProvider = stateProvider;
             _data = data;
             _playerLocationPublisher = playerLocationPublisher;
+            _mainThread = mainThread;
         }
 
-        public UniTask<MoveToLocationResponse> InvokeAsync(MoveToLocationRequest request, CancellationToken cancellationToken = default)
+        public async UniTask<MoveToLocationResponse> InvokeAsync(MoveToLocationRequest request, CancellationToken cancellationToken = default)
         {
-            if (!_data.LocationDefs.TryGetValue(request.LocationId, out var targetDef))
-                return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "unknown_location" });
-
-            var current = _stateProvider.GetPlayer().CurrentLocationId;
-            if (!string.IsNullOrEmpty(current)
-                && _data.LocationDefs.TryGetValue(current, out var currentDef)
-                && currentDef.ConnectedLocationIds != null
-                && !currentDef.ConnectedLocationIds.Contains(request.LocationId))
+            // publish chain แตะ Unity API (ChibiSpawnerView spawn/despawn chibi)
+            return await _mainThread.EnqueueAsync(() =>
             {
-                return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "not_connected" });
-            }
+                if (!_data.LocationDefs.TryGetValue(request.LocationId, out var targetDef))
+                    return new MoveToLocationResponse { Success = false, FailureReason = "unknown_location" };
 
-            _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
+                var current = _stateProvider.GetPlayer().CurrentLocationId;
+                if (!string.IsNullOrEmpty(current)
+                    && _data.LocationDefs.TryGetValue(current, out var currentDef)
+                    && currentDef.ConnectedLocationIds != null
+                    && !currentDef.ConnectedLocationIds.Contains(request.LocationId))
+                {
+                    return new MoveToLocationResponse { Success = false, FailureReason = "not_connected" };
+                }
 
-            // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView) รู้ตัวแทนการ polling
-            _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = current, NewLocationId = request.LocationId });
+                _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
 
-            return UniTask.FromResult(new MoveToLocationResponse { Success = true });
+                // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView) รู้ตัวแทนการ polling
+                _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = current, NewLocationId = request.LocationId });
+
+                return new MoveToLocationResponse { Success = true };
+            });
         }
     }
 
@@ -158,75 +194,81 @@ namespace Marooned.Systems
         private readonly CardInventorySystem _inventory;
         private readonly LubanDataService _data;
         private readonly NpcDirectorSystem _npcDirector; // ใหม่ Phase 4 — inject ผ่าน constructor
+        private readonly McpMainThreadDispatcher _mainThread;
 
         public UseCardHandler(GameStateProvider stateProvider, CardInventorySystem inventory,
-            LubanDataService data, NpcDirectorSystem npcDirector)
+            LubanDataService data, NpcDirectorSystem npcDirector, McpMainThreadDispatcher mainThread)
         {
             _stateProvider = stateProvider;
             _inventory = inventory;
             _data = data;
             _npcDirector = npcDirector;
+            _mainThread = mainThread;
         }
 
-        public UniTask<UseCardResponse> InvokeAsync(UseCardRequest request, CancellationToken cancellationToken = default)
+        public async UniTask<UseCardResponse> InvokeAsync(UseCardRequest request, CancellationToken cancellationToken = default)
         {
-            if (!_data.CardDefs.TryGetValue(request.CardId, out var def))
-                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "unknown_card" });
-
-            // Phase 4: ตรวจ targeting requirement ก่อน
-            if (def.TargetType == CardTargetType.SingleTarget && string.IsNullOrEmpty(request.TargetId))
-                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "missing_target" });
-            if (def.TargetType == CardTargetType.Self && !string.IsNullOrEmpty(request.TargetId))
-                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "invalid_target_type" });
-
-            // Phase 4 (Safe UX): เช็คเงื่อนไข elimination ก่อนหักการ์ด — CanEliminate เป็น
-            // dry-run ไม่ mutate state ทำให้การ์ดไม่หายเมื่อลงมือไม่สำเร็จ (witnessed ฯลฯ)
-            if (def.EffectType == CardEffectType.Eliminate)
+            // publish chain (inventory → UI, eliminate → chibi despawn) แตะ Unity API
+            return await _mainThread.EnqueueAsync(() =>
             {
-                var player = _stateProvider.GetPlayer();
-                var (canEliminate, failReason) = _npcDirector.CanEliminate(
-                    GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
-                if (!canEliminate)
-                    return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = failReason });
-            }
+                if (!_data.CardDefs.TryGetValue(request.CardId, out var def))
+                    return new UseCardResponse { Success = false, FailureReason = "unknown_card" };
 
-            // ผ่านเงื่อนไขทั้งหมดแล้วค่อยหักการ์ด
-            if (!_inventory.TryConsume(request.CardId, 1))
-                return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = "not_in_inventory" });
+                // Phase 4: ตรวจ targeting requirement ก่อน
+                if (def.TargetType == CardTargetType.SingleTarget && string.IsNullOrEmpty(request.TargetId))
+                    return new UseCardResponse { Success = false, FailureReason = "missing_target" };
+                if (def.TargetType == CardTargetType.Self && !string.IsNullOrEmpty(request.TargetId))
+                    return new UseCardResponse { Success = false, FailureReason = "invalid_target_type" };
 
-            // ดำเนินการจริง
-            switch (def.EffectType)
-            {
-                case CardEffectType.Eliminate:
+                // Phase 4 (Safe UX): เช็คเงื่อนไข elimination ก่อนหักการ์ด — CanEliminate เป็น
+                // dry-run ไม่ mutate state ทำให้การ์ดไม่หายเมื่อลงมือไม่สำเร็จ (witnessed ฯลฯ)
+                if (def.EffectType == CardEffectType.Eliminate)
                 {
                     var player = _stateProvider.GetPlayer();
-                    var (success, reason) = _npcDirector.TryEliminate(
+                    var (canEliminate, failReason) = _npcDirector.CanEliminate(
                         GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
-                    if (!success)
-                        return UniTask.FromResult(new UseCardResponse { Success = false, FailureReason = reason });
-                    return UniTask.FromResult(new UseCardResponse { Success = true, ResultText = $"eliminated_{request.TargetId}" });
+                    if (!canEliminate)
+                        return new UseCardResponse { Success = false, FailureReason = failReason };
                 }
 
-                case CardEffectType.StatDelta:
-                default:
+                // ผ่านเงื่อนไขทั้งหมดแล้วค่อยหักการ์ด
+                if (!_inventory.TryConsume(request.CardId, 1))
+                    return new UseCardResponse { Success = false, FailureReason = "not_in_inventory" };
+
+                // ดำเนินการจริง
+                switch (def.EffectType)
                 {
-                    if (def.StatEffect != null)
+                    case CardEffectType.Eliminate:
                     {
                         var player = _stateProvider.GetPlayer();
-                        foreach (var kv in def.StatEffect)
+                        var (success, reason) = _npcDirector.TryEliminate(
+                            GameStateProvider.LocalPlayerId, request.TargetId, player.CurrentLocationId);
+                        if (!success)
+                            return new UseCardResponse { Success = false, FailureReason = reason };
+                        return new UseCardResponse { Success = true, ResultText = $"eliminated_{request.TargetId}" };
+                    }
+
+                    case CardEffectType.StatDelta:
+                    default:
+                    {
+                        if (def.StatEffect != null)
                         {
-                            switch (kv.Key)
+                            var player = _stateProvider.GetPlayer();
+                            foreach (var kv in def.StatEffect)
                             {
-                                case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
-                                case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
-                                case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
-                                case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                                switch (kv.Key)
+                                {
+                                    case "Hunger": player.Hunger = System.Math.Clamp(player.Hunger + kv.Value, 0f, 100f); break;
+                                    case "Thirst": player.Thirst = System.Math.Clamp(player.Thirst + kv.Value, 0f, 100f); break;
+                                    case "Mood": player.Mood = System.Math.Clamp(player.Mood + kv.Value, 0f, 100f); break;
+                                    case "Fatigue": player.Fatigue = System.Math.Clamp(player.Fatigue + kv.Value, 0f, 100f); break;
+                                }
                             }
                         }
+                        return new UseCardResponse { Success = true };
                     }
-                    return UniTask.FromResult(new UseCardResponse { Success = true });
                 }
-            }
+            });
         }
     }
 
@@ -234,19 +276,27 @@ namespace Marooned.Systems
     {
         private readonly DeductionSystem _deduction;
         private readonly GameStateProvider _stateProvider;
+        private readonly McpMainThreadDispatcher _mainThread;
 
-        public CallMeetingHandler(DeductionSystem deduction, GameStateProvider stateProvider)
+        public CallMeetingHandler(DeductionSystem deduction, GameStateProvider stateProvider,
+            McpMainThreadDispatcher mainThread)
         {
             _deduction = deduction;
             _stateProvider = stateProvider;
+            _mainThread = mainThread;
         }
 
-        public UniTask<CallMeetingResponse> InvokeAsync(CallMeetingRequest request, CancellationToken cancellationToken = default)
+        public async UniTask<CallMeetingResponse> InvokeAsync(CallMeetingRequest request, CancellationToken cancellationToken = default)
         {
             // Lab A: meeting just snapshots whoever is currently visible; a real
             // "gather everyone" pause/summon step is a later lab.
-            var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
-            return UniTask.FromResult(new CallMeetingResponse { Success = true, AttendingNpcs = npcs });
+            // (อ่าน state เปล่าๆ — แต่กัน race กับ main thread ที่ mutate dict ด้วย
+            // เพราะ handler ถูก invoke บน TCP thread เหมือนกัน)
+            return await _mainThread.EnqueueAsync(() =>
+            {
+                var npcs = _deduction.GetObservableNpcsAt(_stateProvider.GetPlayer().CurrentLocationId);
+                return new CallMeetingResponse { Success = true, AttendingNpcs = npcs };
+            });
         }
     }
 }

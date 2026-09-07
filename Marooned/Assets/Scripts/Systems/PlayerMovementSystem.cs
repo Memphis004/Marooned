@@ -5,6 +5,28 @@ using UnityEngine;
 namespace Marooned.Systems
 {
     /// <summary>
+    /// Lab B Phase 6 — ขอบเขตเดินของ "แผนที่รวม" (config object เท่านั้น ไม่มี logic)
+    /// PlayerMovementSystem เป็น plain C# singleton (VContainer) ใส่ [SerializeField]
+    /// ไม่ได้ จึงให้ GameLifetimeScope (MonoBehaviour ประจำ scope) เก็บค่าไว้ใน
+    /// Inspector แล้ว inject เข้ามาทาง constructor ผ่าน struct นี้
+    /// </summary>
+    public readonly struct WorldBounds
+    {
+        public WorldBounds(float minX, float maxX, float minY, float maxY)
+        {
+            MinX = minX;
+            MaxX = maxX;
+            MinY = minY;
+            MaxY = maxY;
+        }
+
+        public float MinX { get; }
+        public float MaxX { get; }
+        public float MinY { get; }
+        public float MaxY { get; }
+    }
+
+    /// <summary>
     /// Lab B Phase 3 — อัปเดตตำแหน่งผู้เล่นจาก PlayerInputService (Tick-driven
     /// ผ่าน GameTickDriver เดิม) — เก็บ WorldX/WorldY ใน PlayerSurvivalState
     /// (PositionX/PositionY) ไม่มีการ publish message ทุกเฟรม — View อ่าน state
@@ -19,12 +41,21 @@ namespace Marooned.Systems
         public float Speed = 3.5f;
 
         // ขอบเขตโลก (top-down lite) — clamp ไม่ให้เดินหลุดกรอบ
-        public float MinX = -11f, MaxX = 11f, MinY = -3.5f, MaxY = 5f;
+        // Phase 6: ค่า inject จาก GameLifetimeScope ([SerializeField] worldMinX ฯลฯ
+        // บน scope) — ปรับขนาด "แผนที่รวม" ได้จาก Inspector แทนค่า hardcoded
+        public float MinX { get; }
+        public float MaxX { get; }
+        public float MinY { get; }
+        public float MaxY { get; }
 
-        public PlayerMovementSystem(PlayerInputService input, GameStateProvider stateProvider)
+        public PlayerMovementSystem(PlayerInputService input, GameStateProvider stateProvider, WorldBounds worldBounds)
         {
             _input = input;
             _player = stateProvider.GetPlayer();
+            MinX = worldBounds.MinX;
+            MaxX = worldBounds.MaxX;
+            MinY = worldBounds.MinY;
+            MaxY = worldBounds.MaxY;
         }
 
         public void Tick(float deltaSeconds)

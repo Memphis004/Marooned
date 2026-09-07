@@ -1,0 +1,7 @@
+[T0-boot] player=(0.00, 0.00, 0.00) cam=(0.00, 0.00, -10.00) loc=beach statePos=(0.00,0.00)
+[A] walk right 3.2s
+[A-mid] player=(5.26, 0.00, 0.00) cam=(5.20, 0.00, -10.00) loc=jungle_edge statePos=(5.26,0.00)
+[A-end] player=(11.00, 0.00, 0.00) cam=(11.00, 0.00, -10.00) loc=jungle_edge statePos=(11.00,0.00)
+[B] walk left 2.6s
+[B-end] player=(1.89, 0.00, 0.00) cam=(1.89, 0.00, -10.00) loc=beach statePos=(1.89,0.00)
+DONE

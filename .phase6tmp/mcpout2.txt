@@ -1,0 +1,1 @@
+[OUT] {"result":{"protocolVersion":"2024-11-05","capabilities":{"logging":{},"tools":{"listChanged":true}},"serverInfo":{"name":"McpBridge","version":"1.0.0.0"}},"id":1,"jsonrpc":"2.0"}

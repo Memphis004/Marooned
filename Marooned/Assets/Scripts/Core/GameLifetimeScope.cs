@@ -38,6 +38,21 @@ namespace Marooned.Core
         [UnityEngine.SerializeField] private string interprocessHost = "127.0.0.1";
         [UnityEngine.SerializeField] private int interprocessPort = 3216; // different port than reference project's 3215
 
+        [UnityEngine.Header("Player Movement — ขอบเขตแผนที่รวม (Lab B Phase 6)")]
+        // PlayerMovementSystem เป็น plain C# (ไม่ใช่ MonoBehaviour) ใส่ SerializeField
+        // ไม่ได้ — scope เป็นผู้เก็บค่าแทนแล้ว inject ผ่าน WorldBounds ตอน Configure
+        [UnityEngine.SerializeField] private float worldMinX = -11f;
+        [UnityEngine.SerializeField] private float worldMaxX = 11f;
+        [UnityEngine.SerializeField] private float worldMinY = -3.5f;
+        [UnityEngine.SerializeField] private float worldMaxY = 5f;
+
+        // TcpWorker เปิด TCP listener ค้างไว้ — ถ้าไม่ Dispose ตอนออก play mode,
+        // accept-loop thread จะรั้ง socket ข้าม play session (session ถัดไป bind ไม่ได้:
+        // "Only one usage of each socket address") — container dispose ของ VContainer
+        // ไม่การันตีว่าครอบคลุม worker ที่ register ผ่าน MessagePipe interprocess
+        // จึงเก็บ reference มาปิดเองใน OnDestroy
+        private MessagePipe.Interprocess.Workers.TcpWorker _tcpWorker;
+
         protected override void Configure(IContainerBuilder builder)
         {
             var options = builder.RegisterMessagePipe();
@@ -52,24 +67,25 @@ namespace Marooned.Core
             });
 
             // บังคับให้ VContainer สร้าง TcpWorker จริง ไม่ใช่แค่ register ไว้เฉยๆ
-            // builder.RegisterBuildCallback(container =>
-            // {
-            //     container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
-            // });
-
             builder.RegisterBuildCallback(container =>
             {
-                try
-                {
-                    container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
-                }
-                catch (System.Exception ex)
-                {
-                    UnityEngine.Debug.LogError(
-                        $"[GameLifetimeScope] TcpWorker ล้มเหลว (port {interprocessPort} อาจถูกใช้ค้างจาก session ก่อนหน้า) " +
-                        $"— MCP bridge จะต่อไม่ได้รอบนี้ แต่ระบบอื่น (UI, gameplay) ยังทำงานต่อได้ปกติ: {ex}");
-                }
+                container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
             });
+
+            // builder.RegisterBuildCallback(container =>
+            // {
+            //     try
+            //     {
+            //         _tcpWorker = container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
+            //     }
+            //     catch (System.Exception ex)
+            //     {
+            //         _tcpWorker = null;
+            //         UnityEngine.Debug.LogError(
+            //             $"[GameLifetimeScope] TcpWorker ล้มเหลว (port {interprocessPort} อาจถูกใช้ค้างจาก session ก่อนหน้า) " +
+            //             $"— MCP bridge จะต่อไม่ได้รอบนี้ แต่ระบบอื่น (UI, gameplay) ยังทำงานต่อได้ปกติ: {ex}");
+            //     }
+            // });
 
             // --- Gameplay subsystems ---
             builder.Register<SurvivalStatSystem>(Lifetime.Singleton).AsSelf();
@@ -84,6 +100,9 @@ namespace Marooned.Core
             // --- Player system (Lab B Phase 3) ---
             // input service (plain C# ticked by GameTickDriver) + movement + pickup
             builder.Register<PlayerInputService>(Lifetime.Singleton).AsSelf();
+            // Lab B Phase 6: ขอบเขตเดินของ "แผนที่รวม" — แก้ค่าใน Inspector ของ
+            // GameLifetimeScope (worldMinX/worldMaxX/worldMinY/worldMaxY)
+            builder.RegisterInstance(new WorldBounds(worldMinX, worldMaxX, worldMinY, worldMaxY));
             builder.Register<PlayerMovementSystem>(Lifetime.Singleton).AsSelf();
             builder.Register<ItemPickupSystem>(Lifetime.Singleton).AsSelf();
             // WorldItemSystem เป็น IInitializable → EntryPoint เพื่อให้ spawn ชุดแรก
@@ -91,6 +110,10 @@ namespace Marooned.Core
             // .AsSelf() เพิ่มการ register ตัวคลาสเอง (RegisterEntryPoint พื้นฐาน
             // register เฉพาะ implemented interfaces ทำให้ Resolve<WorldItemSystem> ไม่ได้)
             builder.RegisterEntryPoint<WorldItemSystem>(Lifetime.Singleton).AsSelf();
+            // Lab B Phase 6 (Test C fix): mutating MCP handlers ถูก invoke บน TCP
+            // background thread — ต้องมาร์ชั่นงานกลับมา main thread ก่อนแตะ Unity API
+            // (publish chain เช่น UI re-render / chibi spawn จะ throw ไม่งั้น)
+            builder.RegisterEntryPoint<McpMainThreadDispatcher>(Lifetime.Singleton).AsSelf();
 
             // --- State provider consumed by MCP query handlers ---
             builder.Register<GameStateProvider>(Lifetime.Singleton).AsSelf();
@@ -126,6 +149,28 @@ namespace Marooned.Core
             // UseCardHandler resolve ผ่าน IAsyncRequestHandler<UseCardRequest, UseCardResponse>
             // (register ไว้แล้วด้านบน) — ผลลัพธ์ Success/Failure แสดงผ่าน CardHandView.ShowFeedback
             builder.RegisterEntryPoint<CardHandPresenter>(Lifetime.Singleton).AsSelf();
+        }
+
+        /// <summary>
+        /// Play mode exit / scene teardown / app quit → ปิด TCP listener ทิ้ง
+        /// (TcpWorker.Dispose = cancel accept/receive loop + SocketTcpServer.Dispose
+        /// ซึ่งปิด listening socket) — กัน port 3216 ค้างข้าม play session
+        /// </summary>
+        protected override void OnDestroy()
+        {
+            try
+            {
+                _tcpWorker?.Dispose();
+                if (_tcpWorker != null)
+                    UnityEngine.Debug.Log($"[GameLifetimeScope] TcpWorker disposed — port {interprocessPort} released");
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning($"[GameLifetimeScope] TcpWorker.Dispose ล้มเหลว (port {interprocessPort} อาจยังค้าง): {ex.Message}");
+            }
+            _tcpWorker = null;
+
+            base.OnDestroy(); // DisposeCore → Container.Dispose ตามปกติ
         }
     }
 }

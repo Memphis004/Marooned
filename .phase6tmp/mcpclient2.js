@@ -1,0 +1,12 @@
+const { spawn } = require('child_process');
+const proc = spawn('dotnet', ['bin/Debug/net8.0/McpBridge.dll'], { cwd: 'McpBridge' });
+proc.stdout.on('data', d => process.stdout.write('[OUT] ' + d.toString().trim() + '\n'));
+proc.stderr.on('data', () => {});
+proc.on('exit', c => console.log('[EXIT] ' + c));
+const send = o => proc.stdin.write(JSON.stringify(o) + '\n');
+setTimeout(() => send({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'phase6',version:'1.0'}}}), 2000);
+setTimeout(() => send({jsonrpc:'2.0',method:'notifications/initialized'}), 4500);
+setTimeout(() => send({jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'get_game_state',arguments:{}}}), 5500);
+setTimeout(() => send({jsonrpc:'2.0',id:4,method:'tools/call',params:{name:'explore_location',arguments:{locationId:'jungle_edge'}}}), 30000);
+setTimeout(() => send({jsonrpc:'2.0',id:5,method:'tools/call',params:{name:'get_game_state',arguments:{}}}), 55000);
+setTimeout(() => { proc.kill(); process.exit(0); }, 80000);
