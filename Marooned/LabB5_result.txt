@@ -1,0 +1,10 @@
+[0] initial: activeSlots=0 inventory={food_coconut=1}
+[1] explore success=True found=[raw_fish] activeSlots=0 inventory={food_coconut=1, raw_fish=1}
+[2] explore success=True found=[raw_fish] activeSlots=0 inventory={food_coconut=1, raw_fish=2}
+[3] explore success=True found=[water_bottle] activeSlots=0 inventory={food_coconut=1, raw_fish=2, water_bottle=1}
+[4] explore success=True found=[food_coconut] activeSlots=0 inventory={food_coconut=2, raw_fish=2, water_bottle=1}
+[5] explore success=True found=[water_bottle] activeSlots=0 inventory={food_coconut=2, raw_fish=2, water_bottle=2}
+[6] explore success=True found=[food_coconut] activeSlots=0 inventory={food_coconut=3, raw_fish=2, water_bottle=2}
+[shot] สั่งจับ Game View → LabB5_cardhand_screenshot.png
+[final] get_game_state inventory: {food_coconut=3, raw_fish=2, water_bottle=2}
+DONE

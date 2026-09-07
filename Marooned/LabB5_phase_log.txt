@@ -1,0 +1,9 @@
+13:31:45 — สร้าง Canvas (Screen Space - Overlay + CanvasScaler)
+13:31:45 — สร้าง EventSystem (StandaloneInputModule)
+13:31:45 — สร้าง CardHandContainer ใต้ Canvas (bottom-stretch, h=120, HorizontalLayoutGroup)
+13:31:45 — บันทึก prefab: Assets/Prefabs/UI/CardSlot.prefab
+13:31:45 — สร้าง CardHandSystem ใต้ GameLifetimeScope
+13:31:45 — บันทึก scene แล้ว (Canvas + CardHandContainer + CardHandSystem)
+13:31:47 — เริ่ม Play Mode (runtime test)
+14:17:01 — Cleanup: scene บนดิสก์ → canvas=True canvasScaler=True eventSystem=True container=True cardHandSystem=True (ต้อง true ทั้งหมด)
+14:17:02 — ลบ UiSetupAutomation.cs แล้ว — จบ Phase 5 setup

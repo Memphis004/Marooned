@@ -2,13 +2,13 @@
 title: 2026-09-07
 type: devlog
 sources:
-  - "[[overview]]"
-  - "[[game_design_doc]]"
-  - "[[card-system]]"
-  - "[[McpRequestHandlers.cs]]"
-  - "[[RoundInitializer.cs]]"
-  - "[[GameTickDriver.cs]]"
-  - "[[NpcDirectorSystem.cs]]"
+  - "[[sources/overview]]"
+  - "[[sources/game_design_doc]]"
+  - "[[sources/card-system]]"
+  - "[[sources/mcprequesthandlers-cs]]"
+  - "[[sources/roundinitializer-cs]]"
+  - "[[sources/gametickdriver-cs]]"
+  - "[[sources/npcdirectorsystem-cs]]"
 related:
   - "[[architecture/overview]]"
   - "[[architecture/card-system]]"

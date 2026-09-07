@@ -2,6 +2,8 @@ using MessagePipe;
 using Marooned.Shared;
 using Marooned.Systems;
 using Marooned.UI.Core;
+using Marooned.UI.Presenters;
+using Marooned.UI.Views;
 using VContainer;
 using VContainer.Unity;
 
@@ -50,9 +52,23 @@ namespace Marooned.Core
             });
 
             // บังคับให้ VContainer สร้าง TcpWorker จริง ไม่ใช่แค่ register ไว้เฉยๆ
+            // builder.RegisterBuildCallback(container =>
+            // {
+            //     container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
+            // });
+
             builder.RegisterBuildCallback(container =>
             {
-                container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
+                try
+                {
+                    container.Resolve<MessagePipe.Interprocess.Workers.TcpWorker>();
+                }
+                catch (System.Exception ex)
+                {
+                    UnityEngine.Debug.LogError(
+                        $"[GameLifetimeScope] TcpWorker ล้มเหลว (port {interprocessPort} อาจถูกใช้ค้างจาก session ก่อนหน้า) " +
+                        $"— MCP bridge จะต่อไม่ได้รอบนี้ แต่ระบบอื่น (UI, gameplay) ยังทำงานต่อได้ปกติ: {ex}");
+                }
             });
 
             // --- Gameplay subsystems ---
@@ -96,6 +112,15 @@ namespace Marooned.Core
 
             // --- UI root ---
             builder.RegisterEntryPoint<UIRoot>();
+
+            // --- UI: Card Hand (Lab B Phase 5) ---
+            // CardHandView ต้องอยู่ใน hierarchy ของ scope นี้ (CardHandSystem — สร้างโดย
+            // Assets/Editor/UiSetupAutomation.cs) ไม่งั้น RegisterComponentInHierarchy
+            // จะ throw ตอน container build
+            builder.RegisterComponentInHierarchy<CardHandView>();
+            // Presenter เป็น plain C# (IInitializable) — subscribe CardInventoryChangedMessage
+            // แล้ว push RenderHand ให้ view; CardHandView ถูก inject จาก hierarchy registration บน
+            builder.RegisterEntryPoint<CardHandPresenter>(Lifetime.Singleton).AsSelf();
         }
     }
 }

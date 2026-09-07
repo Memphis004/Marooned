@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Marooned.Shared;
+using MessagePipe;
 
 namespace Marooned.Systems
 {
@@ -8,10 +9,16 @@ namespace Marooned.Systems
         private readonly PlayerSurvivalState _state;
         private readonly Dictionary<string, CardDef> _cardDefs; // loaded from Luban-generated JSON at boot
 
-        public CardInventorySystem(GameStateProvider stateProvider, LubanDataService dataService)
+        // Lab B Phase 5: publish CardInventoryChangedMessage ทุกครั้งที่ inventory เปลี่ยนจริง
+        // (CardHandPresenter subscribe เพื่อ render มือการ์ด — event-driven ไม่ polling)
+        private readonly IPublisher<CardInventoryChangedMessage> _inventoryChanged;
+
+        public CardInventorySystem(GameStateProvider stateProvider, LubanDataService dataService,
+            IPublisher<CardInventoryChangedMessage> inventoryChanged)
         {
             _state = stateProvider.GetPlayer();
             _cardDefs = dataService.CardDefs;
+            _inventoryChanged = inventoryChanged;
         }
 
         public bool TryAdd(string cardId, int count = 1)
@@ -20,15 +27,19 @@ namespace Marooned.Systems
             _state.Inventory.TryGetValue(cardId, out var current);
             var next = current + count;
             if (def.StackLimit > 0) next = System.Math.Min(next, def.StackLimit);
+            if (next == current) return true; // ถึง StackLimit แล้ว — state ไม่เปลี่ยน ไม่ publish (กัน pulse หลอก)
             _state.Inventory[cardId] = next;
+            _inventoryChanged.Publish(new CardInventoryChangedMessage { CardId = cardId, NewCount = next, Delta = next - current });
             return true;
         }
 
         public bool TryConsume(string cardId, int count = 1)
         {
             if (!_state.Inventory.TryGetValue(cardId, out var current) || current < count) return false;
-            _state.Inventory[cardId] = current - count;
-            if (_state.Inventory[cardId] <= 0) _state.Inventory.Remove(cardId);
+            var next = current - count;
+            if (next <= 0) _state.Inventory.Remove(cardId);
+            else _state.Inventory[cardId] = next;
+            _inventoryChanged.Publish(new CardInventoryChangedMessage { CardId = cardId, NewCount = System.Math.Max(next, 0), Delta = -count });
             return true;
         }
 

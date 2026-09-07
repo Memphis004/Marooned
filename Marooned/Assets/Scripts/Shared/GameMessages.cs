@@ -198,4 +198,16 @@ namespace Marooned.Shared
         [Key(0)] public string ItemId;
         [Key(1)] public string LocationId;
     }
+
+    // ---- Added in Lab B Phase 5 (Card Hand UI): inventory change broadcast ----
+    // CardInventorySystem publish ทุกครั้งที่ inventory เปลี่ยนจริง → CardHandPresenter
+    // subscribe เพื่อ render มือการ์ดแบบ event-driven (แทน polling)
+
+    [MessagePackObject]
+    public class CardInventoryChangedMessage
+    {
+        [Key(0)] public string CardId;
+        [Key(1)] public int NewCount; // จำนวนหลังเปลี่ยน (0 = หมด/ถูกลบออกจากมือ)
+        [Key(2)] public int Delta;    // +เพิ่ม / -ลด
+    }
 }
