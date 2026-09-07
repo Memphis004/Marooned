@@ -132,6 +132,52 @@ MCP AI ──► Bridge UseCard(cardId, targetId)          [McpBridge/Program.cs
   ให้ presenter เรียก `GetLocalizedReason` เมื่อ fail และ `PlayActionAnimation` เมื่อสำเร็จ
   (direct method call ตาม MVP Lite)
 
+## Hand UI Flow (Lab B Phase 5 — Click-to-Use, minimum viable) ✅
+
+> **อัปเดต:** flow ในหัวข้อก่อนหน้า ("hook รอ call site") เปิด call site แล้ว —
+> `GetLocalizedReason` ถูกเรียกจริงเมื่อ fail (ด้านล่าง) ส่วน `PlayActionAnimation`
+> ยังไม่ถูก wire (เหลือเป็น TODO ถัดไป)
+
+ผู้เล่นใช้การ์ดจากมือได้ด้วยการ**คลิก** (ยังไม่มี drag-and-drop):
+
+```
+คลิกการ์ด
+  └► CardSlotUI.OnPointerClick            [UI/Views/CardSlotUI.cs — IPointerClickHandler]
+        │ ยิง event Clicked(cardId) (View passive — ไม่รู้จัก Presenter)
+        └► CardHandView.SetSlotClickHandler delegate
+              └► CardHandPresenter.UseCardFromSlot(cardId)
+                    │ อ่าน def จาก LubanDataService.CardDefs
+                    ├─ TargetType.Self ──────► UseCardAsync(cardId, null)
+                    └─ TargetType.SingleTarget ► เข้าโหมดเลือกเป้าหมาย
+                          │ _isSelectingTarget = true + _pendingCardId
+                          │ ChibiSpawnerView.SetTargetSelectionMode(true) (highlight chibi)
+                          ├─ คลิก NPC ──► NpcClicked(npcId) ──► UseCardAsync(cardId, npcId)
+                          └─ คลิกที่ว่าง ► WorldClicked ──► ยกเลิก (คืนสี chibi)
+
+UseCardAsync ──► IAsyncRequestHandler<UseCardRequest, UseCardResponse> (UseCardHandler เดิม
+                — path เดียวกับ MCP bridge, Safe UX เช็คก่อนหักการ์ดยังบังคับเหมือนเดิม)
+      ├─ Success ► CardHandView.ShowFeedback(FormatSuccess(ResultText))
+      │            การ์ดหายจากมือเอง: CardInventorySystem publish
+      │            CardInventoryChangedMessage → Presenter.Render()
+      └─ Fail    ► CardHandView.ShowFeedback(GetLocalizedReason(FailureReason))
+                   การ์ดไม่หาย (Safe UX — เช่น "มีคนเห็น!")
+```
+
+ประเด็นสำคัญของ design นี้:
+
+- **MVP Lite คงเดิม** — View ทั้งสอง (CardSlotUI/CardHandView/ChibiSpawnerView) passive:
+  ส่ง event/delegate ให้ Presenter เป็นคนตัดสินใจ ไม่มี View ไหนเรียก handler เอง
+- **ใช้ request/response เดิม** — UI ไม่ bypass `UseCardHandler`; กฎ unknown_card /
+  missing_target / witnessed / Safe UX ทั้งหมดมีผลกับ UI เท่ากับ MCP bridge
+- **NPC click ผ่าน Physics2D** — chibi ไม่ใช่ Canvas UI จึงใช้
+  `Physics2D.OverlapPointNonAlloc` ใน `ChibiSpawnerView.Update` (เฉพาะตอนโหมดเลือกเป้าหมาย —
+  ปกติ zero cost) + auto-add trigger `CircleCollider2D` คลุมตัว chibi ตอน spawn;
+  คลิกบน UI (`EventSystem.IsPointerOverGameObject`) ไม่นับเป็น world click
+- **เลือกการ์ดใหม่ระหว่างเลือกเป้าหมายได้** — คลิกการ์ดอื่น = เปลี่ยน `_pendingCardId`
+  (ไม่ต้องยกเลิกก่อน); `Dispose()` เรียก `EndTargetSelection()` คืนสี chibi เสมอ
+- ยังไม่ได้ทำ: `PlayActionAnimation` หลังใช้สำเร็จ, drag-and-drop, cursor sprite เฉพาะ
+  (ตอนนี้ highlight = ปั่นสี sprite chibi เป็นส้มอ่อน)
+
 ## MCP Tool (Step 6)
 
 `use_card` ใน `McpBridge/Program.cs` รับ `targetId` (optional):
@@ -162,6 +208,8 @@ UseCard(cardId: "food_coconut")
   ไม่ spawn clue) — พิจารณาย้ายเข้า path กลาง
 - `knife_basic` ยังเป็น mock ใน `LubanDataService` — เพิ่มใน `DataTables/CardDef.csv`
   เมื่อเปิด Luban pipeline
-- hand UI flow ยังไม่มี — hook (`GetLocalizedReason`, `PlayActionAnimation`) รอ call site
+- ~~hand UI flow ยังไม่มี — hook (`GetLocalizedReason`, `PlayActionAnimation`) รอ call site~~
+  ✅ **Lab B Phase 5:** click-to-use flow มาแล้ว (ดู "Hand UI Flow" ด้านบน) —
+  `GetLocalizedReason` มี call site แล้ว; **`PlayActionAnimation` ยังรอ wire** (TODO ถัดไป)
 - `PlayerSurvivalState` ยังไม่มี field ระบุว่า player เป็น killer หรือไม่ (ตอนนี้ player
   kill ได้เสมอผ่าน weapon card — ถ้าอนาคตต้องจำกัด ให้เพิ่ม role check ใน UseCardHandler)

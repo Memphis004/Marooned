@@ -51,7 +51,9 @@ tags:
 
 ### UI
 - [[UIRoot.cs]] — panel registry ของ UI (enum → Type mapping)
-- [[CardHandPresenter.cs]] — Presenter ของมือการ์ด + `GetLocalizedReason` แปลง failure reason เป็นไทย (Phase 4)
+- [[CardHandPresenter.cs]] — Presenter ของมือการ์ด: render event-driven + click-to-use
+  (`UseCardFromSlot`, target selection สำหรับ weapon ผ่าน ChibiSpawnerView) +
+  `GetLocalizedReason` แปลง failure reason เป็นไทย (Phase 4–5)
 - [[ClueBoardPresenter.cs]] — Presenter ของกระดานเบาะแส (skeleton)
 - [[MapExplorePresenter.cs]] — Presenter ของแผนที่สำรวจ (skeleton)
 - [[MeetingVotePresenter.cs]] — Presenter ของหน้าโหวตกล่าวหา (skeleton)
