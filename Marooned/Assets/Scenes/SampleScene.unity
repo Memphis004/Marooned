@@ -661,7 +661,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e725ecdf5be296469a8c436d88a3bb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.ChibiSpawnerView
-  backend: 0
+  backend: 1
   genericCutePrefab: {fileID: 1908850870069242641, guid: ee14459f600f6ec4783a1f1bae436bcc, type: 3}
   npcPrefabs:
   - {fileID: 6528400308587160688, guid: 840e0d9e7de7123448fe4454627669c5, type: 3}
@@ -828,6 +828,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.UI.Views.CardHandView
   cardSlotContainer: {fileID: 224809787}
   cardSlotPrefab: {fileID: 8291881094328767165, guid: d3b6aa267487b8b44ab81a6874abc01d, type: 3}
+  feedbackText: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

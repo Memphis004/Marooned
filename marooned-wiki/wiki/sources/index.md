@@ -1,5 +1,4 @@
----
-title: index
+---title: index
 type: index
 sources: []
 related: []
@@ -9,12 +8,14 @@ tags:
   - index
   - marooned
   - lab-a
+  - lab-b
+
 ---
 
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-> อัปเดตล่าสุด: 2026-09-07
+คัปเดตล่าสุด: 2026-09-07 (เพิ่ม Phase 5 Card Hand UI devlog + CardSlotUI snippet)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -54,6 +55,8 @@ tags:
 - [[CardHandPresenter.cs]] — Presenter ของมือการ์ด: render event-driven + click-to-use
   (`UseCardFromSlot`, target selection สำหรับ weapon ผ่าน ChibiSpawnerView) +
   `GetLocalizedReason` แปลง failure reason เป็นไทย (Phase 4–5)
+- [[CardSlotUI.cs]] — View slot การ์ดเดี่ยว: rendering category color, label stack count, pop animation,
+  และ IPointerClickHandler ส่ง event Clicked(cardId) ให้Presenter (MVP Lite —คลิกซ้ายบน slot ที่มีการ์ดเท่านั้น)
 - [[ClueBoardPresenter.cs]] — Presenter ของกระดานเบาะแส (skeleton)
 - [[MapExplorePresenter.cs]] — Presenter ของแผนที่สำรวจ (skeleton)
 - [[MeetingVotePresenter.cs]] — Presenter ของหน้าโหวตกล่าวหา (skeleton)

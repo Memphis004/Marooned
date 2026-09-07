@@ -271,6 +271,83 @@ private void RespawnForLocation(string locationId)
 
 ---
 
+## 📘 Lab B Phase 5 — Card Hand UI (บันทึกหลังขั้นตอน)
+
+### 1. สิ่งที่เพิ่ม/ยืนยันใน Phase 5
+
+#### 1.1 Card Slot UI + IPointerClickHandler
+- ตรวจสอบว่า `Marooned/Assets/Scripts/UI/Views/CardSlotUI.cs` มี implementation `IPointerClickHandler` อยู่แล้ว:
+  - **กดซ้ายบน slot เท่านั้น** (`PointerEventData.InputButton.Left`)
+  - slot ว่าง (CardId null/empty — pooled slot ที่ยังไม่ได้ assign) → **ไม่ตอบสนอง**
+  - slot ที่มีการ์ด → ยิง event `Clicked(cardId)` ออกไป
+- View ยังคง passive ตาม MVP Lite — **click handler ใน view ไม่ตัดสินใจใช้การ์ดเอง**
+- ยังมีส่วนที่ไม่ใช่ click-dedicated:
+  - `SetCard(...)` สำหรับ visual (สีพื้นตาม Category, label stack > 1, fallback font)
+  - `PlayPop()` + `Update()` animation แบบ local scale pop (ไม่ใช้ animator/coroutine)
+  - `ColorFor(CardCategory)` static mapping
+
+#### 1.2 Wiki snippet สร้างสำหรับ Class นี้
+- สร้าง `marooned-wiki/wiki/sources/code-snippets/CardSlotUI.cs.md`
+- อัปเดต `marooned-wiki/wiki/sources/index.md` เพิ่มลิงก์เข้าแถว UI
+- หน้าสแนปบิตเน้น:
+  - IPointerClickHandler guard (ซ้าย click / cardId null)
+  - event forwarding `Clicked(cardId)`
+  - MVP Lite reasoning (view ไม่รู้จัก presenter)
+  - ส่วนที่ไม่เกี่ยวกับ click (`SetCard`, pop, color map)
+  - สถานะปัจจุบัน: code พร้อมใช้อยู่แล้ว, ยังไม่มี scene/prefab จริง
+
+#### 1.3 เชื่อมโยงกับ Hand UI Flow ในตัวโปรเจค
+- CardSlotUI เป็น leaf view ใน chain:
+  - `CardSlotUI.OnPointerClick → CardHandView.SetSlotClickHandler → CardHandPresenter.UseCardFromSlot`
+  - `UseCardFromSlot` จึงตัดสินใจเอง:
+    - `CardTargetType.Self` → ใช้ทันที
+    - `CardTargetType.SingleTarget` → เข้า target selection mode ผ่าน `ChibiSpawnerView`
+- UI นี้ใช้ `IAsyncRequestHandler<UseCardRequest, UseCardResponse>` ตัวเดียวกันกับ MCP bridge → Safe UX ยังบังคับได้ (การ์ดไม่หายเมื่อแพ้)
+
+### 2. Contract ปัจจุบัน (ก่อนสร้าง scene/prefab จริง)
+
+| Layer | สิ่งที่คาดหวังตอนนี้ |
+| --- | --- |
+| `CardSlotUI` | `SetCard`, `PlayPop`, `Clicked`, `OnPointerClick` — เขียนไว้แล้ว |
+| `CardHandView` | ยังเป็น skeleton — มีแค่ serialized container/prefab placeholder + comment `RenderHand` contract |
+| `CardHandPresenter` | subscribe inventory change, wire click handler, target selection mode, feedback mapping, async use path |
+| DI (GameLifetimeScope) | คาดว่า `CardHandView` + `ChibiSpawnerView` จะถูก register เป็น `ComponentInHierarchy` และ presenter เป็น `EntryPoint` |
+| Scene/Prefab | **ยังไม่มี** — UI Layout Automation ยังเป็นขั้นต่อไป |
+
+### 3. สถานะปัจจุบัน (Phase 5 ณ จุดนี้)
+
+- ✅ `CardSlotUI` มี IPointerClickHandler + click forwarding + pop animation เขียนไว้แล้ว
+- ✅ สร้าง wiki snippet สำหรับ `CardSlotUI.cs` และอัปเดต index
+- ⚠️ `CardHandView` + scene/prefab ยังไม่สร้าง → flow ทั้งหมดยังไม่เห็นบนเกม
+- ⚠️ feedback text ยังแสดงกล่อง □□□ สำหรับภาษาไทย เพราะใช้ built-in font ไม่มี Thai glyph (CardSlotUI มี fallback cardId แล้ว แต่ feedback text ยังไม่มี fallback)
+- ⚠️ `PlayActionAnimation` ยังไม่มี call site ใน flow นี้ (ยังเป็น TODO ของ card-system)
+
+### 4. สิ่งที่ต้องทำต่อจากหน้านี้ (Phase 5 ต่อไป)
+
+- สร้าง scene/prefab สำหรับ CardHandView + ตั้งค่า Canvas, container, slot pool
+- Implement `CardHandView.RenderHand(...)` ให้จริง (pool slot → SetCard → subscribe slot Clicked หรือ delegate)
+- Wire `CardHandView` + `CardSlotUI` prefab ให้ presenter รันได้
+- ตัดสินใจ fallback font/TextMeshPro สำหรับ feedback text ไทย (ถ้าจะเห็นข้อความภาษาไทยบน UI จริง)
+- พิจารณา wire `PlayActionAnimation` หลังใช้การ์ดสำเร็จ (ทางเลือกหนึ่ง: เพิ่ม call site ใน presenter success path)
+
+---
+
+## 📊 สถานะโปรเจค (อัปเดต Phase 5)
+
+- **Lab A:** ✅ ปิดแล้ว — MCP Round Trip สำเร็จ, เกมมีการ tick, NPC เกิดขึ้น
+- **Lab B Phase 1-2:** ✅ Chibi Visual System พร้อม 2 Backend (2D Animation + Spine experimental)
+- **Lab B Phase 3:** ✅ Player Movement + Zone-based Loot + NPC Roster
+- **Lab B Phase 4:** ✅ Architecture Refactor + Player-as-Killer + Multiplayer-ready
+- **Lab B Phase 5 (Card Hand UI):** ✅
+  - สร้าง wiki snippet `CardSlotUI.cs` เสร็จ
+  - บันทึก Phase 5 contract + next steps ลง devlog นี้
+  - **ยังไม่เสร็จ:** scene/prefab UI จริง + `CardHandView.RenderHand` + wire presenter+runtime
+- **Design Pivot:** ✅ GDD อัปเดตแล้ว
+
+**เกมที่เล่นได้ตอนนี้:** ผู้เล่นเดิน WASD เก็บไอเท็มจากโซน, Craft, ใช้การ์ด (กิน/ดื่ม/Weapon), และ Player-as-Killer ใช้การ์ด Weapon โจมตี NPC ได้ (ต้อง No Witness) — ** nhưng UI มือการ์ดยังเป็น code/wikideลอด ยังไม่ขึ้นบนหน้าจอจริง**
+
+---
+
 ## 📊 สถานะโปรเจค
 
 - **Lab A:** ✅ ปิดแล้ว — MCP Round Trip สำเร็จ, เกมมีการ tick, NPC เกิดขึ้น
