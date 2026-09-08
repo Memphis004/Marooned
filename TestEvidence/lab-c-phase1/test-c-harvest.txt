@@ -1,0 +1,12 @@
+﻿=== Test C — Harvest with auto tool (2026-09-09 02:45:56) ===
+player teleported next to 'bush_berry' (node_bush_berry_14)
+inventory before: berryx1;food_coconutx1
+harvest call: success=True reason=- node=bush_berry tool=(bare hands)
+inventory after:  berryx2;food_coconutx1
+yield visible in inventory: True
+node durability now: 0
+--- related logs ---
+02:45:11.572 [LOG] [NodeHarvestSystem] harvested 'bush_berry' → +1 berry (durability 0, depleted=True)
+02:45:11.572 [LOG] [NodeHarvestSystem] harvest 'bush_berry' ไม่สำเร็จ: regrowing
+02:45:56.539 [LOG] [NodeHarvestSystem] harvested 'bush_berry' → +1 berry (durability 0, depleted=True)
+RESULT: PASS

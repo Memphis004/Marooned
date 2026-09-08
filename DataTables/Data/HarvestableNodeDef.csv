@@ -1,0 +1,6 @@
+##var,id,displayName,requiredToolCardId,yieldItemId,yieldCount,durability,regrowTime
+##type,string,string,string,string,int,int,int
+##,node id,display name,required tool card id (empty = use hands),yield card id,yield per harvest,harvests before depleted,regrow seconds (0 = never)
+,tree_wood,ต้นไม้,tool_axe,wood_log,2,3,0
+,rock_stone,ก้อนหิน,tool_pickaxe,stone,1,5,0
+,bush_berry,พุ่มเบอร์รี่,,berry,1,1,300

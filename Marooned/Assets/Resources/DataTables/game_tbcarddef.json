@@ -10,7 +10,9 @@
     "moodDelta": 0,
     "fatigueDelta": 0,
     "explorePenalty": 0,
-    "craftPenalty": 0
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
   },
   {
     "id": "water_bottle",
@@ -23,7 +25,9 @@
     "moodDelta": 0,
     "fatigueDelta": 0,
     "explorePenalty": 0,
-    "craftPenalty": 0
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
   },
   {
     "id": "raw_fish",
@@ -36,7 +40,9 @@
     "moodDelta": -5,
     "fatigueDelta": 0,
     "explorePenalty": 0,
-    "craftPenalty": 0
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
   },
   {
     "id": "cooked_fish",
@@ -49,7 +55,9 @@
     "moodDelta": 5,
     "fatigueDelta": 0,
     "explorePenalty": 0,
-    "craftPenalty": 0
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
   },
   {
     "id": "illness_malnutrition",
@@ -62,7 +70,9 @@
     "moodDelta": 0,
     "fatigueDelta": 0,
     "explorePenalty": -0.3,
-    "craftPenalty": -0.2
+    "craftPenalty": -0.2,
+    "targetType": "Self",
+    "effectType": "StatDelta"
   },
   {
     "id": "illness_dehydration",
@@ -75,6 +85,143 @@
     "moodDelta": 0,
     "fatigueDelta": 0,
     "explorePenalty": -0.4,
-    "craftPenalty": 0
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "mat_vine",
+    "category": "Resource",
+    "displayName": "เถาวัลย์",
+    "spritePath": "Sprites/Cards/mat_vine",
+    "stackLimit": 10,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "mat_stone",
+    "category": "Resource",
+    "displayName": "หิน",
+    "spritePath": "Sprites/Cards/mat_stone",
+    "stackLimit": 10,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "knife_basic",
+    "category": "Weapon",
+    "displayName": "มีด",
+    "spritePath": "Sprites/Cards/knife_basic",
+    "stackLimit": 1,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "SingleTarget",
+    "effectType": "Eliminate"
+  },
+  {
+    "id": "tool_axe",
+    "category": "Tool",
+    "displayName": "ขวา",
+    "spritePath": "Sprites/Cards/tool_axe",
+    "stackLimit": 1,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "tool_pickaxe",
+    "category": "Tool",
+    "displayName": "อีเต้อ",
+    "spritePath": "Sprites/Cards/tool_pickaxe",
+    "stackLimit": 1,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "tool_campfire",
+    "category": "Tool",
+    "displayName": "แคมป์ไฟ",
+    "spritePath": "Sprites/Cards/tool_campfire",
+    "stackLimit": 1,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "wood_log",
+    "category": "Resource",
+    "displayName": "ท่อนไม้",
+    "spritePath": "Sprites/Cards/wood_log",
+    "stackLimit": 10,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "stone",
+    "category": "Resource",
+    "displayName": "หินก้อน",
+    "spritePath": "Sprites/Cards/stone",
+    "stackLimit": 10,
+    "hungerDelta": 0,
+    "thirstDelta": 0,
+    "moodDelta": 0,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
+  },
+  {
+    "id": "berry",
+    "category": "Resource",
+    "displayName": "เบอร์รี่",
+    "spritePath": "Sprites/Cards/berry",
+    "stackLimit": 10,
+    "hungerDelta": 5,
+    "thirstDelta": 0,
+    "moodDelta": 3,
+    "fatigueDelta": 0,
+    "explorePenalty": 0,
+    "craftPenalty": 0,
+    "targetType": "Self",
+    "effectType": "StatDelta"
   }
 ]

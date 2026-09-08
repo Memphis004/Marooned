@@ -20,6 +20,8 @@ public partial class Tables
     public game.TbClueDef TbClueDef {get; }
     public game.TbIllnessDef TbIllnessDef {get; }
     public game.TbWorldEventDef TbWorldEventDef {get; }
+    public game.TbBiomeDef TbBiomeDef {get; }
+    public game.TbHarvestableNodeDef TbHarvestableNodeDef {get; }
 
     public Tables(System.Func<string, JSONNode> loader)
     {
@@ -29,6 +31,8 @@ public partial class Tables
         TbClueDef = new game.TbClueDef(loader("game_tbcluedef"));
         TbIllnessDef = new game.TbIllnessDef(loader("game_tbillnessdef"));
         TbWorldEventDef = new game.TbWorldEventDef(loader("game_tbworldeventdef"));
+        TbBiomeDef = new game.TbBiomeDef(loader("game_tbbiomedef"));
+        TbHarvestableNodeDef = new game.TbHarvestableNodeDef(loader("game_tbharvestablenodedef"));
         ResolveRef();
     }
     
@@ -40,6 +44,8 @@ public partial class Tables
         TbClueDef.ResolveRef(this);
         TbIllnessDef.ResolveRef(this);
         TbWorldEventDef.ResolveRef(this);
+        TbBiomeDef.ResolveRef(this);
+        TbHarvestableNodeDef.ResolveRef(this);
     }
 }
 

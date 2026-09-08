@@ -1,0 +1,29 @@
+[
+  {
+    "id": "tree_wood",
+    "displayName": "ต้นไม้",
+    "requiredToolCardId": "tool_axe",
+    "yieldItemId": "wood_log",
+    "yieldCount": 2,
+    "durability": 3,
+    "regrowTime": 0
+  },
+  {
+    "id": "rock_stone",
+    "displayName": "ก้อนหิน",
+    "requiredToolCardId": "tool_pickaxe",
+    "yieldItemId": "stone",
+    "yieldCount": 1,
+    "durability": 5,
+    "regrowTime": 0
+  },
+  {
+    "id": "bush_berry",
+    "displayName": "พุ่มเบอร์รี่",
+    "requiredToolCardId": "",
+    "yieldItemId": "berry",
+    "yieldCount": 1,
+    "durability": 1,
+    "regrowTime": 300
+  }
+]

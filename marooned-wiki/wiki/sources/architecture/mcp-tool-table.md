@@ -23,7 +23,7 @@ tags:
 
 # MCP Tool Table
 
-ตาราง MCP tools ทั้งหมด — รวบรวมจากโค้ดจริงใน `McpBridge/Program.cs` (10 tools ที่
+ตาราง MCP tools ทั้งหมด — รวบรวมจากโค้ดจริงใน `McpBridge/Program.cs` (11 tools ที่
 implement แล้ว) เทียบกับแผนใน game_design_doc.md §6 สถานะฝั่ง Unity ดูรายละเอียดใน
 [[mcp-bridge]]
 
@@ -38,6 +38,7 @@ implement แล้ว) เทียบกับแผนใน game_design_doc.
 | CraftCard | SurvivalAction | recipeId | success/failureReason + outputCardId | คราฟการ์ดตามสูตร | ⚠️ |
 | MoveToLocation | SurvivalAction | locationId | success/failureReason | ย้ายไป location ที่เชื่อมถึงเท่านั้น | ✅ |
 | UseCard | SurvivalAction | cardId, targetId (optional) | success/failureReason + ResultText (เมื่อ eliminate) | ใช้การ์ด — self-use เติม stat; weapon (Phase 4) ต้องระบุ targetId และผ่านเงื่อนไข no-witness จึงจะฆ่าสำเร็จ (การ์ดไม่หายถ้า fail) | ✅ |
+| HarvestNode | SurvivalAction | toolItemId (optional) | Success + NodeId/ItemId/Count/Depleted/RegrowSeconds หรือ failureReason | เก็บเกี่ยว node ใกล้ผู้เล่น (Lab C Phase 1.5) — auto-pick tool จาก inventory; รายละเอียดใน [[biome-scatter-system]] | ✅ |
 | AwaitNextEvent | SurvivalAction | timeoutSeconds (default 30) | TimedOut / Group + EventId + DisplayText | รอ world event ถัดไป (Survival หรือ Social) | ⚠️ |
 | CallMeeting | Deduction | - | success + รายชื่อ NPC เข้าร่วม | เรียกประชุมฉุกเฉินเมื่อพบศพ/สงสัย | ⚠️ |
 | AccuseNpc | Deduction | targetNpcId | WasCorrect + GameOverWin/Loss + ResultText | กล่าวหา NPC เป็น Killer — ตัดสินชนะ/แพ้ | ✅ |
@@ -74,6 +75,11 @@ implement แล้ว) เทียบกับแผนใน game_design_doc.
   `eliminated_<npcId>` (สถาปัตยกรรม: [[card-system]])
 - **AwaitNextEvent** — ใช้เมื่อ "ไม่มีอะไรจะทำ" เพื่อรอเหตุการณ์แล้ววางแผนตอบสนอง;
   ปัจจุบันตอบ timeout ทันทีถ้าคิวว่าง
+- **HarvestNode** — เก็บเกี่ยว harvestable node ในรัศมี 1.6 หน่วยรอบผู้เล่น (Lab C:
+  [[biome-scatter-system]]) — เลือก tool จากมือการ์ดให้เอง (เช่น `tool_axe` สำหรับ
+  `tree_wood`), ไม่มี tool = `missing_tool`, ไม่มี node ใกล้ = `no_node_in_range`,
+  node กำลังงอกใหม่ = `regrowing`; สำเร็จคืนไอเท็มเข้า inventory + บอกว่า node หมด
+  หรือยัง (Depleted/RegrowSeconds); ระบุ `toolItemId` เองได้ถ้าอยากบังคับ tool ตัวใดตัวหนึ่ง
 - **CallMeeting** — ใช้เมื่อพบศพหรือเก็บหลักฐานพอแล้ว; ตอนนี้แค่ list ใครอยู่ตรงนั้น
 - **AccuseNpc** — ใช้เมื่อมีหลักฐานพอ (ผิด 3 ครั้ง = แพ้, Mood หาย 15/ครั้ง) — เป็น tool
   เดียวที่ตัดสิน win/lose ของเกม

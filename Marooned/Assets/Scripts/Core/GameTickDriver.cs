@@ -25,6 +25,7 @@ namespace Marooned.Core
         private PlayerInputService _playerInput;
         private PlayerMovementSystem _playerMovement;
         private ItemPickupSystem _itemPickup;
+        private NodeHarvestSystem _nodeHarvest;
 
         private bool _resolved;
 
@@ -57,6 +58,7 @@ namespace Marooned.Core
             _playerInput = scope.Container.Resolve<PlayerInputService>();
             _playerMovement = scope.Container.Resolve<PlayerMovementSystem>();
             _itemPickup = scope.Container.Resolve<ItemPickupSystem>();
+            _nodeHarvest = scope.Container.Resolve<NodeHarvestSystem>();
             _resolved = true;
             Debug.Log("[GameTickDriver] Resolve ระบบครบแล้ว — เริ่ม Tick ทุกเฟรม");
             return true;
@@ -75,6 +77,9 @@ namespace Marooned.Core
             _survival.Tick(deltaSeconds);
             _playerMovement.Tick(deltaSeconds);
             _itemPickup.Tick(deltaSeconds);
+            // Lab C Phase 1: เก็บเกี่ยว node — อยู่หลัง pickup เพื่อให้กด E ครั้งเดียว
+            // เก็บไอเท็มพื้นก่อน (ถ้ามี) แล้วจึงโดน node (กันของทั้งสองระบบโดยกดเดียว)
+            _nodeHarvest.Tick(deltaSeconds);
             _npcDirector.Tick(deltaSeconds);
 
             // WorldEventSystem.Tick ต้องการ location tag ปัจจุบัน — ใช้ id ของ

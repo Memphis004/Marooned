@@ -1,0 +1,10 @@
+﻿=== Test D — Deplete until regrow (2026-09-09 02:45:11) ===
+target node: node_bush_berry_8 durability=1 (regrowTime จาก CSV = 30s)
+  attempt 1: success=True reason=- durability=0
+regrowing after deplete: True
+harvest while regrowing: success=False reason=regrowing (ต้องเป็น regrowing)
+state: durability=0 regrowing=True (ป้ายใน Game view ควรจาง + '(กำลังงอกใหม่…)')
+--- related logs (tail) ---
+02:45:11.572 [LOG] [NodeHarvestSystem] harvested 'bush_berry' → +1 berry (durability 0, depleted=True)
+02:45:11.572 [LOG] [NodeHarvestSystem] harvest 'bush_berry' ไม่สำเร็จ: regrowing
+RESULT: PASS

@@ -115,6 +115,15 @@ namespace Marooned.Core
             // (publish chain เช่น UI re-render / chibi spawn จะ throw ไม่งั้น)
             builder.RegisterEntryPoint<McpMainThreadDispatcher>(Lifetime.Singleton).AsSelf();
 
+            // --- Biome scatter + tool-gathering (Lab C Phase 1) ---
+            // BiomeScatterSystem คำนวณตำแหน่ง spawn อย่างเดียว (ไม่แตะ GameObject) —
+            // publish BiomeChangedMessage ให้ BiomeScatterView (MonoBehaviour บน scene)
+            // เป็นคน Instantiate/Destroy; WorldBounds ใช้ instance เดียวกับ movement
+            builder.Register<BiomeScatterSystem>(Lifetime.Singleton).AsSelf();
+            // NodeHarvestSystem: เก็บเกี่ยว harvestable node (E) — เช็ค tool กับ
+            // HarvestableNodeDef.csv, yield เข้า inventory, publish NodeHarvestedMessage
+            builder.Register<NodeHarvestSystem>(Lifetime.Singleton).AsSelf();
+
             // --- State provider consumed by MCP query handlers ---
             builder.Register<GameStateProvider>(Lifetime.Singleton).AsSelf();
 
@@ -132,6 +141,8 @@ namespace Marooned.Core
             builder.RegisterAsyncRequestHandler<MoveToLocationRequest, MoveToLocationResponse, MoveToLocationHandler>(options);
             builder.RegisterAsyncRequestHandler<UseCardRequest, UseCardResponse, UseCardHandler>(options);
             builder.RegisterAsyncRequestHandler<CallMeetingRequest, CallMeetingResponse, CallMeetingHandler>(options);
+            // Lab C Phase 1.5 (harvest_node): เก็บเกี่ยว node ใกล้ผู้เล่น (auto-pick tool)
+            builder.RegisterAsyncRequestHandler<HarvestNodeRequest, HarvestNodeResponse, HarvestNodeHandler>(options);
 
             // --- UI root ---
             builder.RegisterEntryPoint<UIRoot>();

@@ -105,19 +105,22 @@ namespace Marooned.McpBridge
         private readonly IRemoteRequestHandler<MoveToLocationRequest, MoveToLocationResponse> _move;
         private readonly IRemoteRequestHandler<UseCardRequest, UseCardResponse> _useCard;
         private readonly IRemoteRequestHandler<AwaitNextEventRequest, AwaitNextEventResponse> _awaitNextEvent;
+        private readonly IRemoteRequestHandler<HarvestNodeRequest, HarvestNodeResponse> _harvestNode;
 
         public SurvivalActionTools(
             IRemoteRequestHandler<ExploreLocationRequest, ExploreLocationResponse> explore,
             IRemoteRequestHandler<CraftCardRequest, CraftCardResponse> craft,
             IRemoteRequestHandler<MoveToLocationRequest, MoveToLocationResponse> move,
             IRemoteRequestHandler<UseCardRequest, UseCardResponse> useCard,
-            IRemoteRequestHandler<AwaitNextEventRequest, AwaitNextEventResponse> awaitNextEvent)
+            IRemoteRequestHandler<AwaitNextEventRequest, AwaitNextEventResponse> awaitNextEvent,
+            IRemoteRequestHandler<HarvestNodeRequest, HarvestNodeResponse> harvestNode)
         {
             _explore = explore;
             _craft = craft;
             _move = move;
             _useCard = useCard;
             _awaitNextEvent = awaitNextEvent;
+            _harvestNode = harvestNode;
         }
 
         [McpServerTool, Description("Explore the player's current location. Returns any cards found; empty if the node is temporarily depleted.")]
@@ -152,6 +155,22 @@ namespace Marooned.McpBridge
             var res = await _useCard.InvokeAsync(new UseCardRequest { CardId = cardId, TargetId = targetId });
             if (!res.Success) return $"Could not use {cardId}: {res.FailureReason}";
             return string.IsNullOrEmpty(res.ResultText) ? $"Used {cardId}." : $"Used {cardId}: {res.ResultText}";
+        }
+
+        [McpServerTool, Description("Harvest the nearest harvestable node (tree, rock, berry bush) within reach of the player. Tools are picked automatically from inventory (e.g. tool_axe for trees); bare-handed works for nodes that need no tool. Returns the item gained, or the failure reason (no_node_in_range, missing_tool, regrowing).")]
+        public async Task<string> HarvestNode([Description("Optional tool card id to use explicitly (e.g. 'tool_axe'); omit to auto-pick from inventory")] string toolItemId = null)
+        {
+            var res = await _harvestNode.InvokeAsync(new HarvestNodeRequest { ToolItemId = toolItemId });
+            if (!res.Success)
+            {
+                return res.NodeId.Length == 0
+                    ? $"Harvest failed: {res.FailureReason}"
+                    : $"Harvest failed ({res.NodeId}): {res.FailureReason}";
+            }
+            var toolNote = res.Depleted
+                ? (res.RegrowSeconds > 0 ? $" Node depleted -- regrows in {res.RegrowSeconds}s." : " Node depleted permanently.")
+                : "";
+            return $"Harvested {res.NodeId}: +{res.Count} {res.ItemId}.{toolNote}";
         }
 
         [McpServerTool, Description("Block until the next world event fires (Survival or Social group), or time out.")]

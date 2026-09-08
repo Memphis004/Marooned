@@ -6,4 +6,5 @@
   <Project Path="spine-csharp.csproj" />
   <Project Path="spine-unity-examples.csproj" />
   <Project Path="spine-unity-examples-editor.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
 </Solution>

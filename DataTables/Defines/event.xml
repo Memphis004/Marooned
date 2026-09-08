@@ -28,6 +28,10 @@
         <var name="fatigueDelta" type="float"/>
         <var name="explorePenalty" type="float"/>
         <var name="craftPenalty" type="float"/>
+        <!-- Lab C Phase 1: targeting + effect (เดิมมีแค่ใน Shared/CardDef.cs mock
+             ตอนนี้มาจาก CSV จริง เช่น knife_basic = SingleTarget/Eliminate) -->
+        <var name="targetType" type="string"/>
+        <var name="effectType" type="string"/>
     </bean>
     <table name="TbCardDef" value="CardDef" mode="map" index="id" input="CardDef.csv" group="c"/>
 
@@ -93,5 +97,31 @@
         <var name="requiredLocationTag" type="string"/>
     </bean>
     <table name="TbWorldEventDef" value="WorldEventDef" mode="map" index="id" input="WorldEventDef.csv" group="c"/>
+
+    <!-- ============ BiomeDef ============ -->
+    <bean name="BiomeDef">
+        <var name="id" type="string"/>
+        <var name="displayName" type="string"/>
+        <var name="propDensity" type="float"/>
+        <var name="itemSpawnRate" type="float"/>
+        <var name="backgroundColor" type="string"/>
+        <var name="fogDensity" type="float"/>
+        <!-- Lab C Phase 1: node ids ที่ spawn ใน biome นี้ (map กับ HarvestableNodeDef.csv)
+             — System อ่านจากตาราง ไม่ hardcode -->
+        <var name="harvestableNodeIds" type="(list#sep=;),string"/>
+    </bean>
+    <table name="TbBiomeDef" value="BiomeDef" mode="map" index="id" input="BiomeDef.csv" group="c"/>
+
+    <!-- ============ HarvestableNodeDef ============ -->
+    <bean name="HarvestableNodeDef">
+        <var name="id" type="string"/>
+        <var name="displayName" type="string"/>
+        <var name="requiredToolCardId" type="string"/>
+        <var name="yieldItemId" type="string"/>
+        <var name="yieldCount" type="int"/>
+        <var name="durability" type="int"/>
+        <var name="regrowTime" type="int"/>
+    </bean>
+    <table name="TbHarvestableNodeDef" value="HarvestableNodeDef" mode="map" index="id" input="HarvestableNodeDef.csv" group="c"/>
 
 </module>

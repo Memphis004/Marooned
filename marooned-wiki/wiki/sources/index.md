@@ -15,7 +15,7 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-คัปเดตล่าสุด: 2026-09-08 (เพิ่ม Camera Follow และ Zone Triggers ใน Player System)
+คัปเดตล่าสุด: 2026-09-09 (Lab C Phase 1: Hybrid Biome Scatter + Tool-Gathering + MCP harvest_node)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -30,6 +30,10 @@ tags:
   (MessagePipe + VContainer + MVP Lite)
 - [[player-system]] — ระบบผู้เล่น Lab B Phase 3: เดิน WASD 4 ทิศ + เก็บไอเท็มตามโซน
   (PlayerInputService/Movement/WorldItem/Pickup + zone loot mock table)
+- [[biome-scatter-system]] — Lab C Phase 1: Hybrid Biome Scatter (System คำนวณ + publish event,
+  View เป็นคน Instantiate) + HarvestableNode tool-gathering (durability/tool/regrow จาก Luban CSV)
+- [[biome-scatter-editor-setup]] — คู่มือสร้าง BiomePrefabSet ใน Unity Editor +
+  protocol เทส Test A–D พร้อมจุดพบบ่อย
 
 ## 📄 Code Snippets
 

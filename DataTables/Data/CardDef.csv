@@ -1,9 +1,18 @@
-﻿##var,id,category,displayName,spritePath,stackLimit,hungerDelta,thirstDelta,moodDelta,fatigueDelta,explorePenalty,craftPenalty
-##type,string,string,string,string,int,float,float,float,float,float,float
-##,card id,category,display name,sprite path,stack limit,hunger effect,thirst effect,mood effect,fatigue effect,explore penalty,craft penalty
-,food_coconut,Resource,มะพร้าว,Sprites/Cards/food_coconut,10,15,0,0,0,0,0
-,water_bottle,Resource,น้ำขวด,Sprites/Cards/water_bottle,10,0,20,0,0,0,0
-,raw_fish,Resource,ปลาดิบ,Sprites/Cards/raw_fish,10,10,0,-5,0,0,0
-,cooked_fish,Craftable,ปลาย่าง,Sprites/Cards/cooked_fish,10,25,0,5,0,0,0
-,illness_malnutrition,Illness,ภาวะขาดสารอาหาร,Sprites/Cards/illness_malnutrition,1,0,0,0,0,-0.3,-0.2
-,illness_dehydration,Illness,ภาวะขาดน้ำ,Sprites/Cards/illness_dehydration,1,0,0,0,0,-0.4,0
+##var,id,category,displayName,spritePath,stackLimit,hungerDelta,thirstDelta,moodDelta,fatigueDelta,explorePenalty,craftPenalty,targetType,effectType
+##type,string,string,string,string,int,float,float,float,float,float,float,string,string
+##,card id,category,display name,sprite path,stack limit,hunger effect,thirst effect,mood effect,fatigue effect,explore penalty,craft penalty,target type,effect type
+,food_coconut,Resource,มะพร้าว,Sprites/Cards/food_coconut,10,15,0,0,0,0,0,Self,StatDelta
+,water_bottle,Resource,น้ำขวด,Sprites/Cards/water_bottle,10,0,20,0,0,0,0,Self,StatDelta
+,raw_fish,Resource,ปลาดิบ,Sprites/Cards/raw_fish,10,10,0,-5,0,0,0,Self,StatDelta
+,cooked_fish,Craftable,ปลาย่าง,Sprites/Cards/cooked_fish,10,25,0,5,0,0,0,Self,StatDelta
+,illness_malnutrition,Illness,ภาวะขาดสารอาหาร,Sprites/Cards/illness_malnutrition,1,0,0,0,0,-0.3,-0.2,Self,StatDelta
+,illness_dehydration,Illness,ภาวะขาดน้ำ,Sprites/Cards/illness_dehydration,1,0,0,0,0,-0.4,0,Self,StatDelta
+,mat_vine,Resource,เถาวัลย์,Sprites/Cards/mat_vine,10,0,0,0,0,0,0,Self,StatDelta
+,mat_stone,Resource,หิน,Sprites/Cards/mat_stone,10,0,0,0,0,0,0,Self,StatDelta
+,knife_basic,Weapon,มีด,Sprites/Cards/knife_basic,1,0,0,0,0,0,0,SingleTarget,Eliminate
+,tool_axe,Tool,ขวา,Sprites/Cards/tool_axe,1,0,0,0,0,0,0,Self,StatDelta
+,tool_pickaxe,Tool,อีเต้อ,Sprites/Cards/tool_pickaxe,1,0,0,0,0,0,0,Self,StatDelta
+,tool_campfire,Tool,แคมป์ไฟ,Sprites/Cards/tool_campfire,1,0,0,0,0,0,0,Self,StatDelta
+,wood_log,Resource,ท่อนไม้,Sprites/Cards/wood_log,10,0,0,0,0,0,0,Self,StatDelta
+,stone,Resource,หินก้อน,Sprites/Cards/stone,10,0,0,0,0,0,0,Self,StatDelta
+,berry,Resource,เบอร์รี่,Sprites/Cards/berry,10,5,0,3,0,0,0,Self,StatDelta

@@ -210,4 +210,43 @@ namespace Marooned.Shared
         [Key(1)] public int NewCount; // จำนวนหลังเปลี่ยน (0 = หมด/ถูกลบออกจากมือ)
         [Key(2)] public int Delta;    // +เพิ่ม / -ลด
     }
+
+    // ---- Added in Lab C Phase 1 (Hybrid BiomeScatter): harvestable node broadcast ----
+    // In-process only (MessagePipe) — NodeHarvestSystem publish หลัง harvest สำเร็จ
+    // 1 ครั้ง (ได้ไอเท็มเข้า inventory แล้ว) — Depleted=true เมื่อ durability หมด
+    // (RegrowSeconds > 0 = จะกลับมาให้เก็บใหม่, 0 = หายถาวร)
+
+    [MessagePackObject]
+    public class NodeHarvestedMessage
+    {
+        [Key(0)] public string NodeId;
+        [Key(1)] public string ItemId;
+        [Key(2)] public int Count;
+        [Key(3)] public bool Depleted;
+        [Key(4)] public int RegrowSeconds;
+    }
+
+    // ---- Added in Lab C Phase 1.5 (MCP harvest_node): request/response ----
+    // Bridge → Unity: NodeHarvestSystem ทำงานจริง — toolItemId ว่าง = ให้ระบบเลือก
+    // tool ที่เหมาะสมจาก inventory เอง (ต่างจากกด E ที่หมายถึงมือเปล่า)
+
+    [MessagePackObject]
+    public class HarvestNodeRequest
+    {
+        // optional: specific tool card id (e.g. "tool_axe"); null/empty = auto-pick
+        // the best matching tool from inventory (or bare hands if none needed)
+        [Key(0)] public string ToolItemId;
+    }
+
+    [MessagePackObject]
+    public class HarvestNodeResponse
+    {
+        [Key(0)] public bool Success;
+        [Key(1)] public string FailureReason; // "no_node_in_range", "wrong_tool", "regrowing"
+        [Key(2)] public string NodeId;        // node ที่พยายามเก็บ (เติมเมื่อเจอ node)
+        [Key(3)] public string ItemId;        // yield card id (เติมเมื่อ Success)
+        [Key(4)] public int Count;            // จำนวน yield (เติมเมื่อ Success)
+        [Key(5)] public bool Depleted;        // durability หมดพอดี (เติมเมื่อ Success)
+        [Key(6)] public int RegrowSeconds;    // > 0 เมื่อ Depleted และจะงอกใหม่ (เติมเมื่อ Success)
+    }
 }

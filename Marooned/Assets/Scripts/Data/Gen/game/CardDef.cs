@@ -28,6 +28,8 @@ public sealed partial class CardDef : Luban.BeanBase
         { if(!_buf["fatigueDelta"].IsNumber) { throw new SerializationException(); }  FatigueDelta = _buf["fatigueDelta"]; }
         { if(!_buf["explorePenalty"].IsNumber) { throw new SerializationException(); }  ExplorePenalty = _buf["explorePenalty"]; }
         { if(!_buf["craftPenalty"].IsNumber) { throw new SerializationException(); }  CraftPenalty = _buf["craftPenalty"]; }
+        { if(!_buf["targetType"].IsString) { throw new SerializationException(); }  TargetType = _buf["targetType"]; }
+        { if(!_buf["effectType"].IsString) { throw new SerializationException(); }  EffectType = _buf["effectType"]; }
     }
 
     public static CardDef DeserializeCardDef(JSONNode _buf)
@@ -46,6 +48,8 @@ public sealed partial class CardDef : Luban.BeanBase
     public readonly float FatigueDelta;
     public readonly float ExplorePenalty;
     public readonly float CraftPenalty;
+    public readonly string TargetType;
+    public readonly string EffectType;
    
     public const int __ID__ = 874043577;
     public override int GetTypeId() => __ID__;
@@ -68,6 +72,8 @@ public sealed partial class CardDef : Luban.BeanBase
         + "fatigueDelta:" + FatigueDelta + ","
         + "explorePenalty:" + ExplorePenalty + ","
         + "craftPenalty:" + CraftPenalty + ","
+        + "targetType:" + TargetType + ","
+        + "effectType:" + EffectType + ","
         + "}";
     }
 }

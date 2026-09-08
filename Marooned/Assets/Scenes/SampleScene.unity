@@ -543,6 +543,7 @@ Transform:
   - {fileID: 1121774543}
   - {fileID: 2112518052}
   - {fileID: 1705945059}
+  - {fileID: 686634442}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &619394800
@@ -629,6 +630,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &686634441
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 686634442}
+  - component: {fileID: 686634443}
+  m_Layer: 0
+  m_Name: BiomeScatterLayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &686634442
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686634441}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 612527674}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &686634443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686634441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42b73e38de11dea44af4baf2c402e85d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.BiomeScatterView
+  tintGround: 1
+  groundAlpha: 0.35
 --- !u!1 &694791369
 GameObject:
   m_ObjectHideFlags: 0
@@ -641,8 +688,6 @@ GameObject:
   - component: {fileID: 694791372}
   - component: {fileID: 694791371}
   - component: {fileID: 694791370}
-  - component: {fileID: 694791376}
-  - component: {fileID: 694791375}
   - component: {fileID: 694791374}
   m_Layer: 0
   m_Name: Canvas
@@ -747,32 +792,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.UI.Views.ZoneHudView
   zoneText: {fileID: 0}
---- !u!114 &694791375
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 694791369}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee07b45e1591ff94e84875007a20903d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Marooned.UI.Views.ZoneHudView
-  zoneText: {fileID: 0}
---- !u!114 &694791376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 694791369}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee07b45e1591ff94e84875007a20903d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Marooned.UI.Views.ZoneHudView
-  zoneText: {fileID: 0}
 --- !u!1 &1038076559
 GameObject:
   m_ObjectHideFlags: 0
@@ -820,7 +839,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.ZoneTransitionTrigger
   targetLocationId: beach
   playerTag: Player
-  markerColor: {r: 0.2, g: 0.9, b: 0.3, a: 0.25}
+  markerColor: {r: 0.95686275, g: 0.89411765, b: 0.75686276, a: 0.25}
 --- !u!61 &1038076562
 BoxCollider2D:
   m_ObjectHideFlags: 0

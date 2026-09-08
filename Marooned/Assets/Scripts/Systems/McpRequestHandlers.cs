@@ -63,6 +63,44 @@ namespace Marooned.Systems
         }
     }
 
+    /// <summary>
+    /// Lab C Phase 1.5 (MCP harvest_node): เก็บเกี่ยว harvestable node ที่ใกล้ผู้เล่น
+    /// ที่สุดในรัศมีของ NodeHarvestSystem — delegate งานทั้งหมดให้
+    /// NodeHarvestSystem.TryHarvestNearest (auto-pick tool จาก inventory เมื่อ
+    /// ToolItemId ว่าง) แล้ว map HarvestResult → HarvestNodeResponse
+    /// publish chain (inventory → UI re-render, NodeHarvestedMessage) แตะ Unity
+    /// API จึงต้อง enqueue ไป main thread เหมือน handler อื่น
+    /// </summary>
+    public class HarvestNodeHandler : IAsyncRequestHandler<HarvestNodeRequest, HarvestNodeResponse>
+    {
+        private readonly NodeHarvestSystem _harvest;
+        private readonly McpMainThreadDispatcher _mainThread;
+
+        public HarvestNodeHandler(NodeHarvestSystem harvest, McpMainThreadDispatcher mainThread)
+        {
+            _harvest = harvest;
+            _mainThread = mainThread;
+        }
+
+        public async UniTask<HarvestNodeResponse> InvokeAsync(HarvestNodeRequest request, CancellationToken cancellationToken = default)
+        {
+            return await _mainThread.EnqueueAsync(() =>
+            {
+                var result = _harvest.TryHarvestNearest();
+                return new HarvestNodeResponse
+                {
+                    Success = result.Success,
+                    FailureReason = result.FailureReason ?? "",
+                    NodeId = result.NodeId ?? "",
+                    ItemId = result.ItemId ?? "",
+                    Count = result.Count,
+                    Depleted = result.Depleted,
+                    RegrowSeconds = result.RegrowSeconds,
+                };
+            });
+        }
+    }
+
     public class AwaitNextEventHandler : IAsyncRequestHandler<AwaitNextEventRequest, AwaitNextEventResponse>
     {
         private readonly WorldEventSystem _worldEvents;

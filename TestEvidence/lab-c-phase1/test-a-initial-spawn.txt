@@ -1,0 +1,20 @@
+﻿=== Test A — Initial biome spawn (2026-09-09 02:45:32) ===
+BiomeScatterLayer children (props+nodes): 1
+Ground tint object 'BiomeGround_beach': FOUND
+HarvestableNodeComponent count: 2
+  node: node_tree_wood_7 pos=(-7.58,-1.88) durability=3 regrowing=False
+  node: node_bush_berry_8 pos=(19.77,1.43) durability=1 regrowing=False
+--- related logs ---
+02:44:47.736 [LOG] [LubanDataService] loaded 15 cards, 4 locations, 1 recipes, 4 clues, 3 illnesses, 4 events, 3 biomes, 3 harvestable nodes
+02:44:48.474 [LOG] [BiomeScatterView] โหลด BiomePrefabSet 3 ชุด: beach, cave, jungle
+02:44:48.479 [LOG] [BiomeScatterView] biome 'beach': instantiate 8/8 objects
+02:44:48.479 [LOG] [BiomeScatterSystem] SetBiome 'beach': publish 8 spawn positions (props + nodes, density 0.3)
+02:45:11.598 [LOG] [BiomeScatterView] biome 'jungle': instantiate 14/14 objects
+02:45:11.598 [LOG] [BiomeScatterSystem] SetBiome 'jungle': publish 14 spawn positions (props + nodes, density 0.6)
+02:45:11.599 [LOG] [BiomeScatterView] biome 'beach': instantiate 8/8 objects
+02:45:11.599 [LOG] [BiomeScatterSystem] SetBiome 'beach': publish 8 spawn positions (props + nodes, density 0.3)
+02:45:17.818 [LOG] [BiomeScatterView] biome 'jungle': instantiate 14/14 objects
+02:45:17.818 [LOG] [BiomeScatterSystem] SetBiome 'jungle': publish 14 spawn positions (props + nodes, density 0.6)
+02:45:18.237 [LOG] [BiomeScatterView] biome 'beach': instantiate 8/8 objects
+02:45:18.237 [LOG] [BiomeScatterSystem] SetBiome 'beach': publish 8 spawn positions (props + nodes, density 0.3)
+RESULT: PASS

@@ -1,0 +1,6 @@
+##var,id,displayName,propDensity,itemSpawnRate,backgroundColor,fogDensity,harvestableNodeIds
+##type,string,string,float,float,string,float,"(list#sep=;),string"
+##,biome id,display name,prop density,item spawn rate,background color hex,fog density,harvestable node ids (see HarvestableNodeDef.csv)
+,beach,ชายหาด,0.3,0.1,#F4E4C1,0.0,tree_wood;bush_berry
+,jungle,ป่าทึบ,0.6,0.15,#2D5016,0.1,tree_wood;bush_berry
+,cave,ถ้ำมืด,0.2,0.05,#1A1A1A,0.3,rock_stone;bush_berry

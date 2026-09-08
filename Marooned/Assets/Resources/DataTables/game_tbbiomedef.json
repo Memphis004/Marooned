@@ -1,0 +1,38 @@
+[
+  {
+    "id": "beach",
+    "displayName": "ชายหาด",
+    "propDensity": 0.3,
+    "itemSpawnRate": 0.1,
+    "backgroundColor": "#F4E4C1",
+    "fogDensity": 0,
+    "harvestableNodeIds": [
+      "tree_wood",
+      "bush_berry"
+    ]
+  },
+  {
+    "id": "jungle",
+    "displayName": "ป่าทึบ",
+    "propDensity": 0.6,
+    "itemSpawnRate": 0.15,
+    "backgroundColor": "#2D5016",
+    "fogDensity": 0.1,
+    "harvestableNodeIds": [
+      "tree_wood",
+      "bush_berry"
+    ]
+  },
+  {
+    "id": "cave",
+    "displayName": "ถ้ำมืด",
+    "propDensity": 0.2,
+    "itemSpawnRate": 0.05,
+    "backgroundColor": "#1A1A1A",
+    "fogDensity": 0.3,
+    "harvestableNodeIds": [
+      "rock_stone",
+      "bush_berry"
+    ]
+  }
+]

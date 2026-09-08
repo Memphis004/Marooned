@@ -1,0 +1,58 @@
+﻿02:44:47.736 [LOG] [LubanDataService] loaded 15 cards, 4 locations, 1 recipes, 4 clues, 3 illnesses, 4 events, 3 biomes, 3 harvestable nodes
+02:44:47.752 [LOG] [WorldItemSystem] enter beach: spawn 3 item (state รวม 3, เก็บไปแล้ว 0)
+02:44:47.771 [LOG] [GameTickDriver] Resolve ระบบครบแล้ว — เริ่ม Tick ทุกเฟรม
+02:44:48.474 [LOG] [BiomeScatterView] โหลด BiomePrefabSet 3 ชุด: beach, cave, jungle
+02:44:48.479 [LOG] [BiomeScatterView] biome 'beach': instantiate 8/8 objects
+02:44:48.479 [LOG] [BiomeScatterSystem] SetBiome 'beach': publish 8 spawn positions (props + nodes, density 0.3)
+02:44:48.483 [LOG] [RoundInitializer] SetupRound เสร็จ: 3 NPC (1 killer)
+02:44:50.252 [LOG] [ChibiSpawnerView] Spawn chibi npc_01 (CollegeStudentChibi(Clone)) @ beach (active=1)
+02:44:50.254 [LOG] [ChibiSpawnerView] Spawn chibi npc_02 (WizardChibi(Clone)) @ beach (active=2)
+02:44:50.255 [LOG] [ChibiSpawnerView] Spawn chibi npc_03 (CollegeStudentChibi(Clone)) @ beach (active=3)
+02:44:51.213 [LOG] Error reason is 'NoSubscription' and no additional error information was provided (https://generators.ai.unity.com).
+02:44:51.795 [LOG] Error reason is 'NoSubscription' and no additional error information was provided (https://generators.ai.unity.com).
+02:44:52.127 [LOG] Error reason is 'NoSubscription' and no additional error information was provided (https://generators.ai.unity.com).
+02:44:52.466 [LOG] Error reason is 'NoSubscription' and no additional error information was provided (https://generators.ai.unity.com).
+02:44:52.879 [LOG] Error reason is 'NoSubscription' and no additional error information was provided (https://generators.ai.unity.com).
+02:45:11.571 [LOG] [CardHandPresenter] berry → 1 (Δ1) → re-render
+02:45:11.572 [LOG] [NodeHarvestSystem] harvested 'bush_berry' → +1 berry (durability 0, depleted=True)
+02:45:11.572 [LOG] [NodeHarvestSystem] harvest 'bush_berry' ไม่สำเร็จ: regrowing
+02:45:11.576 [LOG] [TestD] PASS — evidence: TestEvidence/lab-c-phase1/test-d-regrow.txt
+02:45:11.597 [LOG] [WorldItemSystem] enter jungle_edge: spawn 3 item (state รวม 3, เก็บไปแล้ว 0)
+02:45:11.598 [LOG] [BiomeScatterView] biome 'jungle': instantiate 14/14 objects
+02:45:11.598 [LOG] [BiomeScatterSystem] SetBiome 'jungle': publish 14 spawn positions (props + nodes, density 0.6)
+02:45:11.598 [LOG] [ChibiSpawnerView] Despawn chibi npc_01 (active=2)
+02:45:11.598 [LOG] [ChibiSpawnerView] Despawn chibi npc_02 (active=1)
+02:45:11.599 [LOG] [ChibiSpawnerView] Despawn chibi npc_03 (active=0)
+02:45:11.599 [LOG] [ZoneTransitionTrigger] Player เปลี่ยนโซน: beach → jungle_edge
+02:45:11.599 [LOG] [WorldItemSystem] enter beach: spawn 3 item (state รวม 3, เก็บไปแล้ว 0)
+02:45:11.599 [LOG] [BiomeScatterView] biome 'beach': instantiate 8/8 objects
+02:45:11.599 [LOG] [BiomeScatterSystem] SetBiome 'beach': publish 8 spawn positions (props + nodes, density 0.3)
+02:45:11.600 [LOG] [ChibiSpawnerView] Spawn chibi npc_01 (CollegeStudentChibi(Clone)) @ beach (active=1)
+02:45:11.601 [LOG] [ChibiSpawnerView] Spawn chibi npc_02 (WizardChibi(Clone)) @ beach (active=2)
+02:45:11.603 [LOG] [ChibiSpawnerView] Spawn chibi npc_03 (CollegeStudentChibi(Clone)) @ beach (active=3)
+02:45:11.603 [LOG] [ZoneTransitionTrigger] Player เปลี่ยนโซน: jungle_edge → beach
+02:45:17.817 [LOG] [WorldItemSystem] enter jungle_edge: spawn 3 item (state รวม 3, เก็บไปแล้ว 0)
+02:45:17.818 [LOG] [BiomeScatterView] biome 'jungle': instantiate 14/14 objects
+02:45:17.818 [LOG] [BiomeScatterSystem] SetBiome 'jungle': publish 14 spawn positions (props + nodes, density 0.6)
+02:45:17.818 [LOG] [ChibiSpawnerView] Despawn chibi npc_01 (active=2)
+02:45:17.818 [LOG] [ChibiSpawnerView] Despawn chibi npc_02 (active=1)
+02:45:17.818 [LOG] [ChibiSpawnerView] Despawn chibi npc_03 (active=0)
+02:45:17.819 [LOG] [ZoneTransitionTrigger] Player เปลี่ยนโซน: beach → jungle_edge
+02:45:18.236 [LOG] [WorldItemSystem] enter beach: spawn 3 item (state รวม 3, เก็บไปแล้ว 0)
+02:45:18.237 [LOG] [BiomeScatterView] biome 'beach': instantiate 8/8 objects
+02:45:18.237 [LOG] [BiomeScatterSystem] SetBiome 'beach': publish 8 spawn positions (props + nodes, density 0.3)
+02:45:18.239 [LOG] [ChibiSpawnerView] Spawn chibi npc_01 (CollegeStudentChibi(Clone)) @ beach (active=1)
+02:45:18.240 [LOG] [ChibiSpawnerView] Spawn chibi npc_02 (WizardChibi(Clone)) @ beach (active=2)
+02:45:18.241 [LOG] [ChibiSpawnerView] Spawn chibi npc_03 (CollegeStudentChibi(Clone)) @ beach (active=3)
+02:45:18.241 [LOG] [ZoneTransitionTrigger] Player เปลี่ยนโซน: jungle_edge → beach
+02:45:32.264 [LOG] [TestA] PASS — evidence: TestEvidence/lab-c-phase1/test-a-initial-spawn.txt
+02:45:36.286 [LOG] [WorldItemSystem] enter jungle_edge: spawn 3 item (state รวม 3, เก็บไปแล้ว 0)
+02:45:36.286 [LOG] [BiomeScatterView] biome 'jungle': instantiate 14/14 objects
+02:45:36.286 [LOG] [BiomeScatterSystem] SetBiome 'jungle': publish 14 spawn positions (props + nodes, density 0.6)
+02:45:36.286 [LOG] [ChibiSpawnerView] Despawn chibi npc_01 (active=2)
+02:45:36.286 [LOG] [ChibiSpawnerView] Despawn chibi npc_02 (active=1)
+02:45:36.287 [LOG] [ChibiSpawnerView] Despawn chibi npc_03 (active=0)
+02:45:36.287 [LOG] [ZoneTransitionTrigger] Player เปลี่ยนโซน: beach → jungle_edge
+02:45:56.539 [LOG] [CardHandPresenter] berry → 2 (Δ1) → re-render
+02:45:56.539 [LOG] [NodeHarvestSystem] harvested 'bush_berry' → +1 berry (durability 0, depleted=True)
+02:45:56.641 [LOG] [TestC] PASS — evidence: TestEvidence/lab-c-phase1/test-c-harvest.txt
