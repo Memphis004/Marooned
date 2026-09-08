@@ -13,9 +13,10 @@ namespace Marooned.Systems
     }
 
     /// <summary>
-    /// Lab B Phase 3 — เก็บไอเท็ม: หาไอเท็มใกล้สุด → เอาออกจากพื้น → เพิ่มเข้า
-    /// CardInventorySystem → publish ItemPickedUpMessage (discrete event ครั้งเดียว
-    /// ต่อการเก็บ 1 ครั้ง ไม่ยิงทุกเฟรม) — Tick ผ่าน GameTickDriver เดิม
+    /// Lab B Phase 3 — เก็บไอเท็ม: หาไอเท็มใกล้สุด → mark Picked ใน WorldItemSystem
+    /// (Lab B Phase 6.1: per-location persistence — item ที่เก็บแล้วไม่ respawn) →
+    /// เพิ่มเข้า CardInventorySystem → publish ItemPickedUpMessage (discrete event
+    /// ครั้งเดียวต่อการเก็บ 1 ครั้ง ไม่ยิงทุกเฟรม) — Tick ผ่าน GameTickDriver เดิม
     /// </summary>
     public class ItemPickupSystem
     {
@@ -75,7 +76,9 @@ namespace Marooned.Systems
 
             var locationId = _stateProvider.GetPlayer().CurrentLocationId;
             Debug.Log($"[ItemPickupSystem] picked up '{item.CardId}' @ {locationId}");
-            _worldItems.RemoveItem(item);
+            // Lab B Phase 6.1: mark Picked = true ใน state ของโซน (per-location
+            // persistence) — destroy GameObject + ไม่ respawn เมื่อกลับเข้าโซนเดิม
+            _worldItems.MarkPicked(item);
 
             // discrete event — ยิงครั้งเดียวต่อการเก็บ (PlayerCharacterView ใช้ trigger anim "pick up")
             _pickupPublisher.Publish(new ItemPickedUpMessage { ItemId = item.CardId, LocationId = locationId });
