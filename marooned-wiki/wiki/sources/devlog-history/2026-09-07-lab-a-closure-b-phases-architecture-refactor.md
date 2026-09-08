@@ -348,12 +348,3 @@ private void RespawnForLocation(string locationId)
 
 ---
 
-## 📊 สถานะโปรเจค
-
-- **Lab A:** ✅ ปิดแล้ว — MCP Round Trip สำเร็จ, เกมมีการ tick, NPC เกิดขึ้น
-- **Lab B Phase 1-2:** ✅ Chibi Visual System พร้อม 2 Backend (2D Animation + Spine experimental)
-- **Lab B Phase 3:** ✅ Player Movement + Zone-based Loot + NPC Roster
-- **Lab B Phase 4:** ✅ Architecture Refactor + Player-as-Killer + Multiplayer-ready
-- **Design Pivot:** ✅ GDD อัปเดตแล้ว
-
-**เกมที่เล่นได้ตอนนี้:** ผู้เล่นเดิน WASD เก็บไอเท็มจากโซน, Craft, ใช้การ์ด (กิน/ดื่ม/Weapon), และ Player-as-Killer ใช้การ์ด Weapon โจมตี NPC ได้ (ต้อง No Witness)

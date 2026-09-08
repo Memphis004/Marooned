@@ -15,7 +15,7 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-คัปเดตล่าสุด: 2026-09-07 (เพิ่ม Phase 5 Card Hand UI devlog + CardSlotUI snippet)
+คัปเดตล่าสุด: 2026-09-08 (เพิ่ม Camera Follow และ Zone Triggers ใน Player System)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)

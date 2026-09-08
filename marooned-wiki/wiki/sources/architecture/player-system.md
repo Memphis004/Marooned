@@ -23,6 +23,13 @@ tags:
 # Player System (Lab B Phase 3)
 
 ## Overview
+
+## Camera Follow
+ระบบกล้องตามผู้เล่นด้วยการตั้งค่า Camera.main.transform.position ให้ตรงกับ PlayerCharacterView.transform.position + offset (z = -10) เพื่อให้ผู้เล่นอยู่กลางจอเสมอ
+
+## Zone Triggers
+โซนกำหนดด้วย Collider2D (IsTrigger) ที่แนบกับ GameObject โซน แต่เมื่อ PlayerLocationChangedMessage ปล่อยออกจากโซนเดิมและเข้าสโซนใหม่ จะทำการเปลี่ยน loot table ของ WorldItemSystem ตามโซนนั้น
+
 ระบบผู้เล่นแบบ free movement (top-down lite) เดิน 4 ทิศด้วย keyboard แล้วเก็บ
 ไอเท็มตามโซน (zone-based loot) เข้า inventory — ครบห่วงโซ่
 `input → movement (state) → view (direct read) → pickup → inventory + message`
