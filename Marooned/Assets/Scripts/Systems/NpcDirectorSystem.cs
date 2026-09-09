@@ -14,6 +14,13 @@ namespace Marooned.Systems
     /// Phase 4 (Player-as-Killer): TryEliminate/CanEliminate เป็น method กลางที่ทั้ง
     /// AI killer (Tick) และ player (weapon card ผ่าน UseCardHandler) ใช้ร่วมกัน
     ///
+    /// Lab C Phase 2 (NPC Embodiment):
+    ///  - MoveNpc() = จุดเดียวที่เปลี่ยน CurrentLocationId + ต้อง seed PositionX/Y
+    ///    ด้วย LocationDef.WorldX/Y ของ destination เสมอ (Position Seeding Rule —
+    ///    กัน NPC warp ไป (0,0) ตอนข้ามโซน)
+    ///  - SetupRound() แจกอาวุธ (การ์ด Category==Weapon ตัวแรกที่ Luban โหลด)
+    ///    ให้ NPC ที่ได้ Role=Killer — ต้องมีอยู่จริงใน DataTables/CardDef.csv
+    ///
     /// IMPORTANT: never hand out NpcState directly to MCP query handlers — always go
     /// through DeductionSystem.BuildObservableView (see DeductionVisibilityRules).
     /// </summary>
@@ -21,6 +28,7 @@ namespace Marooned.Systems
     {
         private readonly Dictionary<string, NpcState> _npcs = new();
         private readonly Dictionary<string, LocationDef> _locations;
+        private readonly LubanDataService _data;
         private readonly IPublisher<NpcEliminatedMessage> _eliminatedPublisher;
         private readonly IPublisher<NpcLocationChangedMessage> _npcLocationPublisher;
         private readonly Random _rng = new();
@@ -30,6 +38,7 @@ namespace Marooned.Systems
         public NpcDirectorSystem(LubanDataService dataService, IPublisher<NpcEliminatedMessage> eliminatedPublisher,
             IPublisher<NpcLocationChangedMessage> npcLocationPublisher)
         {
+            _data = dataService;
             _locations = dataService.LocationDefs;
             _eliminatedPublisher = eliminatedPublisher;
             _npcLocationPublisher = npcLocationPublisher;
@@ -39,6 +48,12 @@ namespace Marooned.Systems
         /// ย้าย NPC ไป location ใหม่ + Publish NpcLocationChangedMessage (Lab B)
         /// ให้ Visual layer (เช่น ChibiSpawnerView) subscribe แทนการ polling
         /// เป็นจุดเดียวที่อนุญาตให้ mutate CurrentLocationId — ระบบอื่นต้องเรียก method นี้
+        ///
+        /// ⚠️ Position Seeding Rule (Lab C Phase 2): set PositionX/Y = WorldX/Y ของ
+        /// location ปลายทางทุกครั้ง — ไม่งั้น NPC เดิมจะ warp ไป (0,0) ขณะข้ามโซน
+        /// (caller ที่ต้องการระบุตำแหน่งเองให้ override หลังเรียก method นี้)
+        /// TargetX/Y ถูก seed ตรงกับ Position ด้วย (ถือว่า "ถึงเป้าแล้ว" ทันที) —
+        /// กันเป้าเก่าจากโซนเดิมลาก NPC เดินข้ามแผนที่หลังย้ายโซน (warp แอบแฝง)
         /// </summary>
         public void MoveNpc(string npcId, string newLocationId)
         {
@@ -48,6 +63,17 @@ namespace Marooned.Systems
             if (oldLocationId == newLocationId) return;
 
             npc.CurrentLocationId = newLocationId;
+
+            // Position Seeding Rule — วาง NPC ที่จุดกึ่งกลางของโซนปลายทางทันที
+            // + ให้ Target ตรงกับ Position (มาถึงแล้ว) จนกว่า wander/AI จะตั้งเป้าใหม่
+            if (_locations.TryGetValue(newLocationId, out var destinationDef))
+            {
+                npc.PositionX = destinationDef.WorldX;
+                npc.PositionY = destinationDef.WorldY;
+                npc.TargetX = destinationDef.WorldX;
+                npc.TargetY = destinationDef.WorldY;
+            }
+
             _npcLocationPublisher.Publish(new NpcLocationChangedMessage
             {
                 NpcId = npcId,
@@ -60,6 +86,10 @@ namespace Marooned.Systems
         /// Sets up a round: picks killerCount out of npcIds to be Killer, rest Innocent.
         /// Ratio guidance (confirmed): ~1 killer per 4-8 innocents, Among Us style
         /// (e.g. 5 NPC -> 1 killer, 10 NPC -> 2 killers).
+        ///
+        /// Lab C Phase 2: แจกอาวุธให้ Killer — ใช้การ์ด Category==Weapon ตัวแรกที่
+        /// Luban โหลดจริง (CardDef.csv) ไม่ใช่ id hardcode — ถ้าไม่มีเลย log warning
+        /// แล้วข้าม (Killer ยัง setup ได้ แค่ไม่มีอาวุธ — Step 4 KillerPlanner จะเดินหาอาวุธแทน)
         /// </summary>
         public void SetupRound(IEnumerable<string> npcIds, int killerCount)
         {
@@ -67,15 +97,28 @@ namespace Marooned.Systems
             var ids = npcIds.ToList();
             var killerIds = ids.OrderBy(_ => _rng.Next()).Take(killerCount).ToHashSet();
 
+            // ตรวจการ์ด Weapon จากข้อมูลจริง (Luban) — ห้าม hardcode id ที่ไม่มีอยู่จริง
+            var weaponCardId = _data.CardDefs
+                .Where(kv => kv.Value.Category == Marooned.Shared.CardCategory.Weapon)
+                .Select(kv => kv.Key)
+                .FirstOrDefault();
+            if (weaponCardId == null)
+                UnityEngine.Debug.LogWarning("[NpcDirectorSystem] ไม่มีการ์ด Category==Weapon ใน CardDef.csv (Luban) — Killer เริ่มรอบโดยไม่มีอาวุธ");
+
             foreach (var id in ids)
             {
-                _npcs[id] = new NpcState
+                var npc = new NpcState
                 {
                     Id = id,
                     Role = killerIds.Contains(id) ? NpcRole.Killer : NpcRole.Innocent,
                     IsAlive = true,
-                    Activity = NpcActivityState.Idle
+                    Activity = NpcActivityState.Idle,
+                    // Position Seeding Rule: ตำแหน่งจริงถูก seed โดย MoveNpc() ซึ่ง
+                    // RoundInitializer.AssignStartingLocations() เรียกตามหลังเสมอ
                 };
+                if (killerIds.Contains(id) && weaponCardId != null)
+                    npc.Inventory.AddItem(weaponCardId);
+                _npcs[id] = npc;
             }
         }
 

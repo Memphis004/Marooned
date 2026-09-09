@@ -115,6 +115,12 @@ namespace Marooned.Core
             // (publish chain เช่น UI re-render / chibi spawn จะ throw ไม่งั้น)
             builder.RegisterEntryPoint<McpMainThreadDispatcher>(Lifetime.Singleton).AsSelf();
 
+            // --- NPC movement (Lab C Phase 2) ---
+            // เดิน NPC เข้าหา TargetX/Y ที่ถูกตั้งไว้ (wander + ทอยข้ามโซนผ่าน
+            // NpcDirectorSystem.MoveNpc) — GameTickDriver เรียก Tick หลัง
+            // NpcDirectorSystem.Tick() เสมอ (target ที่ตั้งในเฟรมนี้ต้องถูกเดินทันที)
+            builder.Register<NpcMovementSystem>(Lifetime.Singleton).AsSelf();
+
             // --- Biome scatter + tool-gathering (Lab C Phase 1) ---
             // BiomeScatterSystem คำนวณตำแหน่ง spawn อย่างเดียว (ไม่แตะ GameObject) —
             // publish BiomeChangedMessage ให้ BiomeScatterView (MonoBehaviour บน scene)

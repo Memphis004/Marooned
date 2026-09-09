@@ -82,6 +82,9 @@ namespace Marooned.Core
             {
                 // ห้าม set CurrentLocationId ตรง — ให้ MoveNpc เป็นคน set + publish
                 // (ทุกตัวอยู่กับผู้เล่นเลย เทสง่าย)
+                // Lab C Phase 2 (Position Seeding Rule): MoveNpc ยัง seed PositionX/Y
+                // = LocationDef.WorldX/Y ของปลายทางให้ด้วย — จุดเริ่มของ NPC จึงถูกต้อง
+                // ตั้งแต่เฟรมแรก ไม่ warp ไป (0,0)
                 _npcDirector.MoveNpc(npc.Id, playerLocation);
             }
         }

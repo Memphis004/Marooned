@@ -44,6 +44,49 @@ namespace Marooned.Shared
 
         /// <summary>Killer-only optional objective, e.g. "eliminate 3 before day 5" — for future killer-AI mode.</summary>
         [Key(8)] public string HiddenAgendaId;
+
+        // ---- Lab C Phase 2 (NPC Embodiment): walking sandbox ground truth ----
+        // ตำแหน่งจริงบนโลก — MoveNpc() ต้อง seed ด้วย LocationDef.WorldX/Y ของ
+        // destination เสมอ (Position Seeding Rule — กัน NPC warp ไป (0,0))
+        // ขณะเดิน NpcMovementSystem เป็นผู้อัปเดตต่อเนื่อง
+        [Key(9)] public float PositionX;
+        [Key(10)] public float PositionY;
+
+        /// <summary>จุดหมายปลายทางที่กำลังเดินไป (ตั้งโดย AI/movement — อ่านโดย NpcMovementSystem)</summary>
+        [Key(11)] public float TargetX;
+        [Key(12)] public float TargetY;
+
+        /// <summary>ความเร็วเดิน (world unit/วินาที) — default 2.0 ช้ากว่าผู้เล่น (3.5)</summary>
+        [Key(13)] public float MovementSpeed = 2.0f;
+
+        /// <summary>
+        /// Ground truth inventory (เช่น อาวุธของ Killer) — ห้ามหลุดเข้า
+        /// NpcObservableView / GetObservableNpcsAt เด็ดขาด
+        /// </summary>
+        [Key(14)] public NpcInventory Inventory = new();
+
+        /// <summary>
+        /// Stats ภายในของ NPC (Hunger/Fear/Curiosity) — ground truth สำหรับ AI
+        /// ใน Step 4 (InnocentUtilityAI/KillerPlanner) ห้าม expose ออกนอกระบบ
+        /// แยกเป็น class ของตัวเองเพื่อให้ Step 4 เติมเมธอดเชิงพฤติกรรมได้โดยไม่แตะ NpcState
+        /// </summary>
+        [Key(15)] public NpcSurvivalState Survival = new();
+    }
+
+    /// <summary>
+    /// สถานะอยู่รอดภายในของ NPC — Ground Truth สำหรับ AI (Step 4)
+    ///  • Hunger   = ความหิว 0-100 (ยิ่งสูงยิ่งหิวมาก — normalize ง่ายตอน score)
+    ///  • Fear     = ความกลัว 0-100 (เห็นศพ/พฤติกรรมน่าสงสัย → เพิ่ม)
+    ///  • Curiosity = ความสงสัยใคร่รู้ 0-100 (เจอเบาะแส/เสียงแปลก → เพิ่ม)
+    /// Information Hiding: ห้ามโผล่ใน NpcObservableView / GetObservableNpcsAt /
+    /// MCP response ใดๆ — มีไว้ให้ระบบ AI ภายในอ่าน/แก้เท่านั้น
+    /// </summary>
+    [MessagePackObject]
+    public class NpcSurvivalState
+    {
+        [Key(0)] public float Hunger;
+        [Key(1)] public float Fear;
+        [Key(2)] public float Curiosity;
     }
 
     /// <summary>

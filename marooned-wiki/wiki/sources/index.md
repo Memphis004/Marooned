@@ -15,7 +15,7 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-คัปเดตล่าสุด: 2026-09-09 (Lab C Phase 1: Hybrid Biome Scatter + Tool-Gathering + MCP harvest_node)
+คัปเดตล่าสุด: 2026-09-10 (Lab C Phase 2 Step 1-2: NPC Embodiment — Data Foundation + Movement System)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -34,6 +34,10 @@ tags:
   View เป็นคน Instantiate) + HarvestableNode tool-gathering (durability/tool/regrow จาก Luban CSV)
 - [[biome-scatter-editor-setup]] — คู่มือสร้าง BiomePrefabSet ใน Unity Editor +
   protocol เทส Test A–D พร้อมจุดพบบ่อย
+- [[npc-embodiment-movement]] — Lab C Phase 2 Step 1-2: NPC มีตำแหน่ง/Inventory/Stats
+  เป็น Ground Truth (NpcState Key 9-15, NpcInventory, NpcSurvivalState) +
+  NpcMovementSystem เดิน wander ทอยข้ามโซน 20% ผ่าน MoveNpc + Position Seeding Rule
+  กัน warp (0,0) + tick order Director ก่อน Movement
 
 ## 📄 Code Snippets
 
@@ -110,6 +114,7 @@ tags:
 - [[2026-09-05]] — Dev Log วันแรก
 - [[2026-09-07-lab-a-closure-b-phases-architecture-refactor]] — Dev Log: ปิด Lab A (MCP round trip) + Lab B Phase 1-4 (Chibi, Player, Player-as-Killer, refactor) + patch WorldItemSystem กัน item respawn ซ้ำ
 - [[2026-09-09-lab-c-phase1-hybrid-biome-scatter-node-harvest-zone-transition]] — Dev Log: Lab C Phase 1 – Hybrid Biome Scatter + Node Harvest + Zone Transition
+- [[npc-embodiment-movement]] — (architecture) Lab C Phase 2 Step 1-2 – NPC Embodiment: Data Foundation + Movement System (2026-09-10)
 
 ## 🗂️ โครงสร้าง Wiki
 

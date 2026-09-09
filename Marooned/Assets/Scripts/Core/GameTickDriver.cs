@@ -9,7 +9,8 @@ namespace Marooned.Core
     ///
     /// เป็น MonoBehaviour ที่เรียก Tick ของระบบ gameplay ทุกเฟรมใน Update():
     ///   - SurvivalStatSystem.Tick(float deltaSeconds)
-    ///   - NpcDirectorSystem.Tick(float deltaSeconds)  (killer AI / กำหนดเวลา NPC)
+    ///   - NpcDirectorSystem.Tick(float deltaSeconds)  (killer AI / กำหนดเวลา NPC — ตั้ง target)
+    ///   - NpcMovementSystem.Tick(float deltaSeconds)  (เดิน NPC เข้าหา target — ต้องมาหลัง Director เสมอ)
     ///   - WorldEventSystem.Tick(float deltaSeconds, string currentLocationTag)
     ///
     /// โปรเจกต์ยังไม่มี interface แบบ ITickable เอง จึงเรียกตรงตาม signature จริง
@@ -20,6 +21,7 @@ namespace Marooned.Core
     {
         private SurvivalStatSystem _survival;
         private NpcDirectorSystem _npcDirector;
+        private NpcMovementSystem _npcMovement;
         private WorldEventSystem _worldEvents;
         private GameStateProvider _stateProvider;
         private PlayerInputService _playerInput;
@@ -53,6 +55,7 @@ namespace Marooned.Core
 
             _survival = scope.Container.Resolve<SurvivalStatSystem>();
             _npcDirector = scope.Container.Resolve<NpcDirectorSystem>();
+            _npcMovement = scope.Container.Resolve<NpcMovementSystem>();
             _worldEvents = scope.Container.Resolve<WorldEventSystem>();
             _stateProvider = scope.Container.Resolve<GameStateProvider>();
             _playerInput = scope.Container.Resolve<PlayerInputService>();
@@ -80,7 +83,12 @@ namespace Marooned.Core
             // Lab C Phase 1: เก็บเกี่ยว node — อยู่หลัง pickup เพื่อให้กด E ครั้งเดียว
             // เก็บไอเท็มพื้นก่อน (ถ้ามี) แล้วจึงโดน node (กันของทั้งสองระบบโดยกดเดียว)
             _nodeHarvest.Tick(deltaSeconds);
+
+            // Lab C Phase 2: ⚠️ Tick order — NpcDirectorSystem (AI ตั้ง target) ก่อน
+            // NpcMovementSystem (เดิน) ในเฟรมเดียวกัน target ที่ AI ตั้งในเฟรมนี้ต้อง
+            // ถูกเดินทันที ไม่ดีเลย์ 1 เฟรม
             _npcDirector.Tick(deltaSeconds);
+            _npcMovement.Tick(deltaSeconds);
 
             // WorldEventSystem.Tick ต้องการ location tag ปัจจุบัน — ใช้ id ของ
             // location ผู้เล่นเป็น tag ไปก่อน (mock events ไม่ได้กำหนด RequiredLocationTags)

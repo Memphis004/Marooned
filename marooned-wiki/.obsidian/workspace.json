@@ -18,55 +18,6 @@
             }
           }
         ]
-      },
-      {
-        "id": "a131d3e6c0a5aa8f",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "03478e020e893a84",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "wiki/sources/code-snippets/LubanDataService.cs.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "LubanDataService.cs"
-            }
-          },
-          {
-            "id": "ce79b85ae44f02ec",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "wiki/sources/mechanics/survival-stats.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "survival-stats"
-            }
-          },
-          {
-            "id": "d31eefe3d2c23a9b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "wiki/sources/code-snippets/ClueBoardPresenter.cs.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "ClueBoardPresenter.cs"
-            }
-          }
-        ],
-        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -252,8 +203,9 @@
   },
   "active": "4bbfc2c89fb272ed",
   "lastOpenFiles": [
-    "wiki/sources/mechanics/survival-stats.md",
     "wiki/sources/code-snippets/ClueBoardPresenter.cs.md",
+    "wiki/sources/mechanics/survival-stats.md",
+    "wiki/sources/architecture/npc-embodiment-movement.md",
     "wiki/sources/code-snippets/LubanDataService.cs.md",
     "wiki/sources/code-snippets/UIRoot.cs.md",
     "wiki/sources/code-snippets/GameLifetimeScope.cs.md",
@@ -277,7 +229,6 @@
     "wiki/sources/architecture/overview.md",
     "wiki/sources/devlog-history/2026-09-05.md",
     "wiki/sources/architecture/mcp-tool-table.md",
-    "wiki/sources/chibi-visual-system.md",
     "sources",
     "wiki/sources/devlog-history",
     "wiki/sources/architecture/mcp-bridge.md.tmp.3148.f45e9b0bb1dd",
