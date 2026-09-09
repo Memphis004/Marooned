@@ -53,7 +53,8 @@ namespace Marooned.Core
 
         private NpcDirectorSystem _npcDirector;
         private GameStateProvider _stateProvider;
-        private LubanDataService _data;
+        // LubanDataService ถูกถอดออก (Step 3): ตำแหน่ง chibi มาจาก NpcState.PositionX/Y
+        // ผ่าน NpcCharacterView แล้ว ไม่ต้องอ่าน LocationDefs ใน spawner อีก
 
         // Key: npcId, Value: chibi GameObject ที่ spawn อยู่บนจอ
         private readonly Dictionary<string, GameObject> _activeChibis = new();
@@ -104,7 +105,6 @@ namespace Marooned.Core
 
             _npcDirector = scope.Container.Resolve<NpcDirectorSystem>();
             _stateProvider = scope.Container.Resolve<GameStateProvider>();
-            _data = scope.Container.Resolve<LubanDataService>();
             _resolved = true;
 
             // MessagePipe: subscribe event การเปลี่ยน location (in-process bus)
@@ -243,19 +243,24 @@ namespace Marooned.Core
             if (visual != null) visual.Bind(npc.Activity);
             else Debug.LogWarning($"[ChibiSpawnerView] '{chibi.name}' ไม่มี component ที่ implement IChibiVisual");
 
-            // วางตำแหน่งตาม WorldX/WorldY ของ location + ไล่ offset กัน chibi ซ้อนกัน
-            var position = Vector3.zero;
-            if (_data.LocationDefs.TryGetValue(npc.CurrentLocationId, out var locationDef))
-                position = new Vector3(locationDef.WorldX, locationDef.WorldY, 0f);
-            position += new Vector3(_activeChibis.Count * 2f, 0f, 0f);
-            chibi.transform.localPosition = position;
+            // Lab C Phase 2 Step 3: ติดตั้ง NpcCharacterView (1 ตัวต่อ chibi) ผ่าน
+            // direct call Init — มันจะ sync transform.position กับ NpcState.PositionX/Y
+            // ทุกเฟรมต่อจากนี้ (MVP Lite: per-frame = direct read ไม่ใช่ MessagePipe)
+            var characterView = chibi.GetComponent<NpcCharacterView>();
+            if (characterView == null) characterView = chibi.AddComponent<NpcCharacterView>();
+            characterView.Init(npc.Id, _npcDirector);
+
+            // ⚠️ เฟรมแรกต้องไม่โผล่ที่ origin: ตั้งตำแหน่งจาก PositionX/Y จริงทันที
+            // (Update ของ NpcCharacterView จะคงตำแหน่งนี้ต่อ — ไม่มี offset แย่งกัน)
+            // หมายเหตุ: offset ไล่ตัวเดิมถูกถอด — ตำแหน่งจริงต่อ NPC มาจาก PositionX/Y
+            chibi.transform.position = new Vector3(npc.PositionX, npc.PositionY, 0f);
 
             EnsureClickable(chibi);
 
             if (_targetSelectionMode) Highlight(chibi, true); // spawn ระหว่างโหมดเลือกเป้าหมาย → ไฮไลต์ทันที
 
             _activeChibis[npc.Id] = chibi;
-            Debug.Log($"[ChibiSpawnerView] Spawn chibi {npc.Id} ({chibi.name}) @ {npc.CurrentLocationId} (active={_activeChibis.Count})");
+            Debug.Log($"[ChibiSpawnerView] Spawn chibi {npc.Id} ({chibi.name}) @ {npc.CurrentLocationId} pos=({npc.PositionX:F1},{npc.PositionY:F1}) (active={_activeChibis.Count})");
         }
 
         /// <summary>

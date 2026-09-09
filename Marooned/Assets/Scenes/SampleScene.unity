@@ -933,8 +933,8 @@ MonoBehaviour:
   backend: 0
   genericCutePrefab: {fileID: 1908850870069242641, guid: a856b794b2c368d458a8ad2d00cf890c, type: 3}
   npcPrefabs:
-  - {fileID: 2686469569641711548, guid: d146f11c82c0e6d46b338f581d5ba4ce, type: 3}
-  - {fileID: 6528400308587160688, guid: 840e0d9e7de7123448fe4454627669c5, type: 3}
+  - {fileID: 1908850870069242641, guid: a856b794b2c368d458a8ad2d00cf890c, type: 3}
+  - {fileID: 1908850870069242641, guid: a856b794b2c368d458a8ad2d00cf890c, type: 3}
   spinePrefabs:
   - {fileID: 7342099114468804206, guid: 793ca76394a58e441969d6aa80c609ac, type: 3}
   - {fileID: 656045509588373927, guid: c3e68fa16c2fc594f83db62b69a163e8, type: 3}

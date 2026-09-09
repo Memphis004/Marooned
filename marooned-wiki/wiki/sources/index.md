@@ -15,7 +15,7 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-คัปเดตล่าสุด: 2026-09-10 (Lab C Phase 2 Step 1-2: NPC Embodiment — Data Foundation + Movement System)
+คัปเดตล่าสุด: 2026-09-10 (Lab C Phase 2 Step 3: NPC Visual Sync — chibi เดินตาม NpcState.Position)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -34,10 +34,11 @@ tags:
   View เป็นคน Instantiate) + HarvestableNode tool-gathering (durability/tool/regrow จาก Luban CSV)
 - [[biome-scatter-editor-setup]] — คู่มือสร้าง BiomePrefabSet ใน Unity Editor +
   protocol เทส Test A–D พร้อมจุดพบบ่อย
-- [[npc-embodiment-movement]] — Lab C Phase 2 Step 1-2: NPC มีตำแหน่ง/Inventory/Stats
+- [[npc-embodiment-movement]] — Lab C Phase 2 Step 1-3: NPC มีตำแหน่ง/Inventory/Stats
   เป็น Ground Truth (NpcState Key 9-15, NpcInventory, NpcSurvivalState) +
   NpcMovementSystem เดิน wander ทอยข้ามโซน 20% ผ่าน MoveNpc + Position Seeding Rule
-  กัน warp (0,0) + tick order Director ก่อน Movement
+  กัน warp (0,0) + tick order Director ก่อน Movement + NpcCharacterView sync chibi
+  กับ Position/Activity ทุกเฟรม (พร้อมผลเทส Test A–D และภาพหลักฐาน)
 
 ## 📄 Code Snippets
 
@@ -78,6 +79,8 @@ tags:
 - [[IChibiVisual.cs]] — interface กลางของ visual layer (backend-agnostic: Animator/Spine/paperdoll,
   Phase 4 เพิ่ม `PlayAction` one-shot)
 - [[ChibiSpawnerView.cs]] — spawn/despawn chibi ของ NPC ตาม location แบบ event-driven
+- [[NpcCharacterView.cs]] — Step 3: sync ตำแหน่ง/facing/animation ของ chibi NPC
+  กับ NpcState ทุกเฟรม (direct read ไม่ใช้ MessagePipe ต่อเฟรม)
 - [[GenericCuteVisualController.cs]] — คุม Animator ของ asset "Generic Cute 2D Student" (PSB skeletal)
 - [[SpineVisualController.cs]] — Spine backend คุม SkeletonAnimation (Elena/Derek ใช้ร่วมกัน)
 

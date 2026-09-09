@@ -68,13 +68,17 @@ seed พิกัดให้เองทุกครั้ง:
   setup ได้ แค่ไม่มีอาวุธ; Step 4 KillerPlanner มี phase SeekingWeapon รองรับ)
 - คนที่สุ่มได้ Role=Killer จะได้ `Inventory.AddItem(weaponCardId)` 1 ชิ้น
 
-### Movement System (Step 2)
+### Movement System (Step 2 + Step 3 patch)
 - **`NpcMovementSystem`** (`Marooned/Assets/Scripts/Systems/NpcMovementSystem.cs`)
   — plain C# singleton (VContainer `Lifetime.Singleton`), ไม่ใช่ MonoBehaviour
 - `Tick(dt)` ต่อ NPC ที่ยังมีชีวิต:
   1. `MoveTowardTarget` — เลื่อน Position เข้าหา Target ด้วย MovementSpeed
      (normalize + กัน overshoot, frame-rate independent)
-  2. ถึงเป้า (≤ 0.1f) → `PickNextTarget()`
+  2. ถึงเป้า (≤ 0.1f) → **Activity = Idle + สุ่มพัก 0.8–2.5 วิ** (เพิ่มใน Step 3
+     ตาม contract "Idle เมื่อถึงเป้า" — ทำให้จอเห็น idle ชัดเจน) → หมดเวลาพัก
+     ค่อย `PickNextTarget()`
+- **Step 4 note**: idle-pause นี้อยู่ใน Tick loop เดียวกับ re-target — ตอน
+  deprecate PickNextTarget ให้ย้ายการจัดการ Idle/พักไป AI planner ด้วย
 - `PickNextTarget()` — **แยกเป็น public method อิสระเพื่อ deprecate ง่ายใน Step 4**:
   - ทอย 20% ข้ามโซน: สุ่ม `ConnectedLocationIds` → เรียก `MoveNpc()` **ทันทีตอนตั้ง
     target** (ไม่ใช่ detect ข้ามขอบระหว่างทาง) → แล้วสุ่ม target ใหม่ในโซนนั้น
@@ -100,10 +104,34 @@ VisibleConditionCardIds/Avatar เท่านั้น)
   (Step 3 จะทำ chibi เดินตาม PositionX/Y ต่อ)
 - [[WorldItemSystem]] — แหล่ง pattern ZoneSpread ที่ wander ยึด
 
+### Visual Sync (Step 3)
+- **`NpcCharacterView`** (`Marooned/Assets/Scripts/Core/Visual/NpcCharacterView.cs`)
+  — MonoBehaviour 1 ตัวต่อ chibi, ติดตั้งโดย ChibiSpawnerView.SpawnChibi ผ่าน
+  `Init(npcId, npcDirector)` แบบ direct call (View แบบ passive — ไม่ resolve container)
+- `Update()`: อ่าน NpcState ตรง → `transform.position = (PositionX, PositionY, 0)` +
+  flip จากเครื่องหมาย dx (threshold 0.02) + `IChibiVisual.Bind(Activity)`
+  — per-frame = direct read (บทเรียน Lab 13) ไม่ใช้ MessagePipe ต่อเฟรม
+- ตำแหน่งเฟรมแรก: SpawnChibi ตั้ง `chibi.transform.position` จาก PositionX/Y ทันที
+  (offset ไล่ตัวเดิมถูกถอด — ตำแหน่งจริงมาจาก state แล้ว)
+- `IChibiVisual` ทั้งสอง backend ยืนยันแล้วว่า Traveling → walk:
+  GenericCute → "walk" (SerializeField ต่อ prefab), Spine → "Walking" (Elena/Derek)
+- Spine flip ผ่าน `Skeleton.ScaleX`, GenericCute flip ผ่าน `localScale.x` — view ไม่ต้องรู้
+- Property `NpcId` (read-only) เพิ่มบน view เพื่อการจับคู่/ตรวจสอบในเทส
+
+## การเทส (Play Mode จริง 2026-09-10)
+- A ✅: syncErr=(0.00,0.00) ทุก snapshot, anim=walk/idle ตาม Traveling/Idle, face สลับ L/R
+- B ✅: ข้ามโซน spawn/despawn บาลานซ์ (5/5) ผ่าน message flow เดิม ไม่มี transform แย่ง
+- C ✅: backend=Spine (runtime toggle) — anim=Walking บน rig Spine + syncErr 0
+- D ✅: ไม่มี exception จาก game code, ผู้เล่น/กล้อง/pickup ไม่ถูกแตะ, port 3216 listening
+- ภาพหลักฐาน: `TestEvidence/step3_testA_genericcute_walk.png`, `TestEvidence/step3_testC_spine_walk.png`
+
 ## สถานะปัจจุบัน
 - ✅ Step 1: NpcState Key 9-15 + NpcInventory + NpcSurvivalState + seeding rule + แจกอาวุธ
 - ✅ Step 2: NpcMovementSystem (wander + ข้ามโซน 20% + PickNextTarget แยก method) + tick order
-- ❌ Step 3 (รอบถัดไป): chibi เดินตาม Position จริง (NpcCharacterView)
+- ✅ Step 3: NpcCharacterView sync position/facing/anim + SpawnChibi wiring + idle pause
 - ❌ Step 4 (รอบถัดไป): InnocentUtilityAI + KillerPlanner — deprecate PickNextTarget
+  (+ ย้าย idle-pause ไป planner ด้วย)
 - ❌ NpcSurvivalState ยังไม่มีใคร tick ค่า (รอ Step 4)
 - ❌ การเดินยังไม่เช็คชนกับสิ่งกีดขวาง / ขอบเขตโลก (wander clamp ที่รัศมีโซนพอ)
+- ⚠️ พบว่า scene ถูกแก้ภายนอก: npcPrefabs[0]/[1] ชี้ prefab เดียวกับ fallback
+  (001 Student 1) ทำให้ NPC ทุกตัวหน้าตาเหมือน fallback — ไม่ใช่ regression จาก Step 3

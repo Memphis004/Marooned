@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Marooned.Shared;
 
 namespace Marooned.Systems
@@ -7,9 +8,10 @@ namespace Marooned.Systems
     /// Lab C Phase 2 — เดิน NPC ด้วย Target ที่ถูกตั้งไว้ใน NpcState (ground truth)
     ///
     /// หน้าที่เดียว: Tick(dt) เลื่อน PositionX/Y เข้าหา TargetX/Y ด้วย MovementSpeed
-    /// แล้วเมื่อถึงเป้า (≤ 0.1f) เรียก PickNextTarget() เพื่อสุ่มจุด wander ใหม่
-    /// (จุดนี้จะถูก deprecate ใน Step 4 — AI เป็นคนเลือก target เอง จึงแยก method
-    /// อิสระไว้ให้ปิดง่าย ไม่กระทบ logic เดินใน Tick)
+    /// เมื่อถึงเป้า (≤ 0.1f): Activity = Idle + พักสั้นๆ (Min/MaxIdleSeconds) แล้ว
+    /// เรียก PickNextTarget() เพื่อสุ่มจุด wander ใหม่ (จุดนี้จะถูก deprecate ใน
+    /// Step 4 — AI เป็นคนเลือก target เอง จึงแยก method อิสระไว้ให้ปิดง่าย
+    /// ไม่กระทบ logic เดินใน Tick)
     ///
     /// การข้ามโซน (20% ตอนตั้ง target ใหม่): เรียก NpcDirectorSystem.MoveNpc()
     /// ทันที "ตอนตั้ง target" ไม่ใช่ detect ข้ามขอบระหว่างทาง — CurrentLocationId
@@ -34,9 +36,19 @@ namespace Marooned.Systems
         /// <summary>โอกาส (0-1) ที่จะตั้ง target ในโซนเพื่อนบ้านแทนโซนปัจจุบัน</summary>
         public float CrossZoneChance = 0.2f;
 
+        /// <summary>
+        /// ช่วงพักสุ่มหลังถึงเป้า (วินาที) — ทำให้ Activity = Idle ช่วงสั้นๆ ที่จอ
+        /// เห็น "idle ตอนหยุด" ชัดเจน (Step 3 Test A) ก่อนเลือกเป้าใหม่
+        /// </summary>
+        public float MinIdleSeconds = 0.8f;
+        public float MaxIdleSeconds = 2.5f;
+
         private readonly NpcDirectorSystem _npcDirector;
         private readonly LubanDataService _data;
         private readonly Random _rng = new();
+
+        /// <summary>npcId → เวลาพักที่เหลือ (ถ้ามี key = กำลัง Idle หลังถึงเป้า)</summary>
+        private readonly Dictionary<string, float> _idleTimers = new();
 
         public NpcMovementSystem(NpcDirectorSystem npcDirector, LubanDataService dataService)
         {
@@ -46,14 +58,43 @@ namespace Marooned.Systems
 
         public void Tick(float deltaSeconds)
         {
+            // เก็บกวาด timer ของ NPC ที่ถูกลบออกจากรอบ (เช่น SetupRound ใหม่)
+            if (_idleTimers.Count > 0)
+            {
+                List<string> stale = null;
+                foreach (var id in _idleTimers.Keys)
+                    if (!_npcDirector.Npcs.ContainsKey(id)) (stale ??= new List<string>()).Add(id);
+                if (stale != null)
+                    foreach (var id in stale) _idleTimers.Remove(id);
+            }
+
             foreach (var npc in _npcDirector.Npcs.Values)
             {
                 if (!npc.IsAlive) continue;
 
+                // ช่วงพักหลังถึงเป้า: Activity = Idle จนหมดเวลา แล้วค่อยเลือกเป้าใหม่
+                if (_idleTimers.TryGetValue(npc.Id, out var idleRemaining))
+                {
+                    npc.Activity = NpcActivityState.Idle;
+                    idleRemaining -= deltaSeconds;
+                    if (idleRemaining > 0f)
+                    {
+                        _idleTimers[npc.Id] = idleRemaining;
+                        continue;
+                    }
+                    _idleTimers.Remove(npc.Id);
+                    PickNextTarget(npc); // หมดเวลาพัก → เป้าใหม่ทันที (จะตั้ง Activity = Traveling)
+                    continue;
+                }
+
                 MoveTowardTarget(npc, deltaSeconds);
 
                 if (HasArrived(npc))
-                    PickNextTarget(npc);
+                {
+                    // Idle เมื่อถึงเป้า (spec Step 3.2) + สุ่มช่วงพักก่อนหาเป้าใหม่
+                    npc.Activity = NpcActivityState.Idle;
+                    _idleTimers[npc.Id] = MinIdleSeconds + (float)_rng.NextDouble() * (MaxIdleSeconds - MinIdleSeconds);
+                }
             }
         }
 
