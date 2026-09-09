@@ -125,13 +125,74 @@ VisibleConditionCardIds/Avatar เท่านั้น)
 - D ✅: ไม่มี exception จาก game code, ผู้เล่น/กล้อง/pickup ไม่ถูกแตะ, port 3216 listening
 - ภาพหลักฐาน: `TestEvidence/step3_testA_genericcute_walk.png`, `TestEvidence/step3_testC_spine_walk.png`
 
+## Step 4: Basic AI Hook (2026-09-10)
+- **สมองแยกตาม role** ใน `NpcDirectorSystem.TickBehavior`:
+  `Role==Killer → KillerPlanner.Tick` ไม่งั้น → `InnocentUtilityAI.Tick`
+- **4.1 deprecate re-target-on-arrival**: `NpcMovementSystem` เหลือหน้าที่เดินเข้าหา
+  Target ที่มีอยู่ + ตั้ง Activity ตามสถานะ (Traveling/Idle) เท่านั้น — `PickNextTarget`
+  ถูกลบ การเลือก target ทั้งหมดอยู่ที่ AI (กันสองระบบแย่ง TargetX/Y)
+- **4.2 namespace `Marooned.Systems.AI`**:
+  - `IUtilityAction { Id, Score(npc, ctx), Execute(npc, ctx, dt) }` (Score = pure)
+  - `UtilityContext { Data, NpcDirector, StateProvider }` — Singleton สร้างครั้งเดียว
+  - `Wander` (static helper): `HasPendingTarget / SetRandomTargetInZone /
+    MoveToRandomConnectedZone / MoveToZone / FindZonesWithCardCategory` — ตั้ง target
+    ผ่าน MoveNpc เท่านั้น (Single Source of Truth) caller เช็ค HasPendingTarget ก่อน
+    ตั้งเป้าใหม่ (กันแย่ง)
+  - `InnocentUtilityAI`: re-evaluate ทุก ~1.5 วิต่อตัว → execute ทุก tick จนรอบถัดไป
+    (IdleWander = baseline 0.1, SeekFood = Hunger>55 → เดินไปโซน loot มี food แล้วกิน
+    จาก inventory, InvestigateNoise/FleeToSafeZone = stub score 0)
+  - `KillerPlanner` (state machine ต่อ killer): Patrolling → SeekingWeapon →
+    SeekingOpportunity → Executing → BuildingAlibi (timeout 30 วิ → Patrolling)
+    - cooldown นับถอยใน planner ทุก tick ไม่ใช่เฉพาะตอนพยายามฆ่า (semantics ย้ายครบ)
+    - ฆ่าผ่าน `TryEliminate/CanEliminate` เท่านั้น (เช็คซ้ำ dry-run ก่อนลงมือ)
+      HasWeapon (Category==Weapon ใน inventory) เป็นเงื่อนไขก่อน Executing —
+      economy-agnostic ตาม design decision, อาวุธไม่ถูกหักตอนฆ่า (TODO durability)
+- **4.3 cleanup**: `TryAttemptElimination` (สุ่ม 15%/tick) + call site ถูกลบ
+  (grep ยืนยันไม่มี caller หลงเหลือ)
+- **⚠️ DI cycle ที่ต้องเลี่ยง**: NpcDirectorSystem → AI → UtilityContext →
+  NpcDirectorSystem จะ cycle ถ้า context resolve director ตอน build — ทางแก้:
+  `UtilityContext(data, stateProvider)` ไม่มี director แล้ว `NpcDirectorSystem`
+  **Bind(this)** เข้า context ใน constructor ของตัวเอง (จุดเดียวของเกม) AI อ่าน
+  `ctx.NpcDirector` ตอน Tick เท่านั้น (หลัง construct จบเสมอ)
+- DI: `UtilityContext / InnocentUtilityAI / KillerPlanner` เป็น Lifetime.Singleton
+  ใน GameLifetimeScope.Configure() — NpcDirectorSystem รับสมองผ่าน constructor
+  (ห้าม new เอง)
+- `NpcInventory.GetCardIds()` เพิ่ม (อ่านอย่างเดียว) สำหรับ HasWeapon — ห้ามใช้สร้าง
+  MCP response (ground truth ไม่หลุด)
+- **4.4 runtime tests (Play Mode จริง 2026-09-10) — ผ่านทั้งหมด**:
+  - A ✅ hunger=90 → `[InnocentAI] chose SeekFood (score=0.90)` ทันทีหลัง re-eval,
+    action คงอยู่ข้าม tick (กัน jitter ได้จริง)
+  - B ✅ killer+เหยื่อ อยู่โซนเดียวกัน (พยานถูกย้ายออก + **pin target กันหลุดโซน**
+    ระหว่างกรอบเวลาเทส) → `eliminated npc_02` + `clue_blood_stain` + chibi despawn
+    ผ่าน message flow, cooldown reset ~180 (เหลือ 178 หลัง 2 วิ), phase → BuildingAlibi
+  - C ✅ มีพยาน (pinned ในโซนเดียวกัน) → `abort (CanEliminate: witnessed)` →
+    **ไม่มีใครตาย** ตลอดกรอบเวลา 2 วิ — กฎ no-witness ไม่ถูก bypass
+  - D ✅ ผู้เล่นแทงผ่าน UseCardHandler (flow เดียวกับ AI):
+    มีพยาน → `Success=False FailureReason=witnessed` (การ์ดไม่ถูกหัก — Safe UX),
+    ไม่มีพยาน → `Success=True ResultText=eliminated_npc_01`
+  - E ✅ การเดินลื่น (ตัวอย่าง ~1.4 world unit / 2 วิ ≈ MovementSpeed 2.0),
+    ไม่มี teleport/แย่ง target หลัง deprecate PickNextTarget
+  - F ✅ diff response shape: `get_game_state`/`get_visible_npcs` ไม่มี
+    plan/phase/cooldown/inventory/Position leak แม้แต่ field เดียว
+    (MessagePack JSON ตรง wire shape — killer ถือ knife_basic แต่ visible ไม่เห็น)
+- **Bug ที่เจอตอนเทส (แก้แล้วใน KillerPlanner)**:
+  1. BuildingAlibi เลือกทางหนีใหม่ทุกเฟรม (MoveNpc seed Target=Position →
+     HasPendingTarget=false ทันที) = teleport storm spawn/despawn รัวๆ — แก้:
+     เลือกทางหนี **ครั้งเดียวตอน Transition เข้า phase** ระหว่างรอเดินวนในโซนเดิม
+  2. abort (witnessed) → หาเหยื่อใหม่ทันทีทุกเฟรม = log spam 2 บรรทัด/เฟรม — แก้:
+     เพิ่ม `OpportunityRetrySeconds` (2 วิ) พักก่อนหาโอกาสใหม่
+- **บทเรียนเทส**: witness ที่ปล่อยให้เดินอิสระจะทอยข้ามโซนหลุดจากโซนฆ่าตลอดเวลา
+  (zone move = instant ผ่าน MoveNpc) ทำให้ kill จริงเป็น no-witness ถูกกฎหมด —
+  เทส forced scenario ต้อง **pin target ของพยานในโซน** ก่อนเปิดกรอบเวลา
+
 ## สถานะปัจจุบัน
 - ✅ Step 1: NpcState Key 9-15 + NpcInventory + NpcSurvivalState + seeding rule + แจกอาวุธ
 - ✅ Step 2: NpcMovementSystem (wander + ข้ามโซน 20% + PickNextTarget แยก method) + tick order
 - ✅ Step 3: NpcCharacterView sync position/facing/anim + SpawnChibi wiring + idle pause
-- ❌ Step 4 (รอบถัดไป): InnocentUtilityAI + KillerPlanner — deprecate PickNextTarget
-  (+ ย้าย idle-pause ไป planner ด้วย)
-- ❌ NpcSurvivalState ยังไม่มีใคร tick ค่า (รอ Step 4)
+- ✅ Step 4 (4.1-4.3): สมอง AI แยก role (InnocentUtilityAI + KillerPlanner) —
+  deprecate PickNextTarget แล้ว, idle-pause ถูกถอดไปกับ re-target logic เดิม
+  (AI ตั้ง target ใหม่ได้ทันที — ถ้าต้องการ idle ค่อยทำเป็น action ของ utility AI)
+- ✅ Step 4.4: runtime tests A-F ผ่านครบ (2026-09-10) — รายละเอียดด้านบน
 - ❌ การเดินยังไม่เช็คชนกับสิ่งกีดขวาง / ขอบเขตโลก (wander clamp ที่รัศมีโซนพอ)
 - ⚠️ พบว่า scene ถูกแก้ภายนอก: npcPrefabs[0]/[1] ชี้ prefab เดียวกับ fallback
   (001 Student 1) ทำให้ NPC ทุกตัวหน้าตาเหมือน fallback — ไม่ใช่ regression จาก Step 3

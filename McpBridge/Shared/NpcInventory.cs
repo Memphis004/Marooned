@@ -27,6 +27,12 @@ namespace Marooned.Shared
 
         public bool HasItem(string cardId) => Count(cardId) > 0;
 
+        /// <summary>
+        /// id ของการ์ดทั้งหมดที่พักอยู่ (อ่านอย่างเดียว — ให้ระบบ AI ภายในใช้
+        /// เช็ค category เช่น HasWeapon ของ KillerPlanner) ห้ามใช้สร้าง MCP response
+        /// </summary>
+        public IEnumerable<string> GetCardIds() => _items.Keys;
+
         public void AddItem(string cardId, int count = 1)
         {
             if (count <= 0) return;

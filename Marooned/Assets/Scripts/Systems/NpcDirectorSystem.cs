@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Marooned.Shared;
+using Marooned.Systems.AI;
 using MessagePipe;
 
 namespace Marooned.Systems
@@ -21,6 +22,12 @@ namespace Marooned.Systems
     ///  - SetupRound() แจกอาวุธ (การ์ด Category==Weapon ตัวแรกที่ Luban โหลด)
     ///    ให้ NPC ที่ได้ Role=Killer — ต้องมีอยู่จริงใน DataTables/CardDef.csv
     ///
+    /// Step 4 (Basic AI Hook): TickBehavior hook สมองแยกตาม role —
+    ///   Role==Killer → KillerPlanner.Tick, อื่นๆ → InnocentUtilityAI.Tick
+    ///   (ทั้งคู่ inject ผ่าน constructor จาก VContainer — ห้าม new เอง)
+    ///   TryAttemptElimination (สุ่ม 15%/tick) ถูกลบแล้ว — การฆ่า AI ทั้งหมด
+    ///   ผ่าน KillerPlanner → TryEliminate (เส้นทางเดียวกับ player)
+    ///
     /// IMPORTANT: never hand out NpcState directly to MCP query handlers — always go
     /// through DeductionSystem.BuildObservableView (see DeductionVisibilityRules).
     /// </summary>
@@ -33,15 +40,27 @@ namespace Marooned.Systems
         private readonly IPublisher<NpcLocationChangedMessage> _npcLocationPublisher;
         private readonly Random _rng = new();
 
+        // Step 4: สมองแยกตาม role (inject จาก DI — ห้าม new เองใน constructor นี้)
+        private readonly InnocentUtilityAI _innocentAI;
+        private readonly KillerPlanner _killerPlanner;
+
         public IReadOnlyDictionary<string, NpcState> Npcs => _npcs;
 
         public NpcDirectorSystem(LubanDataService dataService, IPublisher<NpcEliminatedMessage> eliminatedPublisher,
-            IPublisher<NpcLocationChangedMessage> npcLocationPublisher)
+            IPublisher<NpcLocationChangedMessage> npcLocationPublisher,
+            InnocentUtilityAI innocentAI, KillerPlanner killerPlanner, UtilityContext aiContext)
         {
             _data = dataService;
             _locations = dataService.LocationDefs;
             _eliminatedPublisher = eliminatedPublisher;
             _npcLocationPublisher = npcLocationPublisher;
+            _innocentAI = innocentAI;
+            _killerPlanner = killerPlanner;
+
+            // กัน DI cycle (UtilityContext ไม่ resolve ระบบนี้ตอน build): ผูกตัวเองเข้า
+            // context ที่นี่ — จุดเดียวของเกม AI อ่าน ctx.NpcDirector ตอน Tick เท่านั้น
+            // (หลัง constructor จบ) จึงไม่มีจังหวะอ่านค่า null
+            aiContext.Bind(this);
         }
 
         /// <summary>
@@ -127,15 +146,21 @@ namespace Marooned.Systems
             foreach (var npc in _npcs.Values.Where(n => n.IsAlive))
             {
                 TickBehavior(npc, deltaSeconds);
-                if (npc.Role == NpcRole.Killer)
-                    TryAttemptElimination(npc, deltaSeconds);
+                // Step 4: TryAttemptElimination call site ถูกลบ — killer ลงมือผ่าน
+                // KillerPlanner เท่านั้น (กัน elimination รันซ้อน 2 เส้นทาง)
             }
         }
 
+        /// <summary>
+        /// Step 4 hook: สมองแยกตาม role — ตั้ง target/ตัดสินใจ แล้ว NpcMovementSystem
+        /// (ถูก tick ทีหลังในเฟรมเดียวกัน) จะเดินตาม target นั้นทันที
+        /// </summary>
         private void TickBehavior(NpcState npc, float deltaSeconds)
         {
-            // Placeholder schedule: random idle/gather/rest/travel switching.
-            // Replace with a proper daily-schedule table (Luban) in a later lab.
+            if (npc.Role == NpcRole.Killer)
+                _killerPlanner.Tick(npc, deltaSeconds);
+            else
+                _innocentAI.Tick(npc, deltaSeconds);
         }
 
         /// <summary>
@@ -182,27 +207,6 @@ namespace Marooned.Systems
                 SpawnedClueCardIds = clueIds
             });
             return (true, null);
-        }
-
-        private void TryAttemptElimination(NpcState killer, float deltaSeconds)
-        {
-            killer.KillCooldownRemaining = Math.Max(0, killer.KillCooldownRemaining - deltaSeconds);
-            if (killer.KillCooldownRemaining > 0) return;
-
-            var sameLocation = _npcs.Values
-                .Where(n => n.IsAlive && n.Id != killer.Id && n.CurrentLocationId == killer.CurrentLocationId)
-                .ToList();
-
-            // "No witness" rule: only killer + exactly one victim present, nobody else.
-            if (sameLocation.Count != 1) return;
-
-            var victim = sameLocation[0];
-            if (_rng.NextDouble() > 0.15) return; // small per-tick chance, tune later
-
-            // Phase 4: ลงมือผ่าน TryEliminate กลาง (กฎ witness/clue/publish อยู่ที่เดียวกับ player)
-            var (success, _) = TryEliminate(killer.Id, victim.Id, killer.CurrentLocationId);
-            if (success)
-                killer.KillCooldownRemaining = 180f; // seconds
         }
 
         private List<string> SpawnClues(string killerEntityId, NpcState victim)

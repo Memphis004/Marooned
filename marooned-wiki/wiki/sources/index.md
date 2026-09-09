@@ -15,7 +15,7 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-คัปเดตล่าสุด: 2026-09-10 (Lab C Phase 2 Step 3: NPC Visual Sync — chibi เดินตาม NpcState.Position)
+คัปเดตล่าสุด: 2026-09-10 (Lab C Phase 2 เสร็จครบ: NPC Embodiment + AI Hook + runtime tests A–F ผ่าน)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -34,9 +34,10 @@ tags:
   View เป็นคน Instantiate) + HarvestableNode tool-gathering (durability/tool/regrow จาก Luban CSV)
 - [[biome-scatter-editor-setup]] — คู่มือสร้าง BiomePrefabSet ใน Unity Editor +
   protocol เทส Test A–D พร้อมจุดพบบ่อย
-- [[npc-embodiment-movement]] — Lab C Phase 2 Step 1-3: NPC มีตำแหน่ง/Inventory/Stats
+- [[npc-embodiment-movement]] — Lab C Phase 2 Step 1-4 ครบ: NPC embodiment + AI Hook เทส A-F ผ่านหมด
   เป็น Ground Truth (NpcState Key 9-15, NpcInventory, NpcSurvivalState) +
-  NpcMovementSystem เดิน wander ทอยข้ามโซน 20% ผ่าน MoveNpc + Position Seeding Rule
+  NpcMovementSystem (เดินอย่างเดียว) + สมอง AI แยก role InnocentUtilityAI/KillerPlanner
+  ผ่าน MoveNpc + Position Seeding Rule + DI cycle ปลอดภัย (Bind pattern)
   กัน warp (0,0) + tick order Director ก่อน Movement + NpcCharacterView sync chibi
   กับ Position/Activity ทุกเฟรม (พร้อมผลเทส Test A–D และภาพหลักฐาน)
 
@@ -117,7 +118,8 @@ tags:
 - [[2026-09-05]] — Dev Log วันแรก
 - [[2026-09-07-lab-a-closure-b-phases-architecture-refactor]] — Dev Log: ปิด Lab A (MCP round trip) + Lab B Phase 1-4 (Chibi, Player, Player-as-Killer, refactor) + patch WorldItemSystem กัน item respawn ซ้ำ
 - [[2026-09-09-lab-c-phase1-hybrid-biome-scatter-node-harvest-zone-transition]] — Dev Log: Lab C Phase 1 – Hybrid Biome Scatter + Node Harvest + Zone Transition
-- [[npc-embodiment-movement]] — (architecture) Lab C Phase 2 Step 1-2 – NPC Embodiment: Data Foundation + Movement System (2026-09-10)
+- [[2026-09-10-lab-c-phase2-npc-embodiment-ai-hook]] — Dev Log: Lab C Phase 2 – NPC Embodiment (data foundation, movement, visual sync, AI Hook InnocentUtilityAI/KillerPlanner) + runtime tests A–F ผ่านครบ + 2 bugs ที่เจอ/แก้
+- [[npc-embodiment-movement]] — (architecture) Lab C Phase 2 Step 1-4 – NPC Embodiment + Basic AI Hook: data/movement/visual sync + InnocentUtilityAI/KillerPlanner (2026-09-10)
 
 ## 🗂️ โครงสร้าง Wiki
 

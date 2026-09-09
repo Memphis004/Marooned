@@ -1,27 +1,23 @@
 using System;
-using System.Collections.Generic;
 using Marooned.Shared;
 
 namespace Marooned.Systems
 {
     /// <summary>
-    /// Lab C Phase 2 — เดิน NPC ด้วย Target ที่ถูกตั้งไว้ใน NpcState (ground truth)
+    /// Lab C Phase 2 Step 4 — เดิน NPC เข้าหา Target ที่มีอยู่ใน state เท่านั้น
     ///
-    /// หน้าที่เดียว: Tick(dt) เลื่อน PositionX/Y เข้าหา TargetX/Y ด้วย MovementSpeed
-    /// เมื่อถึงเป้า (≤ 0.1f): Activity = Idle + พักสั้นๆ (Min/MaxIdleSeconds) แล้ว
-    /// เรียก PickNextTarget() เพื่อสุ่มจุด wander ใหม่ (จุดนี้จะถูก deprecate ใน
-    /// Step 4 — AI เป็นคนเลือก target เอง จึงแยก method อิสระไว้ให้ปิดง่าย
-    /// ไม่กระทบ logic เดินใน Tick)
+    /// ⚠️ DEPRECATED (Step 4.1): re-target-on-arrival (PickNextTarget + ทอยข้ามโซน +
+    /// idle-pause) ถูกถอดออกแล้ว — การเลือก target ทั้งหมดย้ายไปอยู่ที่ AI
+    /// (InnocentUtilityAI / KillerPlanner ใน namespace Marooned.Systems.AI)
+    /// กันสองระบบแย่งกันเซ็ต TargetX/Y (undefined behavior)
     ///
-    /// การข้ามโซน (20% ตอนตั้ง target ใหม่): เรียก NpcDirectorSystem.MoveNpc()
-    /// ทันที "ตอนตั้ง target" ไม่ใช่ detect ข้ามขอบระหว่างทาง — CurrentLocationId
-    /// เปลี่ยนผ่าน MoveNpc() เท่านั้น (Single Source of Truth) และ MoveNpc เป็นคน
-    /// seed PositionX/Y ที่จุดกึ่งกลางโซนใหม่ให้เอง (Position Seeding Rule)
+    /// หน้าที่เหลือ:
+    ///  1. Tick(dt): เลื่อน PositionX/Y เข้าหา TargetX/Y ด้วย MovementSpeed
+    ///     (normalize + กัน overshoot, frame-rate independent)
+    ///  2. อัปเดต Activity ตามสถานะการเดิน: Traveling ขณะกำลังเคลื่อน, Idle เมื่อถึงเป้า
+    ///     (continuous-state description — ไม่ใช่การเลือก target)
     ///
-    /// ขอบเขต wander ยึด pattern เดียกับ WorldItemSystem.ZoneSpread — สุ่มรัศมี
-    /// รอบ LocationDef.WorldX/Y ของโซนปัจจุบัน ไม่เดา bounds ที่ไม่มีจริง
-    ///
-    /// Plain C# singleton (VContainer Lifetime.Singleton) — ถูก tick โดย
+    /// ยังคงเป็น plain C# singleton (VContainer Lifetime.Singleton) ถูก tick โดย
     /// GameTickDriver หลัง NpcDirectorSystem.Tick() เสมอ (target ที่ AI ตั้งใน
     /// เฟรมนี้ต้องถูกเดินทันที ไม่ดีเลย์ 1 เฟรม)
     /// </summary>
@@ -30,71 +26,23 @@ namespace Marooned.Systems
         /// <summary>ระยะถือว่า "ถึงเป้าแล้ว" (world unit)</summary>
         public float ArrivalThreshold = 0.1f;
 
-        /// <summary>รัศมี wander รอบจุดกึ่งกลางโซน (world unit) — อิงแนวคิด ZoneSpread ของ WorldItemSystem</summary>
-        public float WanderRadius = 2.5f;
-
-        /// <summary>โอกาส (0-1) ที่จะตั้ง target ในโซนเพื่อนบ้านแทนโซนปัจจุบัน</summary>
-        public float CrossZoneChance = 0.2f;
-
-        /// <summary>
-        /// ช่วงพักสุ่มหลังถึงเป้า (วินาที) — ทำให้ Activity = Idle ช่วงสั้นๆ ที่จอ
-        /// เห็น "idle ตอนหยุด" ชัดเจน (Step 3 Test A) ก่อนเลือกเป้าใหม่
-        /// </summary>
-        public float MinIdleSeconds = 0.8f;
-        public float MaxIdleSeconds = 2.5f;
-
         private readonly NpcDirectorSystem _npcDirector;
-        private readonly LubanDataService _data;
-        private readonly Random _rng = new();
 
-        /// <summary>npcId → เวลาพักที่เหลือ (ถ้ามี key = กำลัง Idle หลังถึงเป้า)</summary>
-        private readonly Dictionary<string, float> _idleTimers = new();
-
-        public NpcMovementSystem(NpcDirectorSystem npcDirector, LubanDataService dataService)
+        public NpcMovementSystem(NpcDirectorSystem npcDirector)
         {
             _npcDirector = npcDirector;
-            _data = dataService;
         }
 
         public void Tick(float deltaSeconds)
         {
-            // เก็บกวาด timer ของ NPC ที่ถูกลบออกจากรอบ (เช่น SetupRound ใหม่)
-            if (_idleTimers.Count > 0)
-            {
-                List<string> stale = null;
-                foreach (var id in _idleTimers.Keys)
-                    if (!_npcDirector.Npcs.ContainsKey(id)) (stale ??= new List<string>()).Add(id);
-                if (stale != null)
-                    foreach (var id in stale) _idleTimers.Remove(id);
-            }
-
             foreach (var npc in _npcDirector.Npcs.Values)
             {
                 if (!npc.IsAlive) continue;
 
-                // ช่วงพักหลังถึงเป้า: Activity = Idle จนหมดเวลา แล้วค่อยเลือกเป้าใหม่
-                if (_idleTimers.TryGetValue(npc.Id, out var idleRemaining))
-                {
-                    npc.Activity = NpcActivityState.Idle;
-                    idleRemaining -= deltaSeconds;
-                    if (idleRemaining > 0f)
-                    {
-                        _idleTimers[npc.Id] = idleRemaining;
-                        continue;
-                    }
-                    _idleTimers.Remove(npc.Id);
-                    PickNextTarget(npc); // หมดเวลาพัก → เป้าใหม่ทันที (จะตั้ง Activity = Traveling)
-                    continue;
-                }
-
                 MoveTowardTarget(npc, deltaSeconds);
 
-                if (HasArrived(npc))
-                {
-                    // Idle เมื่อถึงเป้า (spec Step 3.2) + สุ่มช่วงพักก่อนหาเป้าใหม่
-                    npc.Activity = NpcActivityState.Idle;
-                    _idleTimers[npc.Id] = MinIdleSeconds + (float)_rng.NextDouble() * (MaxIdleSeconds - MinIdleSeconds);
-                }
+                // Activity เป็นคำอธิบายสถานะการเดิน — ไม่ใช่การเลือก target
+                npc.Activity = HasArrived(npc) ? NpcActivityState.Idle : NpcActivityState.Traveling;
             }
         }
 
@@ -125,50 +73,6 @@ namespace Marooned.Systems
             var dx = npc.TargetX - npc.PositionX;
             var dy = npc.TargetY - npc.PositionY;
             return dx * dx + dy * dy <= ArrivalThreshold * ArrivalThreshold;
-        }
-
-        /// <summary>
-        /// เลือก target ถัดไปเมื่อถึงเป้าแล้ว (Step 2 wander behavior):
-        ///  • ทอย 20% ข้ามโซน → สุ่ม ConnectedLocationId เรียก MoveNpc() ทันทีตอนตั้ง target
-        ///    (ไม่ใช่ detect ข้ามขอบระหว่างทาง) — MoveNpc seed ตำแหน่งที่จุดกึ่งกลางโซนใหม่ให้
-        ///  • ไม่งั้น → สุ่มจุดในรัศมี WanderRadius รอบ LocationDef.WorldX/Y ของโซนปัจจุบัน
-        ///    (pattern เดียวกับ WorldItemSystem.ZoneSpread — ไม่เดา bounds ที่ไม่มีจริง)
-        ///  • ตั้ง Activity ตามสถานะ: Traveling ขณะมีเป้าให้เดิน, Idle เมื่อไม่มี
-        ///
-        /// ⚠️ Step 4 note: method นี้ (re-target-on-arrival) จะถูก deprecate —
-        /// การเลือก target ทั้งหมดย้ายไป IUtilityAction / KillerPlanner
-        /// NpcMovementSystem จะเหลือหน้าที่ "เดินเข้าหา target ที่มีอยู่" เท่านั้น
-        /// </summary>
-        public void PickNextTarget(NpcState npc)
-        {
-            var locationId = npc.CurrentLocationId;
-            if (string.IsNullOrEmpty(locationId)) return;
-            if (!_data.LocationDefs.TryGetValue(locationId, out var locationDef)) return;
-
-            // ทอยข้ามโซน — ต้องมี connected location ให้ไปจริง
-            var connections = locationDef.ConnectedLocationIds;
-            if (connections != null && connections.Count > 0 && _rng.NextDouble() < CrossZoneChance)
-            {
-                var destinationId = connections[_rng.Next(connections.Count)];
-                if (destinationId != locationId)
-                {
-                    // MoveNpc ทันทีตอนตั้ง target — CurrentLocationId เปลี่ยนที่นี่จุดเดียว
-                    // และ seed Position ที่จุดกึ่งกลางโซนใหม่ (กัน warp (0,0)) แล้วค่อย
-                    // สุ่ม target ใหม่ในโซนนั้น (โค้ดด้านล่างอ่าน CurrentLocationId ที่เพิ่งเปลี่ยน)
-                    _npcDirector.MoveNpc(npc.Id, destinationId);
-                    if (!_data.LocationDefs.TryGetValue(npc.CurrentLocationId, out locationDef))
-                        return;
-                }
-            }
-
-            // สุ่มจุดในรัศมี wander รอบจุดกึ่งกลางโซน — สูตร offset เดียวกับ
-            // WorldItemSystem.RollLoot (ZoneSpread)
-            var offsetX = (float)(_rng.NextDouble() * 2 - 1) * WanderRadius;
-            var offsetY = (float)(_rng.NextDouble() * 2 - 1) * (WanderRadius * 0.6f);
-
-            npc.TargetX = locationDef.WorldX + offsetX;
-            npc.TargetY = locationDef.WorldY + offsetY;
-            npc.Activity = NpcActivityState.Traveling;
         }
     }
 }

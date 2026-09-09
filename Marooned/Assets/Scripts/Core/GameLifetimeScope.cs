@@ -1,6 +1,7 @@
 using MessagePipe;
 using Marooned.Shared;
 using Marooned.Systems;
+using Marooned.Systems.AI;
 using Marooned.UI.Core;
 using Marooned.UI.Presenters;
 using Marooned.UI.Views;
@@ -115,10 +116,24 @@ namespace Marooned.Core
             // (publish chain เช่น UI re-render / chibi spawn จะ throw ไม่งั้น)
             builder.RegisterEntryPoint<McpMainThreadDispatcher>(Lifetime.Singleton).AsSelf();
 
+            // --- NPC AI (Lab C Phase 2 Step 4) ---
+            // UtilityContext สร้างครั้งเดียว (ถือ Data/StateProvider) — สมอง AI ทั้งสอง
+            // ฝั่งได้ context นี้ผ่าน constructor (inject จาก container ห้าม new เอง)
+            // แล้ว NpcDirectorSystem รับสมองเข้าไปใช้ใน TickBehavior
+            // กัน DI cycle: context ที่นี่จงใจ *ไม่* resolve NpcDirectorSystem ตอน build
+            // (NpcDirectorSystem → AI → context → NpcDirectorSystem จะเป็น cycle) —
+            // NpcDirectorSystem จะ Bind(this) เข้า context เองใน constructor (จุดเดียว)
+            // AI อ่าน ctx.NpcDirector ตอน Tick เท่านั้น ซึ่งเกิดหลัง construct จบแล้วเสมอ
+            builder.Register(c => new UtilityContext(
+                c.Resolve<LubanDataService>(),
+                c.Resolve<GameStateProvider>()), Lifetime.Singleton);
+            builder.Register<InnocentUtilityAI>(Lifetime.Singleton).AsSelf();
+            builder.Register<KillerPlanner>(Lifetime.Singleton).AsSelf();
+
             // --- NPC movement (Lab C Phase 2) ---
-            // เดิน NPC เข้าหา TargetX/Y ที่ถูกตั้งไว้ (wander + ทอยข้ามโซนผ่าน
-            // NpcDirectorSystem.MoveNpc) — GameTickDriver เรียก Tick หลัง
-            // NpcDirectorSystem.Tick() เสมอ (target ที่ตั้งในเฟรมนี้ต้องถูกเดินทันที)
+            // เดิน NPC เข้าหา TargetX/Y ที่ถูกตั้งไว้ — การเลือก target เป็นหน้าที่
+            // AI (Step 4) ระบบนี้เหลือหน้าที่เดินอย่างเดียว; GameTickDriver เรียก Tick
+            // หลัง NpcDirectorSystem.Tick() เสมอ (target ที่ตั้งในเฟรมนี้ต้องถูกเดินทันที)
             builder.Register<NpcMovementSystem>(Lifetime.Singleton).AsSelf();
 
             // --- Biome scatter + tool-gathering (Lab C Phase 1) ---
