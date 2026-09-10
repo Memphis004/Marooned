@@ -485,7 +485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de0acecb436e00e4aa1595246cb135b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.RoundInitializer
-  npcCount: 3
+  npcCount: 5
   killerCount: 1
 --- !u!1 &612527672
 GameObject:

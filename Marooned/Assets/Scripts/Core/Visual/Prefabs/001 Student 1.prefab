@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8711184764569554572}
   - component: {fileID: 4822398208353430945}
   - component: {fileID: 6286409334407175923}
+  - component: {fileID: 3543541623718724271}
+  - component: {fileID: -7962356843252226623}
   m_Layer: 0
   m_Name: 001 Student 1
   m_TagString: Untagged
@@ -72,6 +74,33 @@ MonoBehaviour:
   walkAnim: walk
   interactAnim: interact
   pickupAnim: pick up
+--- !u!210 &3543541623718724271
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1908850870069242641}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+  m_Sort3DAs2D: 0
+--- !u!114 &-7962356843252226623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1908850870069242641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a30be9a825595043811677bd5a85fac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Marooned.Core.Visual.YSortingGroup
+  precisionMultiplier: 100
+  baseOrder: 0
 --- !u!1 &2133635629936236740
 GameObject:
   m_ObjectHideFlags: 0

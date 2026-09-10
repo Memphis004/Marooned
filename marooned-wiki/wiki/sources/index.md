@@ -9,6 +9,7 @@ tags:
   - marooned
   - lab-a
   - lab-b
+  - lab-c
 
 ---
 
