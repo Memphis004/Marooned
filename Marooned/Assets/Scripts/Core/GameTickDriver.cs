@@ -22,6 +22,7 @@ namespace Marooned.Core
         private SurvivalStatSystem _survival;
         private NpcDirectorSystem _npcDirector;
         private NpcMovementSystem _npcMovement;
+        private NpcZoneTransitionSystem _npcZoneTransition;
         private WorldEventSystem _worldEvents;
         private GameStateProvider _stateProvider;
         private PlayerInputService _playerInput;
@@ -56,6 +57,7 @@ namespace Marooned.Core
             _survival = scope.Container.Resolve<SurvivalStatSystem>();
             _npcDirector = scope.Container.Resolve<NpcDirectorSystem>();
             _npcMovement = scope.Container.Resolve<NpcMovementSystem>();
+            _npcZoneTransition = scope.Container.Resolve<NpcZoneTransitionSystem>();
             _worldEvents = scope.Container.Resolve<WorldEventSystem>();
             _stateProvider = scope.Container.Resolve<GameStateProvider>();
             _playerInput = scope.Container.Resolve<PlayerInputService>();
@@ -89,6 +91,9 @@ namespace Marooned.Core
             // ถูกเดินทันที ไม่ดีเลย์ 1 เฟรม
             _npcDirector.Tick(deltaSeconds);
             _npcMovement.Tick(deltaSeconds);
+            // Hybrid Transition Points (Part 2): หลัง Movement เสมอ — Movement เดิน
+            // NPC ถึงจุดเชื่อม แล้วระบบนี้เปลี่ยน phase/ข้ามโซนทันทีในเฟรมเดียว
+            _npcZoneTransition.Tick(deltaSeconds);
 
             // WorldEventSystem.Tick ต้องการ location tag ปัจจุบัน — ใช้ id ของ
             // location ผู้เล่นเป็น tag ไปก่อน (mock events ไม่ได้กำหนด RequiredLocationTags)

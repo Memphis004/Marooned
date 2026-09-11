@@ -46,7 +46,12 @@ namespace Marooned.Systems.AI
         /// <summary>เรียกทุก tick จาก NpcDirectorSystem.TickBehavior (NPC ที่ยังมีชีวิต)</summary>
         public void Tick(NpcState npc, float deltaSeconds)
         {
-            // ลบ state ของ NPC ที่โดนเก็บออก (SetupRound ใหม่) — กัน dict โต
+            // Hybrid Transition Points (Part 2): ระหว่างข้ามโซน (เดินเข้าจุดเชื่อม/exit/
+            // enter) — ห้าม re-evaluate/execute action กัน AI ตั้ง target ซ้อนทับ
+            // transition target (Test C evidence: log นี้จะไม่ปรากฏระหว่าง transition)
+            if (Wander.IsTransitioning(npc)) return;
+
+            // ลบ state ของ NPC ที่โดนเก็บอۆออก (SetupRound ใหม่) — กัน dict โต
             if (_reEvalTimers.Count > 0 && !_reEvalTimers.ContainsKey(npc.Id) && _currentChoice.ContainsKey(npc.Id))
                 _currentChoice.Remove(npc.Id);
 

@@ -71,6 +71,35 @@ namespace Marooned.Shared
         /// แยกเป็น class ของตัวเองเพื่อให้ Step 4 เติมเมธอดเชิงพฤติกรรมได้โดยไม่แตะ NpcState
         /// </summary>
         [Key(15)] public NpcSurvivalState Survival = new();
+
+        // ---- Hybrid Transition Points (Part 1 — foundation): ground truth fields
+        //      สำหรับการเดินข้ามโซนผ่านจุดเชื่อม (ZoneConnectionDef) — Part 2
+        //      (NpcZoneTransitionSystem) จะเริ่มใช้จริง ตอนนี้ยังไม่มีใครเขียน/อ่าน
+        //      นอกจาก default เพื่อไม่ให้พฤติกรรม NPC เปลี่ยน
+        //      Information Hiding: ทั้งสอง field เป็น ground truth — ห้ามหลุดเข้า
+        //      NpcObservableView / GetObservableNpcsAt / MCP response เด็ดขาด
+        //      (player เห็นได้แค่ "NPC เดินออกนอกจอ" จาก position/animation เท่านั้น)
+
+        /// <summary>Ground truth — phase ปัจจุบันของการข้ามโซน ห้ามหลุดเข้า NpcObservableView</summary>
+        [Key(16)] public NpcTransitionPhase TransitionPhase = NpcTransitionPhase.None;
+
+        /// <summary>Ground truth — โซนปลายทางที่กำลังจะไป (empty ถ้าไม่ได้อยู่ระหว่าง transition) ห้ามหลุดเข้า NpcObservableView</summary>
+        [Key(17)] public string PendingTransitionTargetZoneId;
+    }
+
+    /// <summary>
+    /// Phase ของการข้ามโซนแบบเดินผ่านจุดเชื่อม (Hybrid Transition Points)
+    ///  • None           = เดินอิสระปกติภายในโซนเดียว
+    ///  • WalkingToPoint = กำลังเดินเข้าหาจุดเชื่อม (transition point) ของโซนต้นทาง
+    ///  • Exiting        = ถึงจุดเชื่อมแล้ว กำลังเล่น exit animation (เดินออกนอกจอ)
+    ///  • Entering       = ข้ามโซนมาแล้ว กำลังเล่น enter animation (เดินเข้าจากจุดเชื่อมของโซนปลายทาง)
+    /// </summary>
+    public enum NpcTransitionPhase
+    {
+        None,
+        WalkingToPoint,
+        Exiting,
+        Entering
     }
 
     /// <summary>

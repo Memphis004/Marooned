@@ -16,7 +16,8 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-คัปเดตล่าสุด: 2026-09-10 (Lab C Phase 2 เสร็จครบ: NPC Embodiment + AI Hook + runtime tests A–F ผ่าน)
+อัปเดตล่าสุด: 2026-09-11 (Hybrid Transition Points: NPC เดินข้ามโซนผ่านจุดเชื่อม
+ZoneConnectionDef + FSM + PlayMode visual test A+B ผ่าน)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -41,6 +42,12 @@ tags:
   ผ่าน MoveNpc + Position Seeding Rule + DI cycle ปลอดภัย (Bind pattern)
   กัน warp (0,0) + tick order Director ก่อน Movement + NpcCharacterView sync chibi
   กับ Position/Activity ทุกเฟรม (พร้อมผลเทส Test A–D และภาพหลักฐาน)
+- [[npc-zone-transitions]] — Hybrid Transition Points (2026-09-11): NPC เดินข้ามโซนผ่าน
+  จุดเชื่อมแทน teleport — ZoneConnectionDef.csv (กฎพิกัด 80% จากโซนต้นทาง) +
+  LubanDataService.GetTransition + NpcState Key 16-17 (ground truth ห้าม leak) +
+  Wander.MoveToZone (single source of truth, fallback teleport) +
+  NpcZoneTransitionSystem FSM (WalkingToPoint→Exiting 0.5s→ข้ามโซน→Entering 0.3s)
+  + tick order Director→Movement→ZoneTransition + EditMode 6/6 และ PlayMode visual A+B ผ่าน
 
 ## 📄 Code Snippets
 
@@ -56,6 +63,12 @@ tags:
 - [[ExplorationSystem.cs]] — สำรวจ location แบบ weighted loot ที่ deplete ได้
 - [[NpcDirectorSystem.cs]] — เจ้าของ ground truth NPC + killer AI + spawn clue
   (Phase 4: `CanEliminate`/`TryEliminate` method กลางที่ player ใช้ร่วมกับ AI)
+- [[Wander.cs]] — helper การเดินร่วมของ AI (single source of truth):
+  `IsTransitioning` gate + `MoveToZone` (เริ่ม transition ผ่านจุดเชื่อม / fallback
+  teleport) + `SetRandomTargetInZone`
+- [[NpcZoneTransitionSystem.cs]] — FSM ข้ามโซนแบบเดินผ่านจุดเชื่อม
+  (WalkingToPoint→Exiting→Entering→None) plain C# timer dictionary ไม่มี coroutine
+  (2026-09-11)
 - [[DeductionSystem.cs]] — information-hiding layer + ตัดสิน accusation
 - [[WorldEventSystem.cs]] — weighted random event queue (Survival/Social)
 - [[McpRequestHandlers.cs]] — ปลายทาง request จาก MCP Bridge 10 ตัว
@@ -82,7 +95,8 @@ tags:
   Phase 4 เพิ่ม `PlayAction` one-shot)
 - [[ChibiSpawnerView.cs]] — spawn/despawn chibi ของ NPC ตาม location แบบ event-driven
 - [[NpcCharacterView.cs]] — Step 3: sync ตำแหน่ง/facing/animation ของ chibi NPC
-  กับ NpcState ทุกเฟรม (direct read ไม่ใช้ MessagePipe ต่อเฟรม)
+  กับ NpcState ทุกเฟรม (direct read ไม่ใช้ MessagePipe ต่อเฟรม) + จับ phase
+  เปลี่ยนของ transition เล่น `PlayAction("zone_exit"/"zone_enter")` one-shot
 - [[GenericCuteVisualController.cs]] — คุม Animator ของ asset "Generic Cute 2D Student" (PSB skeletal)
 - [[SpineVisualController.cs]] — Spine backend คุม SkeletonAnimation (Elena/Derek ใช้ร่วมกัน)
 

@@ -1,0 +1,24 @@
+{
+    "name": "Marooned.Game",
+    "rootNamespace": "Marooned",
+    "references": [
+        "Luban.Runtime",
+        "MessagePipe",
+        "MessagePipe.Interprocess",
+        "MessagePipe.VContainer",
+        "MessagePack.Unity",
+        "UniTask",
+        "VContainer",
+        "spine-csharp",
+        "spine-unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -65,6 +65,18 @@ namespace Marooned.Systems
         public Dictionary<string, cfg.game.BiomeDef> BiomeDefs { get; private set; } = new();
         public Dictionary<string, cfg.game.HarvestableNodeDef> HarvestableNodeDefs { get; private set; } = new();
 
+        // ---- Hybrid Transition Points (Part 1 — foundation) — consume generated
+        //      cfg.game.ZoneConnectionDef ตรงๆ (ไม่มี Shared mirror) index ด้วย
+        //      (from, to) pair เพื่อ lookup จุดเชื่อมแบบ O(1) ตอน Part 2 ----
+        private Dictionary<(string From, string To), cfg.game.ZoneConnectionDef> _zoneConnectionsByPair = new();
+
+        /// <summary>
+        /// หา connection จากโซน from → to (null ถ้าไม่มีจุดเชื่อมตรง)
+        /// Part 2 จะใช้ใน NpcZoneTransitionSystem (เดินเข้าจุดเชื่อม → ข้ามโซน)
+        /// </summary>
+        public cfg.game.ZoneConnectionDef GetTransition(string from, string to) =>
+            _zoneConnectionsByPair.TryGetValue((from, to), out var def) ? def : null;
+
         // ChibiPartDefs / ChibiOutfitDefs ถูกถอดออก: ตารางไม่มีอยู่ใน Luban pipeline
         // จริง (event.xml ไม่นิยาม bean — ดูหมายเหตุในไฟล์นั้น) และ mock เดิมก็ว่างเปล่า
 
@@ -93,9 +105,16 @@ namespace Marooned.Systems
             BiomeDefs = tables.TbBiomeDef.DataMap.ToDictionarySafe();
             HarvestableNodeDefs = tables.TbHarvestableNodeDef.DataMap.ToDictionarySafe();
 
+            // Hybrid Transition Points (Part 1): DataList (ไม่ใช่ DataMap เพราะ key
+            // ของเราคือ (from,to) ไม่ใช่ id) — duplicate pair จะ throw ตอน load
+            // ซึ่งถือเป็น config error ที่ควรให้ crash ตั้งแต่ boot
+            _zoneConnectionsByPair = tables.TbZoneConnectionDef.DataList
+                .ToDictionary(c => (c.FromLocationId, c.ToLocationId));
+
             Debug.Log($"[LubanDataService] loaded {CardDefs.Count} cards, {LocationDefs.Count} locations, " +
                       $"{RecipeDefs.Count} recipes, {ClueDefs.Count} clues, {IllnessDefs.Count} illnesses, " +
-                      $"{WorldEventDefs.Count} events, {BiomeDefs.Count} biomes, {HarvestableNodeDefs.Count} harvestable nodes");
+                      $"{WorldEventDefs.Count} events, {BiomeDefs.Count} biomes, {HarvestableNodeDefs.Count} harvestable nodes, " +
+                      $"{_zoneConnectionsByPair.Count} zone connections");
         }
 
         /// <summary>

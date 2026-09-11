@@ -1,0 +1,44 @@
+[
+  {
+    "id": "beach_to_jungle_edge",
+    "fromLocationId": "beach",
+    "toLocationId": "jungle_edge",
+    "transitionX": 8,
+    "transitionY": 4
+  },
+  {
+    "id": "jungle_edge_to_beach",
+    "fromLocationId": "jungle_edge",
+    "toLocationId": "beach",
+    "transitionX": 2,
+    "transitionY": 1
+  },
+  {
+    "id": "jungle_edge_to_deep_jungle",
+    "fromLocationId": "jungle_edge",
+    "toLocationId": "deep_jungle",
+    "transitionX": 18,
+    "transitionY": 9
+  },
+  {
+    "id": "deep_jungle_to_jungle_edge",
+    "fromLocationId": "deep_jungle",
+    "toLocationId": "jungle_edge",
+    "transitionX": 12,
+    "transitionY": 6
+  },
+  {
+    "id": "beach_to_cave_entrance",
+    "fromLocationId": "beach",
+    "toLocationId": "cave_entrance",
+    "transitionX": -4,
+    "transitionY": 6.4
+  },
+  {
+    "id": "cave_entrance_to_beach",
+    "fromLocationId": "cave_entrance",
+    "toLocationId": "beach",
+    "transitionX": -1,
+    "transitionY": 1.6
+  }
+]

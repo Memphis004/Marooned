@@ -22,6 +22,7 @@ public partial class Tables
     public game.TbWorldEventDef TbWorldEventDef {get; }
     public game.TbBiomeDef TbBiomeDef {get; }
     public game.TbHarvestableNodeDef TbHarvestableNodeDef {get; }
+    public game.TbZoneConnectionDef TbZoneConnectionDef {get; }
 
     public Tables(System.Func<string, JSONNode> loader)
     {
@@ -33,6 +34,7 @@ public partial class Tables
         TbWorldEventDef = new game.TbWorldEventDef(loader("game_tbworldeventdef"));
         TbBiomeDef = new game.TbBiomeDef(loader("game_tbbiomedef"));
         TbHarvestableNodeDef = new game.TbHarvestableNodeDef(loader("game_tbharvestablenodedef"));
+        TbZoneConnectionDef = new game.TbZoneConnectionDef(loader("game_tbzoneconnectiondef"));
         ResolveRef();
     }
     
@@ -46,6 +48,7 @@ public partial class Tables
         TbWorldEventDef.ResolveRef(this);
         TbBiomeDef.ResolveRef(this);
         TbHarvestableNodeDef.ResolveRef(this);
+        TbZoneConnectionDef.ResolveRef(this);
     }
 }
 

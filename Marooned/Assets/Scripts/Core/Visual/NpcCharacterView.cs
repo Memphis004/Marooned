@@ -34,6 +34,10 @@ namespace Marooned.Core
         private bool _lastFacingRight = true;
         private bool _facingInitialized;
 
+        // Hybrid Transition Points (Part 2): phase ล่าสุดที่ view เห็น — ใช้ detect
+        // การเปลี่ยน phase เพื่อเล่น one-shot anim ครั้งเดียวต่อการเปลี่ยน
+        private NpcTransitionPhase _lastPhase = NpcTransitionPhase.None;
+
         /// <summary>
         /// เรียกโดย ChibiSpawnerView ทันทีหลัง Instantiate — wiring แบบ direct call
         /// (MVP Lite: ไม่ resolve container / ไม่ลาก reference ใน Inspector)
@@ -55,6 +59,23 @@ namespace Marooned.Core
 
             // --- position (ตาเห็นอยู่แล้ว — ground truth PositionX/Y) ---
             transform.position = new Vector3(npc.PositionX, npc.PositionY, 0f);
+
+            // --- transition phase: จับการเปลี่ยน → เล่น one-shot anim ผ่าน PlayAction เดิม ---
+            // (reuse IChibiVisual.PlayAction — ห้ามเพิ่ม interface method ใหม่;
+            //  backend ที่ไม่มี state "zone_exit"/"zone_enter" จะข้ามเงียบๆ ตาม contract)
+            if (npc.TransitionPhase != _lastPhase)
+            {
+                if (npc.TransitionPhase == NpcTransitionPhase.Exiting)
+                    _visual?.PlayAction("zone_exit");
+                else if (npc.TransitionPhase == NpcTransitionPhase.Entering)
+                    _visual?.PlayAction("zone_enter");
+                _lastPhase = npc.TransitionPhase;
+            }
+
+            // ระหว่าง exit/enter — หยุด facing/Bind ปกติ (ให้ one-shot anim แสดงเต็มๆ)
+            if (npc.TransitionPhase == NpcTransitionPhase.Exiting ||
+                npc.TransitionPhase == NpcTransitionPhase.Entering)
+                return;
 
             // --- facing: flip จากเครื่องหมาย delta แนวนอนของการเคลื่อนที่ ---
             var dx = npc.TargetX - npc.PositionX;

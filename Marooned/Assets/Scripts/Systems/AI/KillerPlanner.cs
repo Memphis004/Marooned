@@ -58,6 +58,10 @@ namespace Marooned.Systems.AI
         /// <summary>เรียกทุก tick จาก NpcDirectorSystem.TickBehavior (killer ที่ยังมีชีวิต)</summary>
         public void Tick(NpcState killer, float deltaSeconds)
         {
+            // Hybrid Transition Points (Part 2): ระหว่างข้ามโซน — ห้าม re-target/ลงมือฆ่า
+            // กัน AI ตั้ง target ซ้อนทับ transition (และกันฆ่าคน "ระหว่างเดินออกนอกจอ")
+            if (Wander.IsTransitioning(killer)) return;
+
             // เริ่มรอบใหม่ → Patrolling (+ รับ cooldown เริ่มต้น 0)
             if (!_phases.TryGetValue(killer.Id, out var phase))
             {

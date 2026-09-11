@@ -136,6 +136,12 @@ namespace Marooned.Core
             // หลัง NpcDirectorSystem.Tick() เสมอ (target ที่ตั้งในเฟรมนี้ต้องถูกเดินทันที)
             builder.Register<NpcMovementSystem>(Lifetime.Singleton).AsSelf();
 
+            // --- NPC zone transition (Hybrid Transition Points Part 2) ---
+            // FSM ข้ามโซนแบบเดินผ่านจุดเชื่อม (ZoneConnectionDef) — GameTickDriver
+            // เรียก Tick หลัง NpcMovementSystem เสมอ (Movement เดินถึงจุดเชื่อม →
+            // ระบบนี้เปลี่ยน phase/ข้ามโซนทันทีในเฟรมเดียว)
+            builder.Register<NpcZoneTransitionSystem>(Lifetime.Singleton).AsSelf();
+
             // --- Biome scatter + tool-gathering (Lab C Phase 1) ---
             // BiomeScatterSystem คำนวณตำแหน่ง spawn อย่างเดียว (ไม่แตะ GameObject) —
             // publish BiomeChangedMessage ให้ BiomeScatterView (MonoBehaviour บน scene)

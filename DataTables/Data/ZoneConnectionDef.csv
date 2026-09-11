@@ -1,0 +1,9 @@
+##var,id,fromLocationId,toLocationId,transitionX,transitionY
+##type,string,string,string,float,float
+##,connection id,from location,to location,transition x,transition y
+,beach_to_jungle_edge,beach,jungle_edge,8,4
+,jungle_edge_to_beach,jungle_edge,beach,2,1
+,jungle_edge_to_deep_jungle,jungle_edge,deep_jungle,18,9
+,deep_jungle_to_jungle_edge,deep_jungle,jungle_edge,12,6
+,beach_to_cave_entrance,beach,cave_entrance,-4,6.4
+,cave_entrance_to_beach,cave_entrance,beach,-1,1.6

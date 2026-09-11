@@ -124,4 +124,20 @@
     </bean>
     <table name="TbHarvestableNodeDef" value="HarvestableNodeDef" mode="map" index="id" input="HarvestableNodeDef.csv" group="c"/>
 
+    <!-- ============ ZoneConnectionDef ============ -->
+    <!-- Hybrid Transition Points (Part 1 — foundation only): จุดเชื่อมโซน
+         fromLocationId/toLocationId ต้องมีจริงใน LocationDef.csv และควร
+         reference กันแบบสองทาง (A_to_B คู่กับ B_to_A) — transitionX/Y คือ
+         ตำแหน่งภายในโซนปลายทางที่ NPC จะโผล่ (enter point) และจุดที่เดิน
+         เข้าหาในโซนต้นทาง (exit point) ตาม convention ของ Part 2
+         consume เป็น cfg.game.ZoneConnectionDef ตรงๆ (ไม่มี Shared mirror) -->
+    <bean name="ZoneConnectionDef">
+        <var name="id" type="string"/>
+        <var name="fromLocationId" type="string"/>
+        <var name="toLocationId" type="string"/>
+        <var name="transitionX" type="float"/>
+        <var name="transitionY" type="float"/>
+    </bean>
+    <table name="TbZoneConnectionDef" value="ZoneConnectionDef" mode="map" index="id" input="ZoneConnectionDef.csv" group="c"/>
+
 </module>

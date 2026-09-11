@@ -11,14 +11,24 @@ namespace Marooned.Systems.AI
     ///
     ///  • จุด wander สุ่มในรัศมีรอบ LocationDef.WorldX/Y (ZoneSpread pattern เดียวกับ
     ///    WorldItemSystem — ไม่เดา bounds ที่ไม่มีจริง)
-    ///  • ข้ามโซน "ตอนตั้ง target" ผ่าน MoveNpc() เท่านั้น (Single Source of Truth)
-    ///    และ MoveNpc เป็นคน seed Position/Target ที่กึ่งกลางโซนใหม่ (Seeding Rule)
-    ///  • ป้องกัน "แย่ง target": caller ควรเช็ค HasPendingTarget ก่อนตั้งเป้าใหม่
+    ///  • ข้ามโซนมี 2 ทาง: มีจุดเชื่อมใน ZoneConnectionDef → เดินเข้าจุดเชื่อมแล้วให้
+    ///    NpcZoneTransitionSystem จัดการ (TransitionPhase FSM) / ไม่มี → fallback
+    ///    teleport ผ่าน MoveNpc() (จุดเดียวที่แก้ CurrentLocationId — Seeding Rule)
+    ///  • ป้องกัน "แย่ง target": caller ควรเช็ค IsTransitioning/HasPendingTarget
+    ///    ก่อนตั้งเป้าใหม่ (AI Tick ทุกตัว gate ด้วย IsTransitioning)
     ///
     /// Static class (ไม่มี state) — Random แยกต่อผู้เรียก (AI แต่ละตัวมีของตัวเอง)
     /// </summary>
     public static class Wander
     {
+        /// <summary>
+        /// NPC กำลังอยู่ในช่วง transition ข้ามโซน (เดินเข้าจุดเชื่อม / exit / enter) —
+        /// AI ทุกฝ่ายต้องเช็คก่อนตั้ง target ใหม่ กันแย่ง target ระหว่าง transition
+        /// (single gate — InnocentUtilityAI / KillerPlanner ใช้ helper เดียวกัน)
+        /// </summary>
+        public static bool IsTransitioning(NpcState npc) =>
+            npc.TransitionPhase != NpcTransitionPhase.None;
+
         /// <summary>npc กำลังเดินไปเป้าที่ยังไม่ถึง (ระยะ > threshold) อยู่หรือไม่</summary>
         public static bool HasPendingTarget(NpcState npc, float arrivalThreshold = 0.1f)
         {
@@ -45,12 +55,14 @@ namespace Marooned.Systems.AI
         }
 
         /// <summary>
-        /// เดินไปโซนอื่น: สุ่ม connected location แล้ว MoveNpc ทันที (จบการตัดสินใจที่นี่ —
-        /// MoveNpc seed ตำแหน่งที่กึ่งกลางโซนใหม่ + Target=Position)
+        /// เดินไปโซนอื่น: สุ่ม connected location แล้วเริ่ม transition แบบเดินผ่านจุดเชื่อม
+        /// (delegate ไป MoveToZone — single source of truth) — ถ้าคู่โซนไม่มีใน
+        /// ZoneConnectionDef → MoveToZone fallback teleport ให้เอง
         /// คืน false ถ้าโซนปัจจุบันไม่มีทางออก (ไม่ mutate อะไร)
         /// </summary>
         public static bool MoveToRandomConnectedZone(NpcState npc, UtilityContext ctx, Random rng)
         {
+            if (IsTransitioning(npc)) return false;
             if (!ctx.Data.LocationDefs.TryGetValue(npc.CurrentLocationId, out var locDef))
                 return false;
             var connections = locDef.ConnectedLocationIds;
@@ -59,8 +71,7 @@ namespace Marooned.Systems.AI
             var destination = connections[rng.Next(connections.Count)];
             if (string.IsNullOrEmpty(destination) || destination == npc.CurrentLocationId) return false;
 
-            ctx.NpcDirector.MoveNpc(npc.Id, destination);
-            return true;
+            return MoveToZone(npc, ctx, destination, rng);
         }
 
         /// <summary>
@@ -71,6 +82,7 @@ namespace Marooned.Systems.AI
         /// </summary>
         public static bool MoveToZone(NpcState npc, UtilityContext ctx, string destinationId, Random rng, bool requireConnection = true)
         {
+            if (IsTransitioning(npc)) return false;
             if (string.IsNullOrEmpty(destinationId)) return false;
             if (!ctx.Data.LocationDefs.TryGetValue(destinationId, out var destinationDef)) return false;
 
@@ -86,7 +98,23 @@ namespace Marooned.Systems.AI
                     return false;
             }
 
-            ctx.NpcDirector.MoveNpc(npc.Id, destinationDef.Id);
+            // Hybrid Transition Points (Part 2): มีจุดเชื่อมใน ZoneConnectionDef →
+            // ตั้ง target ที่จุดเชื่อมแล้วให้ NpcZoneTransitionSystem จัดการข้ามโซนเอง
+            // (System เขียน ground truth fields เท่านั้น — ไม่แตะ GameObject)
+            // ไม่มีจุดเชื่อม (คู่ไม่อยู่ใน CSV) → fallback teleport แบบเดิมผ่าน MoveNpc
+            var transition = ctx.Data.GetTransition(npc.CurrentLocationId, destinationId);
+            if (transition == null)
+            {
+                ctx.NpcDirector.MoveNpc(npc.Id, destinationDef.Id); // fallback teleport
+                return true;
+            }
+
+            npc.TargetX = transition.TransitionX;
+            npc.TargetY = transition.TransitionY;
+            npc.Activity = NpcActivityState.Traveling;
+            npc.TransitionPhase = NpcTransitionPhase.WalkingToPoint;
+            npc.PendingTransitionTargetZoneId = destinationId;
+            UnityEngine.Debug.Log($"[NpcZoneTransition] {npc.Id} start walk {npc.CurrentLocationId} -> {destinationId} target=({transition.TransitionX:F1},{transition.TransitionY:F1})");
             return true;
         }
 
