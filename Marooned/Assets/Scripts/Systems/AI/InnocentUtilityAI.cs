@@ -13,7 +13,10 @@ namespace Marooned.Systems.AI
     ///  • IdleWanderAction — สุ่มจุดใน location ปัจจุบัน (baseline, score ต่ำ)
     ///  • SeekFoodAction — score = Hunger normalize; execute = เดินไป location ที่มี
     ///    food; ถ้า inventory มี food card → consume + คืน Hunger
-    ///  • InvestigateNoiseAction / FleeToSafeZoneAction — stub score 0 (เปิดใช้ทีหลัง)
+    ///  • InvestigateNoiseAction — score = Curiosity×(1-Fear) normalize; เดินไปจุดเสียง
+    ///    (Phase 2.5A: จุดเสียงจาก NpcSurvivalSystem motive hook)
+    ///  • FleeToSafeZoneAction — score = Fear normalize; ออกจากโซนที่เห็นศพ
+    ///    (Phase 2.5A: Fear จาก NpcSurvivalSystem motive hook)
     ///
     /// Information Hiding: อ่าน NpcState.Survival/Inventory (ground truth) ได้
     /// เพราะระบบนี้รันใน Unity — ห้ามผลลัพธ์ใดๆ ของระบบนี้หลุดออก MCP response
@@ -38,8 +41,8 @@ namespace Marooned.Systems.AI
             {
                 new IdleWanderAction(),
                 new SeekFoodAction(),
-                new InvestigateNoiseAction(), // stub score 0
-                new FleeToSafeZoneAction(),   // stub score 0
+                new InvestigateNoiseAction(), // สำรวจจุดเสียง (Phase 2.5A: ใช้จริงแล้ว)
+                new FleeToSafeZoneAction(),   // หนีเมื่อกลัว (Phase 2.5A: ใช้จริงแล้ว)
             };
         }
 
@@ -89,8 +92,12 @@ namespace Marooned.Systems.AI
                 chosen.Execute(npc, _ctx, deltaSeconds);
         }
 
-        /// <summary>ตรวจสอบ (เทส): action ที่ถูกเลือกอยู่ของ NPC</summary>
-        public string CurrentActionId(string npcId) =>
+        /// <summary>
+        /// Debug/เทส (Lab C Phase 2.5B) — action id ที่ชนะ re-evaluate ล่าสุดของ NPC
+        /// (null = ยังไม่เลือก / ไม่มี action สนใจ) อ่านอย่างเดียวไม่ mutate —
+        /// ใช้โดย NpcDebugOverlay (F12) และเทส
+        /// </summary>
+        public string GetCurrentActionId(string npcId) =>
             _currentChoice.TryGetValue(npcId, out var a) ? a?.Id : null;
     }
 
@@ -194,19 +201,69 @@ namespace Marooned.Systems.AI
         }
     }
 
-    /// <summary>stub — เดินไปสำรวจจุดที่ได้ยินเสียง (ยังไม่มีระบบเสียง/เหตุการณ์)</summary>
-    public class InvestigateNoiseAction : IUtilityAction
-    {
-        public string Id => "InvestigateNoise";
-        public float Score(NpcState npc, UtilityContext ctx) => 0f; // ยังไม่เปิดใช้
-        public void Execute(NpcState npc, UtilityContext ctx, float deltaSeconds) { }
-    }
-
-    /// <summary>stub — หนีไปโซนปลอดภัยเมื่อ Fear สูง (จะเปิดใช้กับระบบเห็นศพ)</summary>
+    /// <summary>
+    /// หนีภัยเมื่อกลัวสุด ๆ (Lab C Phase 2.5A — เดิมเป็น stub score 0):
+    /// score = Fear normalize (0-1 เหมือน SeekFoodAction) — Fear สูง → ชนะ IdleWander
+    /// execute: ขอทางออกจากโซนปัจจุบันผ่าน Wander.MoveToRandomConnectedZone เท่านั้น
+    /// (ห้ามเขียน movement/teleport เอง) — ไม่มี state "หนีสำเร็จ" พิเศษ: ปล่อยให้
+    /// NpcSurvivalSystem decay พา Fear ลง แล้วรอบ re-evaluate ถัดไป IdleWander ชนะเอง
+    /// </summary>
     public class FleeToSafeZoneAction : IUtilityAction
     {
         public string Id => "FleeToSafeZone";
-        public float Score(NpcState npc, UtilityContext ctx) => 0f; // ยังไม่เปิดใช้
-        public void Execute(NpcState npc, UtilityContext ctx, float deltaSeconds) { }
+
+        private readonly Random _rng = new();
+
+        // Fear 0-100 normalize เป็น 0-1 (เหมือน SeekFoodAction) — Fear > 10 ชนะ IdleWander
+        public float Score(NpcState npc, UtilityContext ctx) => npc.Survival.Fear / 100f;
+
+        public void Execute(NpcState npc, UtilityContext ctx, float deltaSeconds)
+        {
+            // กำลังเดินหนีอยู่ → ไม่แตะ target (กันแย่ง — stateless ต่อ NPC)
+            if (Wander.HasPendingTarget(npc)) return;
+
+            // ทิศทาง "ปลอดภัย" = ออกจากโซนที่เห็นศพ — โซน connected ใดก็ได้
+            // (NpcSurvivalSystem เป็นคนเพิ่ม Fear ตอนเห็นศพ — action นี้แค่เดินหนี)
+            Wander.MoveToRandomConnectedZone(npc, ctx, _rng);
+            // ไม่ return true/finished — ปล่อยให้ decay ทำให้ Fear ตกแล้ว action เปลี่ยนเอง
+        }
+    }
+
+    /// <summary>
+    /// สำรวจจุดที่ได้ยินเสียง (Lab C Phase 2.5A — เดิมเป็น stub score 0):
+    /// score = Curiosity normalize × กลัวน้อย (1 - Fear normalize) — อยากรู้แต่ต้องไม่กลัวสุด ๆ
+    /// (เช่น Curiosity=80, Fear=30 → 0.8 × 0.7 = 0.56)
+    /// execute: เดินไปโซนจุดเสียง (LastNoiseLocationId จดโดย NpcSurvivalSystem ตอน
+    /// ได้ยินเสียงจาก NpcEliminatedMessage) ผ่าน Wander.MoveToZone เท่านั้น —
+    /// ถึงแล้วให้ NpcMovementSystem idle ธรรมชาติ + decay พาไป action อื่น
+    /// (ห้ามเพิ่ม timer "หยุดดู N วิ" — ขัดกับกฎ stateless ของ IUtilityAction)
+    /// </summary>
+    public class InvestigateNoiseAction : IUtilityAction
+    {
+        public string Id => "InvestigateNoise";
+
+        private readonly Random _rng = new();
+
+        public float Score(NpcState npc, UtilityContext ctx)
+        {
+            // ไม่มีจุดเสียงให้สำรวจ → ไม่สนใจเลย (เคลียร์โดย decay threshold ของ NpcSurvivalSystem)
+            if (npc.Survival.LastNoiseLocationId == null) return 0f;
+
+            // Curiosity normalize × ความกลัวน้อย — กลัวมาก (= เห็นศพเอง) จะไม่ไปสำรวจ
+            return (npc.Survival.Curiosity / 100f) * (1f - npc.Survival.Fear / 100f);
+        }
+
+        public void Execute(NpcState npc, UtilityContext ctx, float deltaSeconds)
+        {
+            // กำลังเดินไปจุดเสียงอยู่ → ไม่แตะ target
+            if (Wander.HasPendingTarget(npc)) return;
+
+            var target = npc.Survival.LastNoiseLocationId;
+            if (target == null) return;
+
+            // ถึงโซนจุดเสียงแล้ว → MoveToZone สุ่มจุดในโซนให้เดินเข้าไป "ดูรอบ ๆ" ต่อ
+            // (ยังไม่ adjacent → MoveToZone คืน false ไม่ mutate — รอ decay พาไป action อื่น)
+            Wander.MoveToZone(npc, ctx, target, _rng, requireConnection: true);
+        }
     }
 }

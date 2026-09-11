@@ -116,6 +116,16 @@ namespace Marooned.Shared
         [Key(0)] public float Hunger;
         [Key(1)] public float Fear;
         [Key(2)] public float Curiosity;
+
+        /// <summary>
+        /// Lab C Phase 2.5A — โซนที่เกิดเหตุเสียง (ศพถูกพบ) ล่าสุดที่ NPC นี้ "ได้ยิน"
+        /// (connected location ของเหตุการณ์ NpcEliminatedMessage) — null = ไม่มี
+        /// ใช้โดย InvestigateNoiseAction เป็นจุดหมายสำรวจ; เคลียร์เป็น null เมื่อ
+        /// Curiosity decay ต่ำกว่า threshold (AI re-evaluate ชนะ IdleWander เอง)
+        /// อยู่ใน numbering space ของ NpcSurvivalState (Key 0-2 ใช้อยู่) — คนละ space
+        /// กับ NpcState หลัก (ถึง 17 แล้ว)
+        /// </summary>
+        [Key(3)] public string LastNoiseLocationId;
     }
 
     /// <summary>

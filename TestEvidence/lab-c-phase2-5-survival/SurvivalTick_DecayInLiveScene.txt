@@ -1,0 +1,3 @@
+=== SurvivalTick_DecayInLiveScene — 10:15:28 ===
+PASS (decay ทำงานกับเวลาจริง)
+RESULT: PASS

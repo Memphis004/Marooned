@@ -16,8 +16,9 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-อัปเดตล่าสุด: 2026-09-11 (Hybrid Transition Points: NPC เดินข้ามโซนผ่านจุดเชื่อม
-ZoneConnectionDef + FSM + PlayMode visual test A+B ผ่าน)
+อัปเดตล่าสุด: 2026-09-11 (Lab C Phase 2.5A Living NPCs: NpcSurvivalSystem decay
++ motive hooks ผ่าน NpcEliminatedMessage + เปิด FleeToSafeZone/InvestigateNoise
+จริง — EditMode 8/8 + PlayMode 2/2 ผ่าน)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -48,6 +49,13 @@ ZoneConnectionDef + FSM + PlayMode visual test A+B ผ่าน)
   Wander.MoveToZone (single source of truth, fallback teleport) +
   NpcZoneTransitionSystem FSM (WalkingToPoint→Exiting 0.5s→ข้ามโซน→Entering 0.3s)
   + tick order Director→Movement→ZoneTransition + EditMode 6/6 และ PlayMode visual A+B ผ่าน
+- [[npc-survival-motives]] — Lab C Phase 2.5A Living NPCs (2026-09-11): NPC "รู้สึก" ถึงโลกจริง —
+  NpcSurvivalSystem decay tick (Hunger +2/วิ, Fear −6/วิ ≈17s, Curiosity −3/วิ ≈33s, สเกล 0-100)
+  + motive hooks subscribe NpcEliminatedMessage (witness Fear +50, hearer Curiosity +30
+  + LastNoiseLocationId Key 3) + เปิด FleeToSafeZoneAction/InvestigateNoiseAction จริง
+  (stateless ตามสัญญา IUtilityAction) + Wander.ClampTargetToZone (เฉพาะ TransitionPhase == None
+  และเฉพาะ Target) + tick order Survival→Director→Movement→ZoneTransition +
+  EditMode 8/8 และ PlayMode 2/2 ผ่าน
 
 ## 📄 Code Snippets
 
@@ -69,6 +77,12 @@ ZoneConnectionDef + FSM + PlayMode visual test A+B ผ่าน)
 - [[NpcZoneTransitionSystem.cs]] — FSM ข้ามโซนแบบเดินผ่านจุดเชื่อม
   (WalkingToPoint→Exiting→Entering→None) plain C# timer dictionary ไม่มี coroutine
   (2026-09-11)
+- [[NpcSurvivalSystem.cs]] — decay tick stats NPC (สเกล 0-100) + motive hooks
+  NpcEliminatedMessage (witness/hearer) + clamp target + hint lifecycle
+  LastNoiseLocationId + status log ทุก 30 วิ (2026-09-11)
+- [[InnocentUtilityAI.cs]] — สมองฝั่ง Innocent: utility scoring re-evaluate ทุก ~1.5 วิ
+  — IdleWander/SeekFood/FleeToSafeZone (Fear)/InvestigateNoise (Curiosity×ไม่กลัว)
+  stateless ตามสัญญา IUtilityAction, การเดินผ่าน Wander helper เท่านั้น (2026-09-11)
 - [[DeductionSystem.cs]] — information-hiding layer + ตัดสิน accusation
 - [[WorldEventSystem.cs]] — weighted random event queue (Survival/Social)
 - [[McpRequestHandlers.cs]] — ปลายทาง request จาก MCP Bridge 10 ตัว
@@ -134,6 +148,7 @@ ZoneConnectionDef + FSM + PlayMode visual test A+B ผ่าน)
 - [[2026-09-07-lab-a-closure-b-phases-architecture-refactor]] — Dev Log: ปิด Lab A (MCP round trip) + Lab B Phase 1-4 (Chibi, Player, Player-as-Killer, refactor) + patch WorldItemSystem กัน item respawn ซ้ำ
 - [[2026-09-09-lab-c-phase1-hybrid-biome-scatter-node-harvest-zone-transition]] — Dev Log: Lab C Phase 1 – Hybrid Biome Scatter + Node Harvest + Zone Transition
 - [[2026-09-10-lab-c-phase2-npc-embodiment-ai-hook]] — Dev Log: Lab C Phase 2 – NPC Embodiment (data foundation, movement, visual sync, AI Hook InnocentUtilityAI/KillerPlanner) + runtime tests A–F ผ่านครบ + 2 bugs ที่เจอ/แก้
+- [[2026-09-11-devlog]] — Dev Log: Hybrid Transition Points (Visual/ Spatial Fix) • Living NPCs (Survival Tick + Motive Events + Stub Actions) • Debug Overlay
 - [[npc-embodiment-movement]] — (architecture) Lab C Phase 2 Step 1-4 – NPC Embodiment + Basic AI Hook: data/movement/visual sync + InnocentUtilityAI/KillerPlanner (2026-09-10)
 
 ## 🗂️ โครงสร้าง Wiki

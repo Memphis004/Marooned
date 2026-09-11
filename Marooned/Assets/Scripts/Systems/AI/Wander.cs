@@ -38,6 +38,42 @@ namespace Marooned.Systems.AI
         }
 
         /// <summary>
+        /// clamp TargetX/Y ให้อยู่ในรัศมี wander ของโซนปัจจุบัน (Lab C Phase 2.5A Test D —
+        /// กัน NPC ตั้งเป้าหลุดโซนแล้วเดินออกนอกแผนที่) คืน true ถ้ามีการแก้ target
+        ///
+        /// ⚠️ Hybrid Transition Points: clamp เฉพาะเมื่อ TransitionPhase == None เท่านั้น —
+        /// ระหว่างข้ามโซน target = จุดเชื่อมซึ่งตั้งใจให้อยู่นอกรัศมี wander อยู่แล้ว
+        /// (เช่น beach กลาง (0,0) radius ~2.5 แต่จุดเชื่อม x=8) — clamp ตอนนั้น FSM พังทันที
+        ///
+        /// ⚠️ clamp เฉพาะ Target ไม่แตะ Position — เพราะหลังข้ามโซนเสร็จ (phase กลับ None)
+        /// position = จุดเชื่อมฝั่งโซนใหม่ซึ่ง "ตั้งใจ" ให้อยู่นอกรัศมี (เดินเข้าจากขอบ)
+        /// clamp position ตรงนั้น = teleport ต่อหน้าผู้เล่น ขัดกับเป้าหมายทั้งระบบ transition
+        /// (position หลุดโซนได้ทางเดียว = จุด arrival ซึ่งเจตนาไว้แล้ว — AI จะตั้งเป้าใหม่
+        /// ในโซนพาเดินเข้าเอง)
+        /// เรียกจาก NpcSurvivalSystem.Tick (tick ก่อน AI ทุกเฟรม)
+        /// </summary>
+        public static bool ClampTargetToZone(NpcState npc, UtilityContext ctx,
+            float radiusX = 2.5f, float radiusY = 1.5f)
+        {
+            if (npc.TransitionPhase != NpcTransitionPhase.None) return false; // กำลังข้ามโซน — ห้ามแตะ
+            if (!ctx.Data.LocationDefs.TryGetValue(npc.CurrentLocationId, out var locDef))
+                return false;
+
+            var minX = locDef.WorldX - radiusX;
+            var maxX = locDef.WorldX + radiusX;
+            var minY = locDef.WorldY - radiusY;
+            var maxY = locDef.WorldY + radiusY;
+
+            var tx = Math.Clamp(npc.TargetX, minX, maxX);
+            var ty = Math.Clamp(npc.TargetY, minY, maxY);
+            if (tx == npc.TargetX && ty == npc.TargetY) return false;
+
+            npc.TargetX = tx;
+            npc.TargetY = ty;
+            return true;
+        }
+
+        /// <summary>
         /// ตั้ง target สุ่มในรัศมี wander รอบจุดกึ่งกลางโซนปัจจุบันของ NPC
         /// (โค้ดเดิมของ PickNextTarget ส่วนในโซน — ย้ายมาเป็น helper กลาง)
         /// คืน false ถ้าหา location def ของโซนปัจจุบันไม่เจอ (ไม่ mutate)

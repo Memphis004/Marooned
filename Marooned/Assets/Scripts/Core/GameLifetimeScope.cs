@@ -136,6 +136,13 @@ namespace Marooned.Core
             // หลัง NpcDirectorSystem.Tick() เสมอ (target ที่ตั้งในเฟรมนี้ต้องถูกเดินทันที)
             builder.Register<NpcMovementSystem>(Lifetime.Singleton).AsSelf();
 
+            // --- NPC survival motives (Lab C Phase 2.5A) ---
+            // decay/drain stats 0-100 + motive hooks จาก NpcEliminatedMessage —
+            // implement IDisposable (pattern WorldItemSystem) เพื่อ dispose subscription
+            // GameTickDriver เรียก Tick ก่อน NpcDirectorSystem เสมอ (motive ใหม่ต้อง
+            // พร้อมก่อน AI ตัดสินใจในเฟรมเดียวกัน)
+            builder.Register<NpcSurvivalSystem>(Lifetime.Singleton).AsSelf();
+
             // --- NPC zone transition (Hybrid Transition Points Part 2) ---
             // FSM ข้ามโซนแบบเดินผ่านจุดเชื่อม (ZoneConnectionDef) — GameTickDriver
             // เรียก Tick หลัง NpcMovementSystem เสมอ (Movement เดินถึงจุดเชื่อม →

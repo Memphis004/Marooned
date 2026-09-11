@@ -146,7 +146,7 @@ namespace Marooned.Tests.Editor
             Assert.AreEqual(ty, innocentNpc.TargetY, "InnocentUtilityAI ต้องไม่แตะ target ระหว่าง transition");
             Assert.AreEqual(act, innocentNpc.Activity);
             Assert.AreEqual(phase, innocentNpc.TransitionPhase);
-            Assert.IsNull(innocentAi.CurrentActionId("npc_01"), "ไม่ควรเลือก action ระหว่าง transition");
+            Assert.IsNull(innocentAi.GetCurrentActionId("npc_01"), "ไม่ควรเลือก action ระหว่าง transition");
 
             // killer: role ตั้งตรงนี้ (SetupRound killerCount=0) — cooldown ต้องไม่ถูกแตะระหว่าง transition
             var killerNpc = Npc("npc_02");

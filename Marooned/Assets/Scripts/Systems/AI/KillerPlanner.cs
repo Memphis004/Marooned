@@ -55,6 +55,14 @@ namespace Marooned.Systems.AI
             _ctx = ctx;
         }
 
+        /// <summary>
+        /// Debug/เทส (Lab C Phase 2.5B) — phase ปัจจุบันของ killer
+        /// (Patrolling ถ้ายังไม่เคย Tick — Tick แรกเป็นผู้ seed state)
+        /// อ่านอย่างเดียวไม่ mutate — ใช้โดย NpcDebugOverlay (F12) และเทส
+        /// </summary>
+        public KillerPhase GetCurrentPhase(string npcId) =>
+            _phases.TryGetValue(npcId, out var phase) ? phase : KillerPhase.Patrolling;
+
         /// <summary>เรียกทุก tick จาก NpcDirectorSystem.TickBehavior (killer ที่ยังมีชีวิต)</summary>
         public void Tick(NpcState killer, float deltaSeconds)
         {

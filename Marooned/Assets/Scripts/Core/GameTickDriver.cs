@@ -20,6 +20,7 @@ namespace Marooned.Core
     public class GameTickDriver : MonoBehaviour
     {
         private SurvivalStatSystem _survival;
+        private NpcSurvivalSystem _npcSurvival;
         private NpcDirectorSystem _npcDirector;
         private NpcMovementSystem _npcMovement;
         private NpcZoneTransitionSystem _npcZoneTransition;
@@ -55,6 +56,7 @@ namespace Marooned.Core
             }
 
             _survival = scope.Container.Resolve<SurvivalStatSystem>();
+            _npcSurvival = scope.Container.Resolve<NpcSurvivalSystem>();
             _npcDirector = scope.Container.Resolve<NpcDirectorSystem>();
             _npcMovement = scope.Container.Resolve<NpcMovementSystem>();
             _npcZoneTransition = scope.Container.Resolve<NpcZoneTransitionSystem>();
@@ -85,6 +87,10 @@ namespace Marooned.Core
             // Lab C Phase 1: เก็บเกี่ยว node — อยู่หลัง pickup เพื่อให้กด E ครั้งเดียว
             // เก็บไอเท็มพื้นก่อน (ถ้ามี) แล้วจึงโดน node (กันของทั้งสองระบบโดยกดเดียว)
             _nodeHarvest.Tick(deltaSeconds);
+
+            // Lab C Phase 2.5A: motive decay/clamp ก่อน AI — Fear/Curiosity จากเหตุการณ์
+            // ต้องพร้อมก่อน AI re-evaluate ในเฟรมเดียวกัน
+            _npcSurvival.Tick(deltaSeconds);
 
             // Lab C Phase 2: ⚠️ Tick order — NpcDirectorSystem (AI ตั้ง target) ก่อน
             // NpcMovementSystem (เดิน) ในเฟรมเดียวกัน target ที่ AI ตั้งในเฟรมนี้ต้อง
