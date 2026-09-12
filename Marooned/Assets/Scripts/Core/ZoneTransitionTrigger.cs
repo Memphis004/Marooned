@@ -1,6 +1,7 @@
 using Marooned.Shared;
 using Marooned.Systems;
 using MessagePipe;
+using TMPro;
 using UnityEngine;
 using VContainer;
 
@@ -102,14 +103,11 @@ namespace Marooned.Core
             var labelGo = new GameObject("ZoneMarker_Label");
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(center.x, center.y + size.y * 0.5f + 0.4f, 0f);
-            var label = labelGo.AddComponent<TextMesh>();
+            var label = labelGo.AddComponent<TextMeshPro>();
             label.text = $"→ {displayName}";
-            label.fontSize = 32;
-            label.characterSize = 0.12f;
-            label.anchor = TextAnchor.MiddleCenter;
-            label.alignment = TextAlignment.Center;
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            labelGo.GetComponent<MeshRenderer>().sharedMaterial = label.font.material;
+            label.font = WorldItemSystem.LoadLabelFont();
+            label.fontSize = 4; // TMP world-space ใช้เลขเล็กกว่า TextMesh มาก
+            label.alignment = TextAlignmentOptions.Center;
         }
 
         /// <summary>ชื่อโซนปลายทางจาก LocationDefs.DisplayName — fallback เป็น targetLocationId</summary>

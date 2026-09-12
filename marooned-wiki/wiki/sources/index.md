@@ -16,10 +16,17 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-อัปเดตล่าสุด: 2026-09-12 (Player Auto-Move: move_to_location เดินจริงไม่ teleport +
-redirect/cancel กลางทางผ่าน generation token + MCP tool `cancel_move` —
-PlayerAutoMoveSystem Begin/Cancel + handler superseded guard + IsAutoMoving Key 15-17 +
-WaitUntilAsync — PlayMode 12/12 + EditMode 18/18 + bridge round trip ผ่าน + bug-log เปิดหมวดแล้ว)
+อัปเดตล่าสุด: 2026-09-13 (UI TMP Migration: Legacy Text/TextMesh → TextMeshPro ทั้ง 6 ไฟล์
++ ฟอนต์ไทย THSarabunPSK SDF (Dynamic) ผ่าน WorldItemSystem.LoadLabelFont จุดโหลดกลาง +
+CardSlot.prefab Text→TextMeshProUGUI + Canvas Scaler match 0.5 + เพิ่ม asmdef ref Unity.TextMeshPro —
+Play session ไม่มี font error, ยังรอ screenshot เทส A–F) + แก้ bug script-execute
+TypeLoadException vtable (Roslyn duplicate: ถอด com.unity.pipeline + เปิด import
+Microsoft.CodeAnalysis.CSharp/System.* 8 dll ที่ LegacyMigration ปิดค้าง) — script-execute ใช้ได้แล้ว
++ เก็บกวาดต่อ: ลบ legacy `Assets/NuGet/` + ถอด UPM `com.github-glitchenzo.nugetforunity`
+(ตัวการ GUID conflicts และ compile error ค้าง) ออกจาก manifest จนคอนโซลเคลียร์
++ เขียน convention nullable annotation สำหรับ Shared DTOs (Section 9 ของ conventions) —
+ล้าง warning CS8618 ค้าง 79 จุดใน 7 ไฟล์ Shared/* (default initializer `string.Empty`/`new()`
++ `string?` scoped เฉพาะ field ที่ null=none จริง) จน McpBridge build สะอาด 0 warning
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -67,6 +74,12 @@ WaitUntilAsync — PlayMode 12/12 + EditMode 18/18 + bridge round trip ผ่า
   commit เมื่อ gen ตรงเท่านั้น; superseded/move_timeout) +
   McpMainThreadDispatcher.WaitUntilAsync + tick order auto-move ก่อน movement +
   PlayMode เทส A–E + redirect/cancel + bridge round trip จริงผ่าน
+- [[ui-tmp-migration]] — UI TMP Migration (2026-09-13): ย้ายข้อความทั้งเกมจาก Legacy
+  Text/TextMesh → TextMeshPro รองรับฟอนต์ไทย THSarabunPSK SDF (Dynamic atlas) —
+  WorldItemSystem.LoadLabelFont จุดโหลดกลาง (null check + LogError, fallback ไม่ crash) +
+  world-space label fontSize 4 (item/harvestable/zone trigger) + UI TMP_Text fontSize 22-28
+  (CardSlot/CardHand feedback/ZoneHud) + CardSlot.prefab Text→TextMeshProUGUI ผ่าน MCP
+  prefab tools + Canvas Scaler 1920×1080 match 0.5 + asmdef ref Unity.TextMeshPro
 
 ## 📄 Code Snippets
 
@@ -154,6 +167,11 @@ WaitUntilAsync — PlayMode 12/12 + EditMode 18/18 + bridge round trip ผ่า
 - [[chibi-avatar]] — ระบบ Chibi sprite-swap avatar
 
 ## 🐛 Bug Log
+- [[2026-09-13-script-execute-roslyn-vtable]] — script-execute พังทั้งตัว
+  (TypeLoadException "invalid vtable method slot 4") — รากเหตุ 3 ชั้น: Roslyn 4.8 (NuGet
+  ของ gamedev-mcp) ทับ Roslyn 3.11 (com.unity.pipeline) + LegacyMigration ปิด import
+  Roslyn CSharp.dll/System.* 8 dll ค้างจาก Sep 6 + recompile แรกของวันทำงานเผยปัญหา —
+  วิธีแก้ครบ 3 จุด + บทเรียนเรื่อง duplicate assembly identity และ DisableImporter ระเบิดเวลา (2026-09-13)
 - [[2026-09-12-movetolocation-teleport]] — Bug แรก: move_to_location teleport
   (โซนเปลี่ยนแต่ PositionX/Y นิ่ง) — รากเหตุ handler ไม่มีระบบเดิน + ไม่มีใคร
   ขยับตำแหน่ง, ทางผ่านกลางที่ผิด (lerp ใน handler), วิธีแก้ครบ 6 จุด
@@ -162,7 +180,9 @@ WaitUntilAsync — PlayMode 12/12 + EditMode 18/18 + bridge round trip ผ่า
   timing เป็นหน้าที่ของเกม ไม่ใช่ proxy) (2026-09-12)
 
 ## 📋 Conventions & Logs
-- [[conventions]] — Coding conventions จากโค้ดจริง
+- [[conventions]] — Coding conventions จากโค้ดจริง (รวม Section 9: nullable annotation
+  สำหรับ Shared DTOs — default initializer vs `string?` scoped, ข้อห้าม `required`,
+  วิธี clean-build ตรวจ CS8618)
 - [[2026-09-05]] — Dev Log วันแรก
 - [[2026-09-07-lab-a-closure-b-phases-architecture-refactor]] — Dev Log: ปิด Lab A (MCP round trip) + Lab B Phase 1-4 (Chibi, Player, Player-as-Killer, refactor) + patch WorldItemSystem กัน item respawn ซ้ำ
 - [[2026-09-09-lab-c-phase1-hybrid-biome-scatter-node-harvest-zone-transition]] — Dev Log: Lab C Phase 1 – Hybrid Biome Scatter + Node Harvest + Zone Transition

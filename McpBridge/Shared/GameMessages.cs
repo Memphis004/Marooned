@@ -11,7 +11,7 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class ExploreLocationRequest
     {
-        [Key(0)] public string LocationId;
+        [Key(0)] public string LocationId = string.Empty;
     }
 
     [MessagePackObject]
@@ -19,21 +19,21 @@ namespace Marooned.Shared
     {
         [Key(0)] public bool Success;
         [Key(1)] public List<string> FoundCardIds = new();
-        [Key(2)] public string TriggeredEventId; // may be empty
+        [Key(2)] public string TriggeredEventId = string.Empty; // may be empty
     }
 
     [MessagePackObject]
     public class CraftCardRequest
     {
-        [Key(0)] public string RecipeId;
+        [Key(0)] public string RecipeId = string.Empty;
     }
 
     [MessagePackObject]
     public class CraftCardResponse
     {
         [Key(0)] public bool Success;
-        [Key(1)] public string FailureReason;
-        [Key(2)] public string OutputCardId;
+        [Key(1)] public string FailureReason = string.Empty;
+        [Key(2)] public string OutputCardId = string.Empty;
     }
 
     [MessagePackObject]
@@ -46,15 +46,15 @@ namespace Marooned.Shared
     public class AwaitNextEventResponse
     {
         [Key(0)] public bool TimedOut;
-        [Key(1)] public string EventId;
-        [Key(2)] public string Group; // "Survival" | "Social"
-        [Key(3)] public string DisplayText;
+        [Key(1)] public string EventId = string.Empty;
+        [Key(2)] public string Group = string.Empty; // "Survival" | "Social"
+        [Key(3)] public string DisplayText = string.Empty;
     }
 
     [MessagePackObject]
     public class AccuseNpcRequest
     {
-        [Key(0)] public string TargetNpcId;
+        [Key(0)] public string TargetNpcId = string.Empty;
     }
 
     [MessagePackObject]
@@ -63,7 +63,7 @@ namespace Marooned.Shared
         [Key(0)] public bool WasCorrect;
         [Key(1)] public bool GameOverWin;
         [Key(2)] public bool GameOverLoss;
-        [Key(3)] public string ResultText;
+        [Key(3)] public string ResultText = string.Empty;
     }
 
     // ---- Added for the full MCP tool table (design doc §6): GetGameState,
@@ -78,7 +78,7 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class GetGameStateResponse
     {
-        [Key(0)] public PlayerSurvivalState Player;
+        [Key(0)] public PlayerSurvivalState Player = new();
     }
 
     [MessagePackObject]
@@ -107,14 +107,14 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class MoveToLocationRequest
     {
-        [Key(0)] public string LocationId;
+        [Key(0)] public string LocationId = string.Empty;
     }
 
     [MessagePackObject]
     public class MoveToLocationResponse
     {
         [Key(0)] public bool Success;
-        [Key(1)] public string FailureReason;
+        [Key(1)] public string FailureReason = string.Empty;
     }
 
     [MessagePackObject]
@@ -129,24 +129,24 @@ namespace Marooned.Shared
         [Key(0)] public bool Success;
 
         /// <summary>"" | "not_moving"</summary>
-        [Key(1)] public string FailureReason;
+        [Key(1)] public string FailureReason = string.Empty;
     }
 
     [MessagePackObject]
     public class UseCardRequest
     {
-        [Key(0)] public string CardId;
+        [Key(0)] public string CardId = string.Empty;
 
         // Phase 4 (Player-as-Killer): null/empty = Self; npc id = SingleTarget (เช่น weapon)
-        [Key(1)] public string TargetId;
+        [Key(1)] public string TargetId = string.Empty;
     }
 
     [MessagePackObject]
     public class UseCardResponse
     {
         [Key(0)] public bool Success;
-        [Key(1)] public string FailureReason; // "missing_target", "witnessed", etc.
-        [Key(2)] public string ResultText;    // เติมเฉพาะตอน Eliminate สำเร็จ
+        [Key(1)] public string FailureReason = string.Empty; // "missing_target", "witnessed", etc.
+        [Key(2)] public string ResultText = string.Empty;    // เติมเฉพาะตอน Eliminate สำเร็จ
     }
 
     [MessagePackObject]
@@ -166,7 +166,7 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class SurvivalStatChangedMessage
     {
-        [Key(0)] public string StatKey; // Hunger/Thirst/Mood/Fatigue
+        [Key(0)] public string StatKey = string.Empty; // Hunger/Thirst/Mood/Fatigue
         [Key(1)] public float NewValue;
         [Key(2)] public float Delta;
     }
@@ -174,15 +174,15 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class ConditionCardAppliedMessage
     {
-        [Key(0)] public string TargetEntityId; // "player" or npcId
-        [Key(1)] public string ConditionCardId;
+        [Key(0)] public string TargetEntityId = string.Empty; // "player" or npcId
+        [Key(1)] public string ConditionCardId = string.Empty;
     }
 
     [MessagePackObject]
     public class NpcEliminatedMessage
     {
-        [Key(0)] public string VictimNpcId;
-        [Key(1)] public string LocationId;
+        [Key(0)] public string VictimNpcId = string.Empty;
+        [Key(1)] public string LocationId = string.Empty;
         [Key(2)] public List<string> SpawnedClueCardIds = new();
     }
 
@@ -193,16 +193,16 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class PlayerLocationChangedMessage
     {
-        [Key(0)] public string OldLocationId;
-        [Key(1)] public string NewLocationId;
+        [Key(0)] public string OldLocationId = string.Empty;
+        [Key(1)] public string NewLocationId = string.Empty;
     }
 
     [MessagePackObject]
     public class NpcLocationChangedMessage
     {
-        [Key(0)] public string NpcId;
-        [Key(1)] public string OldLocationId; // อาจเป็น null ตอนวาง NPC ครั้งแรกของรอบ
-        [Key(2)] public string NewLocationId;
+        [Key(0)] public string NpcId = string.Empty;
+        [Key(1)] public string OldLocationId = string.Empty; // อาจเป็น null ตอนวาง NPC ครั้งแรกของรอบ
+        [Key(2)] public string NewLocationId = string.Empty;
     }
 
     // ---- Added in Lab B Phase 3 (Player System): item pickup broadcast ----
@@ -210,8 +210,8 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class ItemPickedUpMessage
     {
-        [Key(0)] public string ItemId;
-        [Key(1)] public string LocationId;
+        [Key(0)] public string ItemId = string.Empty;
+        [Key(1)] public string LocationId = string.Empty;
     }
 
     // ---- Added in Lab B Phase 5 (Card Hand UI): inventory change broadcast ----
@@ -221,7 +221,7 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class CardInventoryChangedMessage
     {
-        [Key(0)] public string CardId;
+        [Key(0)] public string CardId = string.Empty;
         [Key(1)] public int NewCount; // จำนวนหลังเปลี่ยน (0 = หมด/ถูกลบออกจากมือ)
         [Key(2)] public int Delta;    // +เพิ่ม / -ลด
     }
@@ -234,8 +234,8 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class NodeHarvestedMessage
     {
-        [Key(0)] public string NodeId;
-        [Key(1)] public string ItemId;
+        [Key(0)] public string NodeId = string.Empty;
+        [Key(1)] public string ItemId = string.Empty;
         [Key(2)] public int Count;
         [Key(3)] public bool Depleted;
         [Key(4)] public int RegrowSeconds;
@@ -250,16 +250,16 @@ namespace Marooned.Shared
     {
         // optional: specific tool card id (e.g. "tool_axe"); null/empty = auto-pick
         // the best matching tool from inventory (or bare hands if none needed)
-        [Key(0)] public string ToolItemId;
+        [Key(0)] public string ToolItemId = string.Empty;
     }
 
     [MessagePackObject]
     public class HarvestNodeResponse
     {
         [Key(0)] public bool Success;
-        [Key(1)] public string FailureReason; // "no_node_in_range", "wrong_tool", "regrowing"
-        [Key(2)] public string NodeId;        // node ที่พยายามเก็บ (เติมเมื่อเจอ node)
-        [Key(3)] public string ItemId;        // yield card id (เติมเมื่อ Success)
+        [Key(1)] public string FailureReason = string.Empty; // "no_node_in_range", "wrong_tool", "regrowing"
+        [Key(2)] public string NodeId = string.Empty;        // node ที่พยายามเก็บ (เติมเมื่อเจอ node)
+        [Key(3)] public string ItemId = string.Empty;        // yield card id (เติมเมื่อ Success)
         [Key(4)] public int Count;            // จำนวน yield (เติมเมื่อ Success)
         [Key(5)] public bool Depleted;        // durability หมดพอดี (เติมเมื่อ Success)
         [Key(6)] public int RegrowSeconds;    // > 0 เมื่อ Depleted และจะงอกใหม่ (เติมเมื่อ Success)

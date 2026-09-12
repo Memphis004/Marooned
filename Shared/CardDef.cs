@@ -36,10 +36,10 @@ namespace Marooned.Shared
     /// </summary>
     public class CardDef
     {
-        public string Id;
+        public string Id = string.Empty;
         public CardCategory Category;
-        public string DisplayName;
-        public string SpritePath;
+        public string DisplayName = string.Empty;
+        public string SpritePath = string.Empty;
         public int StackLimit;
 
         // ---- Phase 4 (Player-as-Killer): targeting + effect ----
@@ -50,9 +50,9 @@ namespace Marooned.Shared
         public CardEffectType EffectType = CardEffectType.StatDelta;
 
         /// <summary>Stat key -> delta applied when the card is used (Hunger/Thirst/Mood/Fatigue).</summary>
-        public Dictionary<string, float> StatEffect;
+        public Dictionary<string, float> StatEffect = new();
 
         /// <summary>Only relevant for Illness/Injury: how much each action type is penalized while active.</summary>
-        public Dictionary<string, float> ActionPenalty;
+        public Dictionary<string, float> ActionPenalty = new();
     }
 }

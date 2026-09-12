@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Marooned.Shared;
+using Marooned.Systems;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Marooned.UI.Views
 {
@@ -29,11 +31,11 @@ namespace Marooned.UI.Views
     {
         [SerializeField] private Transform cardSlotContainer;
         [SerializeField] private GameObject cardSlotPrefab; // pooled, per reference project's grid button pooling lesson
-        [SerializeField] private Text feedbackText;         // optional — auto-create ถ้าไม่ผูก
+        [SerializeField] private TMP_Text feedbackText;     // optional — auto-create ถ้าไม่ผูก
 
         private readonly Dictionary<string, CardSlotUI> _slots = new(); // cardId -> slot
         private Action<string> _slotClickHandler;
-        private Text _feedback;
+        private TMP_Text _feedback;
         private float _feedbackHideAtTime;
         private const float FeedbackDuration = 3f;
 
@@ -114,7 +116,7 @@ namespace Marooned.UI.Views
 
         private void OnSlotClicked(string cardId) => _slotClickHandler?.Invoke(cardId);
 
-        /// <summary>หา Text จาก Inspector ก่อน — ไม่มี then สร้างเองใต้ Canvas (built-in font)</summary>
+        /// <summary>หา TMP_Text จาก Inspector ก่อน — ไม่มี then สร้างเองใต้ Canvas (THSarabunPSK SDF)</summary>
         private void EnsureFeedbackText()
         {
             if (_feedback != null) return;
@@ -127,7 +129,7 @@ namespace Marooned.UI.Views
                 return;
             }
 
-            var go = new GameObject("CardHandFeedbackText", typeof(RectTransform), typeof(Text), typeof(Shadow));
+            var go = new GameObject("CardHandFeedbackText", typeof(RectTransform), typeof(TextMeshProUGUI), typeof(Shadow));
             go.transform.SetParent(canvas.transform, false);
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 0f); // กึ่งกลางจอ เหนือมือการ์ด
@@ -136,10 +138,11 @@ namespace Marooned.UI.Views
             rt.anchoredPosition = new Vector2(0f, 150f);
             rt.sizeDelta = new Vector2(900f, 40f);
 
-            _feedback = go.GetComponent<Text>();
-            _feedback.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Unity 6 built-in font
+            _feedback = go.GetComponent<TextMeshProUGUI>();
+            var font = WorldItemSystem.LoadLabelFont();
+            if (font != null) _feedback.font = font;
             _feedback.fontSize = 22;
-            _feedback.alignment = TextAnchor.MiddleCenter;
+            _feedback.alignment = TextAlignmentOptions.Center;
             _feedback.color = Color.white;
             go.GetComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.85f); // outline กันพื้นหลังสว่าง
         }

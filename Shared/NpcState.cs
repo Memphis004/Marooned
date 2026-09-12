@@ -28,10 +28,10 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class NpcState
     {
-        [Key(0)] public string Id;
+        [Key(0)] public string Id = string.Empty;
         [Key(1)] public NpcRole Role;
         [Key(2)] public bool IsAlive = true;
-        [Key(3)] public string CurrentLocationId;
+        [Key(3)] public string CurrentLocationId = string.Empty;
         [Key(4)] public NpcActivityState Activity;
 
         /// <summary>All condition cards, including ones a bystander could not actually notice yet.</summary>
@@ -43,7 +43,7 @@ namespace Marooned.Shared
         [Key(7)] public float KillCooldownRemaining;
 
         /// <summary>Killer-only optional objective, e.g. "eliminate 3 before day 5" — for future killer-AI mode.</summary>
-        [Key(8)] public string HiddenAgendaId;
+        [Key(8)] public string HiddenAgendaId = string.Empty;
 
         // ---- Lab C Phase 2 (NPC Embodiment): walking sandbox ground truth ----
         // ตำแหน่งจริงบนโลก — MoveNpc() ต้อง seed ด้วย LocationDef.WorldX/Y ของ
@@ -83,8 +83,10 @@ namespace Marooned.Shared
         /// <summary>Ground truth — phase ปัจจุบันของการข้ามโซน ห้ามหลุดเข้า NpcObservableView</summary>
         [Key(16)] public NpcTransitionPhase TransitionPhase = NpcTransitionPhase.None;
 
-        /// <summary>Ground truth — โซนปลายทางที่กำลังจะไป (empty ถ้าไม่ได้อยู่ระหว่าง transition) ห้ามหลุดเข้า NpcObservableView</summary>
-        [Key(17)] public string PendingTransitionTargetZoneId;
+        /// <summary>Ground truth — โซนปลายทางที่กำลังจะไป (null ถ้าไม่ได้อยู่ระหว่าง transition) ห้ามหลุดเข้า NpcObservableView</summary>
+        #nullable enable
+        [Key(17)] public string? PendingTransitionTargetZoneId;
+        #nullable restore
     }
 
     /// <summary>
@@ -125,7 +127,9 @@ namespace Marooned.Shared
         /// อยู่ใน numbering space ของ NpcSurvivalState (Key 0-2 ใช้อยู่) — คนละ space
         /// กับ NpcState หลัก (ถึง 17 แล้ว)
         /// </summary>
-        [Key(3)] public string LastNoiseLocationId;
+        #nullable enable
+        [Key(3)] public string? LastNoiseLocationId;
+        #nullable restore
     }
 
     /// <summary>
@@ -135,9 +139,9 @@ namespace Marooned.Shared
     [MessagePackObject]
     public class NpcObservableView
     {
-        [Key(0)] public string Id;
+        [Key(0)] public string Id = string.Empty;
         [Key(1)] public bool IsAlive;
-        [Key(2)] public string CurrentLocationId;
+        [Key(2)] public string CurrentLocationId = string.Empty;
         [Key(3)] public NpcActivityState Activity;
 
         /// <summary>Only condition cards flagged Visible=true in IllnessDef/injury def (e.g. visible scratch, not internal fever unless player checks closely).</summary>

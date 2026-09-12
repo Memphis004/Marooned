@@ -13,6 +13,8 @@ tags:
   - coding-standards
   - marooned
   - lab-a
+  - nullable
+  - shared-dtos
 ---
 
 # Coding Conventions — Marooned
@@ -98,3 +100,53 @@ tags:
 - **ห้าม**เขียน `related: [[A]], [[B]]` หรือ `tags: [[x]]` บรรทัดเดียว — Obsidian parse
   ไม่ได้ (บทเรียนจาก devlog 2026-09-05)
 - อ้าง path ไฟล์จริงทุกครั้งที่พูดถึงโค้ด
+
+## 9. Nullable Annotation — Shared DTOs (2026-09-13)
+
+ทุก field ชนิด reference type ใน `Shared/*.cs` (canonical — sync ด้วย `./sync-shared.sh`
+ตาม Section 6) ต้องระบุสถานะ null ให้ชัดเจน — **ห้ามปล่อย field เปล่าทั้งที่ type ไม่ nullable**
+เพราะจะเด้ง warning CS8618 ฝั่ง McpBridge (`McpBridge.csproj` เปิด `<Nullable>enable</Nullable>`)
+และ warning จะโผล่ทีเดียวเป็นชุดใหญ่ตอน clean build (กรณีจริง 2026-09-13: 79 จุดใน 7 ไฟล์ —
+incremental build ปกติปิดบังไว้)
+
+### กฎตัดสินใจ (decision tree)
+1. **Field ต้องมีค่าเสมอ** → ใส่ default initializer ตอนประกาศ (สไตล์เดิมของไฟล์อยู่แล้ว):
+   - `string` → `public string Id = string.Empty;`
+   - collection → `public List<string> X = new();` / `public Dictionary<string, int> Y = new();`
+   - object DTO → `public ChibiAppearance Avatar = new();`
+2. **"ไม่มีค่า" เป็น semantic จริงของ field (null = none)** → ประกาศ `string?` ด้วย scoped
+   guard ต่อ field เพื่อให้ถูกต้องทั้ง compile context ที่เปิดและไม่เปิด nullable:
+   ```csharp
+   #nullable enable
+   [Key(3)] public string? LastNoiseLocationId;   // null = ยังไม่มีเสียงให้สืบ
+   #nullable restore
+   ```
+   ใช้เฉพาะ field ที่มีโค้ด **เช็ค `== null` จริง** หรือ **เคลียร์ด้วยการ assign null**
+   (เทสก็ `Assert.IsNull`) — ตัวอย่างที่มีอยู่จริง: `NpcSurvivalState.LastNoiseLocationId`
+   (Key 3) และ `NpcState.PendingTransitionTargetZoneId` (Key 17) — **อย่า**แปลง field กลุ่มนี้
+   เป็น `string.Empty` เพราะเปลี่ยนพฤติกรรม AI/เทส
+3. **value type** (int/float/bool/enum) ไม่ต้องทำอะไร — CS8618 ไม่แตะ
+
+### ข้อห้าม
+- **ห้ามใช้ `required` modifier** — ทำ call site ที่ `new NpcState()` / object initializer
+  แบบไม่ครบ field พังทั้งชุด ทั้งฝั่ง Unity และ Bridge
+- **ห้ามเปิด `#nullable enable` ทั้งไฟล์** ใน Shared/ — scoped guard ต่อ field ทำให้ diff สั้น
+  และปลอดภัยกับทั้งสองฝั่งที่ nullable context ไม่ตรงกัน
+- **ห้าม assign `null` ลง field ที่ไม่มี `?`** — ฝั่ง Bridge จะเด้ง CS8625; optional parameter
+  ของ MCP tool ให้ประกาศ `string? x = null` แล้ว coalesce ตอนสร้าง DTO:
+  `new UseCardRequest { TargetId = targetId ?? string.Empty }` (contract "null/empty = self"
+  คงเดิมเพราะ handler เช็ค `IsNullOrEmpty` อยู่แล้ว)
+
+### MessagePack หมายเหตุ
+- Initializer **ไม่เปลี่ยน wire format** (Key-based serialization) — default มีผลแค่ตอน
+  `new` โดยตรง; ตอน deserialize ค่าจาก payload ทับเสมอ และ key ที่ payload เก่าไม่มีจะได้
+  default (`""` / empty collection) แทน null — ถือเป็นจุดดีด้าน backward compat
+- **อย่าเลื่อนเลข Key** ตอนเปลี่ยน field เป็น `string?` — Key เดิมต้องคงไว้เป๊ะ
+
+### วิธีตรวจ
+- Incremental build **ปิดบัง** CS8618 ที่ emit ไปแล้ว — ต้อง clean build เท่านั้น:
+  ```bash
+  ./sync-shared.sh
+  cd McpBridge && rm -rf obj bin && dotnet build   # ต้องได้ 0 Warning(s) 0 Error(s)
+  ```
+- แก้ Shared แล้วต้อง verify ฝั่ง Unity ด้วย (assets-refresh ใน Editor ต้องไม่มี error)

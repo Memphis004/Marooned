@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Marooned.Shared;
 using MessagePipe;
+using TMPro;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -74,7 +75,16 @@ namespace Marooned.Systems
         private IDisposable _subscription;
         private Transform _itemLayer;
         private Sprite _itemSprite;
-        private Font _labelFont;
+        private TMP_FontAsset _labelFont;
+
+        /// <summary>โหลด TMP_FontAsset 'THSarabunPSK SDF' จาก Resources/Fonts — แชร์ให้ label ทุกตัวในไฟล์นี้</summary>
+        internal static TMP_FontAsset LoadLabelFont()
+        {
+            var font = Resources.Load<TMP_FontAsset>("Fonts/THSarabunPSK SDF");
+            if (font == null)
+                Debug.LogError("[WorldItemSystem] หา TMP_FontAsset 'THSarabunPSK SDF' ไม่เจอใน Resources/Fonts/ — ย้าย/สร้าง font asset ที่ Assets/Resources/Fonts/THSarabunPSK SDF.asset");
+            return font;
+        }
 
         /// <summary>ไอเท็มที่กำลังแสดงบนจอ (ใช้โดย ItemPickupSystem)</summary>
         public IReadOnlyList<ItemState> ActiveItems => _activeItems;
@@ -93,7 +103,9 @@ namespace Marooned.Systems
             var host = new GameObject("WorldItemLayer");
             _itemLayer = host.transform;
             _itemSprite = CreateCircleSprite();
-            _labelFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _labelFont = LoadLabelFont();
+            if (_labelFont == null)
+                Debug.LogError("[WorldItemSystem] หา TMP_FontAsset 'THSarabunPSK SDF' ไม่เจอใน Resources/Fonts/");
 
             // spawn ชุดแรกตาม location เริ่มต้น + subscribe การย้ายโซน
             _activeLocationId = _stateProvider.GetPlayer().CurrentLocationId;
@@ -197,13 +209,11 @@ namespace Marooned.Systems
             var labelGo = new GameObject("label");
             labelGo.transform.SetParent(go.transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0.55f, 0f);
-            var label = labelGo.AddComponent<TextMesh>();
+            var label = labelGo.AddComponent<TextMeshPro>();
             label.text = displayName;
-            label.fontSize = 24;
-            label.characterSize = 0.12f;
-            label.anchor = TextAnchor.MiddleCenter;
-            label.font = _labelFont;
-            labelGo.GetComponent<MeshRenderer>().sharedMaterial = _labelFont.material;
+            if (_labelFont != null) label.font = _labelFont;
+            label.fontSize = 4; // TMP world-space ใช้เลขเล็กกว่า TextMesh มาก
+            label.alignment = TextAlignmentOptions.Center;
 
             item.GameObject = go;
         }

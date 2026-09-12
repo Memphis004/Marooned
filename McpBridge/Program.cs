@@ -160,17 +160,17 @@ namespace Marooned.McpBridge
         [McpServerTool, Description("Consume/use a card from inventory (food, water, medicine, etc). For weapon cards (e.g. knife_basic) target_id is required -- the target NPC must be in the same location and there must be no other NPC witnessing, or the attempt fails and the card is not consumed.")]
         public async Task<string> UseCard(
             [Description("Card id to use")] string cardId,
-            [Description("ID of the target NPC (required for weapon cards, e.g. 'npc_03'); omit for self-use cards")] string targetId = null)
+            [Description("ID of the target NPC (required for weapon cards, e.g. 'npc_03'); omit for self-use cards")] string? targetId = null)
         {
-            var res = await _useCard.InvokeAsync(new UseCardRequest { CardId = cardId, TargetId = targetId });
+            var res = await _useCard.InvokeAsync(new UseCardRequest { CardId = cardId, TargetId = targetId ?? string.Empty });
             if (!res.Success) return $"Could not use {cardId}: {res.FailureReason}";
             return string.IsNullOrEmpty(res.ResultText) ? $"Used {cardId}." : $"Used {cardId}: {res.ResultText}";
         }
 
         [McpServerTool, Description("Harvest the nearest harvestable node (tree, rock, berry bush) within reach of the player. Tools are picked automatically from inventory (e.g. tool_axe for trees); bare-handed works for nodes that need no tool. Returns the item gained, or the failure reason (no_node_in_range, missing_tool, regrowing).")]
-        public async Task<string> HarvestNode([Description("Optional tool card id to use explicitly (e.g. 'tool_axe'); omit to auto-pick from inventory")] string toolItemId = null)
+        public async Task<string> HarvestNode([Description("Optional tool card id to use explicitly (e.g. 'tool_axe'); omit to auto-pick from inventory")] string? toolItemId = null)
         {
-            var res = await _harvestNode.InvokeAsync(new HarvestNodeRequest { ToolItemId = toolItemId });
+            var res = await _harvestNode.InvokeAsync(new HarvestNodeRequest { ToolItemId = toolItemId ?? string.Empty });
             if (!res.Success)
             {
                 return res.NodeId.Length == 0

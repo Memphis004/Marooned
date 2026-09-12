@@ -1,5 +1,6 @@
 using Marooned.Systems;
 using cfg.game;
+using TMPro;
 using UnityEngine;
 
 namespace Marooned.Core
@@ -33,7 +34,7 @@ namespace Marooned.Core
         private HarvestableNodeDef _def;
         private NodeHarvestSystem _harvestSystem;
         private float _regrowTimer;
-        private TextMesh _label;
+        private TextMeshPro _label;
 
         /// <summary>เรียกโดย BiomeScatterView หลัง AddComponent — อ่านค่าจาก def ตาราง</summary>
         public void Init(string nodeId, HarvestableNodeDef nodeDef, NodeHarvestSystem harvestSystem)
@@ -122,12 +123,10 @@ namespace Marooned.Core
             var labelGo = new GameObject("label");
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0.85f, 0f);
-            _label = labelGo.AddComponent<TextMesh>();
-            _label.fontSize = 24;
-            _label.characterSize = 0.12f;
-            _label.anchor = TextAnchor.MiddleCenter;
-            _label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            labelGo.GetComponent<MeshRenderer>().sharedMaterial = _label.font.material;
+            _label = labelGo.AddComponent<TextMeshPro>();
+            _label.font = WorldItemSystem.LoadLabelFont();
+            _label.fontSize = 4; // TMP world-space ใช้เลขเล็กกว่า TextMesh มาก
+            _label.alignment = TextAlignmentOptions.Center;
             RefreshLabelText();
         }
 

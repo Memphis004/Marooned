@@ -3,6 +3,7 @@ using Marooned.Shared;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Marooned.UI.Views
 {
@@ -17,7 +18,7 @@ namespace Marooned.UI.Views
     {
         [SerializeField] private Image background;
         [SerializeField] private Image icon;
-        [SerializeField] private Text label;
+        [SerializeField] private TMP_Text label;
 
         /// <summary>จำนวนปัจจุบันที่แสดง — CardHandView ใช้เทียบว่าต้อง pulse ไหม</summary>
         public int Count { get; private set; }

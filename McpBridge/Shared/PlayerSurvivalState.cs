@@ -17,7 +17,7 @@ namespace Marooned.Shared
         /// <summary>cardId -> count.</summary>
         [Key(5)] public Dictionary<string, int> Inventory = new();
 
-        [Key(6)] public string CurrentLocationId;
+        [Key(6)] public string CurrentLocationId = string.Empty;
 
         [Key(7)] public bool IsAlive = true;
 

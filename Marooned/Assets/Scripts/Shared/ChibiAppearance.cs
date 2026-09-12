@@ -56,10 +56,10 @@ namespace Marooned.Shared
     /// </summary>
     public class ChibiPartDef
     {
-        public string Id;
-        public string Slot;       // "body","head","hair","arm_left","arm_right","leg_left","leg_right","accessory","overlay"
+        public string Id = string.Empty;
+        public string Slot = string.Empty;       // "body","head","hair","arm_left","arm_right","leg_left","leg_right","accessory","overlay"
         public int DrawOrder;     // layering within the rig, same idea as reference project's drawOrder
-        public string SexTag;     // "", "Male", "Female" — filtering only, same convention as before
+        public string SexTag = string.Empty;     // "", "Male", "Female" — filtering only, same convention as before
 
         /// <summary>
         /// direction+animState key (e.g. "Down_Walk", "Left_Idle") -> ordered list of
@@ -80,10 +80,10 @@ namespace Marooned.Shared
     /// walk-cycle frame sets across every limb slot at once).</summary>
     public class ChibiOutfitDef
     {
-        public string Id;
-        public string DisplayName;
-        public string SexTag;
-        public Dictionary<string, string> Parts; // slot -> partId, must all share compatible frame keys
-        public string ThumbPath;
+        public string Id = string.Empty;
+        public string DisplayName = string.Empty;
+        public string SexTag = string.Empty;
+        public Dictionary<string, string> Parts = new(); // slot -> partId, must all share compatible frame keys
+        public string ThumbPath = string.Empty;
     }
 }

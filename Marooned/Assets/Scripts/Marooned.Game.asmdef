@@ -8,6 +8,7 @@
         "MessagePipe.VContainer",
         "MessagePack.Unity",
         "UniTask",
+        "Unity.TextMeshPro",
         "VContainer",
         "spine-csharp",
         "spine-unity"

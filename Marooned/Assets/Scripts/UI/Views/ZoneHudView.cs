@@ -5,6 +5,7 @@ using Marooned.Systems;
 using MessagePipe;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using VContainer;
 
 namespace Marooned.UI.Views
@@ -24,7 +25,7 @@ namespace Marooned.UI.Views
     /// </summary>
     public class ZoneHudView : MonoBehaviour
     {
-        [SerializeField] private Text zoneText; // optional — auto-create ใต้ Canvas ถ้าไม่ผูก (pattern เดียวกับ CardHandView feedback)
+        [SerializeField] private TMP_Text zoneText; // optional — auto-create ใต้ Canvas ถ้าไม่ผูก (pattern เดียวกับ CardHandView feedback)
 
         private GameStateProvider _stateProvider;
         private LubanDataService _data;
@@ -69,7 +70,7 @@ namespace Marooned.UI.Views
             }
         }
 
-        /// <summary>หา Text จาก Inspector ก่อน — ไม่มี then สร้างเองใต้ Canvas (built-in font, pattern เดียวกับ CardHandView.EnsureFeedbackText)</summary>
+        /// <summary>หา TMP_Text จาก Inspector ก่อน — ไม่มี then สร้างเองใต้ Canvas (THSarabunPSK SDF, pattern เดียวกับ CardHandView.EnsureFeedbackText)</summary>
         private void EnsureZoneText()
         {
             if (zoneText != null) return;
@@ -82,7 +83,7 @@ namespace Marooned.UI.Views
                 return;
             }
 
-            var go = new GameObject("ZoneHudText", typeof(RectTransform), typeof(Text), typeof(Shadow));
+            var go = new GameObject("ZoneHudText", typeof(RectTransform), typeof(TextMeshProUGUI), typeof(Shadow));
             go.transform.SetParent(canvas.transform, false);
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 1f); // กึ่งกลางแนวนอน ชิดขอบบน
@@ -91,12 +92,14 @@ namespace Marooned.UI.Views
             rt.anchoredPosition = new Vector2(0f, -20f);
             rt.sizeDelta = new Vector2(600f, 44f);
 
-            zoneText = go.GetComponent<Text>();
-            zoneText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Unity 6 built-in font
-            zoneText.fontSize = 26;
-            zoneText.alignment = TextAnchor.MiddleCenter;
-            zoneText.color = Color.white;
+            var tmpText = go.GetComponent<TextMeshProUGUI>();
+            var font = WorldItemSystem.LoadLabelFont();
+            if (font != null) tmpText.font = font;
+            tmpText.fontSize = 28;
+            tmpText.alignment = TextAlignmentOptions.Center;
+            tmpText.color = Color.white;
             go.GetComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.85f); // outline กันพื้นหลังสว่าง
+            zoneText = tmpText;
         }
     }
 }
