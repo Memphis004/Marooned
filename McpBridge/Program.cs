@@ -103,6 +103,7 @@ namespace Marooned.McpBridge
         private readonly IRemoteRequestHandler<ExploreLocationRequest, ExploreLocationResponse> _explore;
         private readonly IRemoteRequestHandler<CraftCardRequest, CraftCardResponse> _craft;
         private readonly IRemoteRequestHandler<MoveToLocationRequest, MoveToLocationResponse> _move;
+        private readonly IRemoteRequestHandler<CancelMoveRequest, CancelMoveResponse> _cancelMove;
         private readonly IRemoteRequestHandler<UseCardRequest, UseCardResponse> _useCard;
         private readonly IRemoteRequestHandler<AwaitNextEventRequest, AwaitNextEventResponse> _awaitNextEvent;
         private readonly IRemoteRequestHandler<HarvestNodeRequest, HarvestNodeResponse> _harvestNode;
@@ -111,6 +112,7 @@ namespace Marooned.McpBridge
             IRemoteRequestHandler<ExploreLocationRequest, ExploreLocationResponse> explore,
             IRemoteRequestHandler<CraftCardRequest, CraftCardResponse> craft,
             IRemoteRequestHandler<MoveToLocationRequest, MoveToLocationResponse> move,
+            IRemoteRequestHandler<CancelMoveRequest, CancelMoveResponse> cancelMove,
             IRemoteRequestHandler<UseCardRequest, UseCardResponse> useCard,
             IRemoteRequestHandler<AwaitNextEventRequest, AwaitNextEventResponse> awaitNextEvent,
             IRemoteRequestHandler<HarvestNodeRequest, HarvestNodeResponse> harvestNode)
@@ -118,6 +120,7 @@ namespace Marooned.McpBridge
             _explore = explore;
             _craft = craft;
             _move = move;
+            _cancelMove = cancelMove;
             _useCard = useCard;
             _awaitNextEvent = awaitNextEvent;
             _harvestNode = harvestNode;
@@ -145,6 +148,13 @@ namespace Marooned.McpBridge
         {
             var res = await _move.InvokeAsync(new MoveToLocationRequest { LocationId = locationId });
             return res.Success ? $"Moved to {locationId}." : $"Move failed: {res.FailureReason}";
+        }
+
+        [McpServerTool, Description("Cancel the player's current auto-move (from move_to_location) immediately. The player stops where they are -- position and location do not change. Returns 'not_moving' if no walk is in progress.")]
+        public async Task<string> CancelMove()
+        {
+            var res = await _cancelMove.InvokeAsync(new CancelMoveRequest());
+            return res.Success ? "Move cancelled -- player stopped where they were." : $"Cancel failed: {res.FailureReason}";
         }
 
         [McpServerTool, Description("Consume/use a card from inventory (food, water, medicine, etc). For weapon cards (e.g. knife_basic) target_id is required -- the target NPC must be in the same location and there must be no other NPC witnessing, or the attempt fails and the card is not consumed.")]

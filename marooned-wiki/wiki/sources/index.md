@@ -16,9 +16,10 @@ tags:
 # 📚 Marooned Wiki — สารบัญ
 
 > เอกสารทั้งหมดของโปรเจค Marooned (Card Survival × Social Deduction)
-อัปเดตล่าสุด: 2026-09-11 (Lab C Phase 2.5A Living NPCs: NpcSurvivalSystem decay
-+ motive hooks ผ่าน NpcEliminatedMessage + เปิด FleeToSafeZone/InvestigateNoise
-จริง — EditMode 8/8 + PlayMode 2/2 ผ่าน)
+อัปเดตล่าสุด: 2026-09-12 (Player Auto-Move: move_to_location เดินจริงไม่ teleport +
+redirect/cancel กลางทางผ่าน generation token + MCP tool `cancel_move` —
+PlayerAutoMoveSystem Begin/Cancel + handler superseded guard + IsAutoMoving Key 15-17 +
+WaitUntilAsync — PlayMode 12/12 + EditMode 18/18 + bridge round trip ผ่าน + bug-log เปิดหมวดแล้ว)
 
 ## 🎮 Game Design
 - [[game_design_doc]] — Game Design Document หลัก (แหล่งความจริงของทุก design decision)
@@ -56,6 +57,16 @@ tags:
   (stateless ตามสัญญา IUtilityAction) + Wander.ClampTargetToZone (เฉพาะ TransitionPhase == None
   และเฉพาะ Target) + tick order Survival→Director→Movement→ZoneTransition +
   EditMode 8/8 และ PlayMode 2/2 ผ่าน
+- [[player-auto-move-system]] — MoveToLocation fix (2026-09-12): Player เดินจริงไม่ teleport
+  + redirect/cancel กลางทางได้ (รวม MCP tool `cancel_move`: หยุดเดินโดยไม่ต้องสั่งปลายทางใหม่
+  idle คืน not_moving, คำสั่ง move ที่โดนยกเลิกคืน superseded) —
+  PlayerAutoMoveSystem (เดินหา TargetX/Y Speed 3.5,
+  Begin/Cancel + MoveGeneration token กัน waiter เก่า commit ทับ) +
+  PlayerSurvivalState Key 15-17 (TargetX/TargetY/IsAutoMoving) + guard คีย์บอร์ดใน
+  PlayerMovementSystem + MoveToLocationHandler 3 เฟส (ตั้งเป้า → รอเดินถึง/ถูกแทนที่ →
+  commit เมื่อ gen ตรงเท่านั้น; superseded/move_timeout) +
+  McpMainThreadDispatcher.WaitUntilAsync + tick order auto-move ก่อน movement +
+  PlayMode เทส A–E + redirect/cancel + bridge round trip จริงผ่าน
 
 ## 📄 Code Snippets
 
@@ -142,6 +153,14 @@ tags:
 - [[world-events]] — ระบบ World Events (Survival/Social groups)
 - [[chibi-avatar]] — ระบบ Chibi sprite-swap avatar
 
+## 🐛 Bug Log
+- [[2026-09-12-movetolocation-teleport]] — Bug แรก: move_to_location teleport
+  (โซนเปลี่ยนแต่ PositionX/Y นิ่ง) — รากเหตุ handler ไม่มีระบบเดิน + ไม่มีใคร
+  ขยับตำแหน่ง, ทางผ่านกลางที่ผิด (lerp ใน handler), วิธีแก้ครบ 6 จุด
+  (PlayerAutoMoveSystem + WaitUntilAsync + tick order) + หลักฐานเทส + บทเรียน
+  (event "เกิดแล้ว" ต้องยิงหลังถึงจริง / อย่าผสมสองแหล่งควบคุม / response
+  timing เป็นหน้าที่ของเกม ไม่ใช่ proxy) (2026-09-12)
+
 ## 📋 Conventions & Logs
 - [[conventions]] — Coding conventions จากโค้ดจริง
 - [[2026-09-05]] — Dev Log วันแรก
@@ -164,7 +183,7 @@ marooned-wiki/
     │   ├── code-snippets/        # snippet รายไฟล์ (40 ไฟล์ — Systems/Core/Data/UI/Visual)
     │   ├── mechanics/            # เอกสารระบบเกม 8 ระบบ
     │   ├── game-design-doc/      # GDD (canonical location)
-    │   ├── bug-log/              # (ว่าง — ไว้บันทึก bug)
+    │   ├── bug-log/              # บันทึก bug (รากเหตุ + วิธีแก้ + บทเรียน)
     │   └── devlog-history/       # dev log รายวัน
     ├── concepts/                 # auto-generated concept pages (Karpathy plugin)
     └── entities/                 # auto-generated entity pages (Karpathy plugin)

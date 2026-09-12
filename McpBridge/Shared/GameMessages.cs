@@ -118,6 +118,21 @@ namespace Marooned.Shared
     }
 
     [MessagePackObject]
+    public class CancelMoveRequest
+    {
+    }
+
+    [MessagePackObject]
+    public class CancelMoveResponse
+    {
+        /// <summary>true = ยกเลิกการเดินที่กำลังรันอยู่; false = ไม่ได้เดินอยู่แล้ว (not_moving)</summary>
+        [Key(0)] public bool Success;
+
+        /// <summary>"" | "not_moving"</summary>
+        [Key(1)] public string FailureReason;
+    }
+
+    [MessagePackObject]
     public class UseCardRequest
     {
         [Key(0)] public string CardId;

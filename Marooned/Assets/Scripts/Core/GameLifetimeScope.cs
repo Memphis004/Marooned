@@ -105,6 +105,11 @@ namespace Marooned.Core
             // GameLifetimeScope (worldMinX/worldMaxX/worldMinY/worldMaxY)
             builder.RegisterInstance(new WorldBounds(worldMinX, worldMaxX, worldMinY, worldMaxY));
             builder.Register<PlayerMovementSystem>(Lifetime.Singleton).AsSelf();
+            // Auto-Move (MoveToLocation fix): เดินผู้เล่นเข้าหา TargetX/Y ที่
+            // MoveToLocationHandler ตั้งไว้ — GameTickDriver เรียก Tick ระหว่าง
+            // survival กับ PlayerMovementSystem (ก่อน movement เสมอ เฟรมที่
+            // ปิด IsAutoMoving movement กลับมารับคีย์บอร์ดได้ทันทีในเฟรมเดียวกัน)
+            builder.Register<PlayerAutoMoveSystem>(Lifetime.Singleton).AsSelf();
             builder.Register<ItemPickupSystem>(Lifetime.Singleton).AsSelf();
             // WorldItemSystem เป็น IInitializable → EntryPoint เพื่อให้ spawn ชุดแรก
             // หลัง container build เสร็จ (subscribe PlayerLocationChangedMessage ภายใน)
@@ -173,6 +178,8 @@ namespace Marooned.Core
             builder.RegisterAsyncRequestHandler<GetVisibleNpcsRequest, GetVisibleNpcsResponse, GetVisibleNpcsHandler>(options);
             builder.RegisterAsyncRequestHandler<GetClueBoardRequest, GetClueBoardResponse, GetClueBoardHandler>(options);
             builder.RegisterAsyncRequestHandler<MoveToLocationRequest, MoveToLocationResponse, MoveToLocationHandler>(options);
+            // cancel_move: ยกเลิก auto-move ที่กำลังรัน (VTuber เปลี่ยนใจ/หยุดเพื่อสำรวจ)
+            builder.RegisterAsyncRequestHandler<CancelMoveRequest, CancelMoveResponse, CancelMoveHandler>(options);
             builder.RegisterAsyncRequestHandler<UseCardRequest, UseCardResponse, UseCardHandler>(options);
             builder.RegisterAsyncRequestHandler<CallMeetingRequest, CallMeetingResponse, CallMeetingHandler>(options);
             // Lab C Phase 1.5 (harvest_node): เก็บเกี่ยว node ใกล้ผู้เล่น (auto-pick tool)

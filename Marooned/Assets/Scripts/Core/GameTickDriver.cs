@@ -27,6 +27,7 @@ namespace Marooned.Core
         private WorldEventSystem _worldEvents;
         private GameStateProvider _stateProvider;
         private PlayerInputService _playerInput;
+        private PlayerAutoMoveSystem _playerAutoMove;
         private PlayerMovementSystem _playerMovement;
         private ItemPickupSystem _itemPickup;
         private NodeHarvestSystem _nodeHarvest;
@@ -63,6 +64,7 @@ namespace Marooned.Core
             _worldEvents = scope.Container.Resolve<WorldEventSystem>();
             _stateProvider = scope.Container.Resolve<GameStateProvider>();
             _playerInput = scope.Container.Resolve<PlayerInputService>();
+            _playerAutoMove = scope.Container.Resolve<PlayerAutoMoveSystem>();
             _playerMovement = scope.Container.Resolve<PlayerMovementSystem>();
             _itemPickup = scope.Container.Resolve<ItemPickupSystem>();
             _nodeHarvest = scope.Container.Resolve<NodeHarvestSystem>();
@@ -82,6 +84,9 @@ namespace Marooned.Core
 
             // ลำดับ: stat ผู้เล่น -> เดิน -> เก็บของ -> พฤติกรรม NPC -> world event
             _survival.Tick(deltaSeconds);
+            // Auto-Move (MoveToLocation): เดินผู้เล่นเข้าเป้าก่อน movement เสมอ —
+            // เฟรมที่ auto-move ปิด IsAutoMoving, movement กลับมารับคีย์บอร์ดได้ทันที
+            _playerAutoMove.Tick(deltaSeconds);
             _playerMovement.Tick(deltaSeconds);
             _itemPickup.Tick(deltaSeconds);
             // Lab C Phase 1: เก็บเกี่ยว node — อยู่หลัง pickup เพื่อให้กด E ครั้งเดียว

@@ -184,23 +184,35 @@ namespace Marooned.Systems
         private readonly LubanDataService _data;
         private readonly IPublisher<PlayerLocationChangedMessage> _playerLocationPublisher;
         private readonly McpMainThreadDispatcher _mainThread;
+        private readonly WorldBounds _bounds; // คลมจุดหมายการเลื่อนอยู่ในกรอบเล่นเดิม
+        private readonly PlayerAutoMoveSystem _autoMove; // จุด Begin/Cancel เดินอัตโนมัติ
+
+        /// <summary>เวลาสูงสุด (วินาที) ที่รอเดินถึงปลายทาง — เกินแล้วคืน move_timeout
+        /// (public ให้ PlayMode test ตั้งค่าสั้นเพื่อทดสอบ failure path แบบ deterministic)</summary>
+        public float MoveTimeoutSeconds = 30f;
 
         public MoveToLocationHandler(GameStateProvider stateProvider, LubanDataService data,
-            IPublisher<PlayerLocationChangedMessage> playerLocationPublisher, McpMainThreadDispatcher mainThread)
+            IPublisher<PlayerLocationChangedMessage> playerLocationPublisher, McpMainThreadDispatcher mainThread,
+            WorldBounds bounds, PlayerAutoMoveSystem autoMove)
         {
             _stateProvider = stateProvider;
             _data = data;
             _playerLocationPublisher = playerLocationPublisher;
             _mainThread = mainThread;
+            _bounds = bounds;
+            _autoMove = autoMove;
         }
 
         public async UniTask<MoveToLocationResponse> InvokeAsync(MoveToLocationRequest request, CancellationToken cancellationToken = default)
         {
-            // publish chain แตะ Unity API (ChibiSpawnerView spawn/despawn chibi)
-            return await _mainThread.EnqueueAsync(() =>
+            // ---- Phase 1 (main thread): validate + Begin auto-move — ยังไม่เปลี่ยนโซน ----
+            // publish chain (ChibiSpawnerView spawn/despawn chibi) แตะ Unity API จึงต้อง enqueue
+            // หมายเหตุ: Begin แทนที่การเดินที่กำลังรันอยู่เสมอ (redirect กลางทางได้) —
+            // handler ของการเดินเก่าจะตรวจเจอผ่าน MoveGeneration แล้วคืน superseded
+            var setup = await _mainThread.EnqueueAsync(() =>
             {
                 if (!_data.LocationDefs.TryGetValue(request.LocationId, out var targetDef))
-                    return new MoveToLocationResponse { Success = false, FailureReason = "unknown_location" };
+                    return (Success: false, FailureReason: "unknown_location", OldLocationId: "", Gen: 0);
 
                 var current = _stateProvider.GetPlayer().CurrentLocationId;
                 if (!string.IsNullOrEmpty(current)
@@ -208,15 +220,92 @@ namespace Marooned.Systems
                     && currentDef.ConnectedLocationIds != null
                     && !currentDef.ConnectedLocationIds.Contains(request.LocationId))
                 {
-                    return new MoveToLocationResponse { Success = false, FailureReason = "not_connected" };
+                    return (Success: false, FailureReason: "not_connected", OldLocationId: current, Gen: 0);
                 }
 
-                _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
+                // ตั้งเป้าให้ PlayerAutoMoveSystem (Single Source of Truth: ระบบนี้
+                // เป็นคนเดียวที่เขียน PositionX/Y ระหว่างเดิน) — ยังไม่ set CurrentLocationId
+                var player = _stateProvider.GetPlayer();
+                var gen = _autoMove.Begin(
+                    System.Math.Clamp(targetDef.WorldX, _bounds.MinX, _bounds.MaxX),
+                    System.Math.Clamp(targetDef.WorldY, _bounds.MinY, _bounds.MaxY));
+                player.FacingRight = player.TargetX > player.PositionX;
+                return (Success: true, FailureReason: "", OldLocationId: current, Gen: gen);
+            });
 
-                // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView) รู้ตัวแทนการ polling
-                _playerLocationPublisher.Publish(new PlayerLocationChangedMessage { OldLocationId = current, NewLocationId = request.LocationId });
+            if (!setup.Success)
+                return new MoveToLocationResponse { Success = false, FailureReason = setup.FailureReason };
+
+            // ---- Phase 2: รอเดินถึงจริง หรือ ถูกแทนที่/ยกเลิกกลางทาง ----
+            // PlayerAutoMoveSystem.Tick ปิด IsAutoMoving เองเมื่อระยะ ≤ 0.1;
+            // Begin/Cancel ของคำสั่งอื่น bump MoveGeneration → predicate เป็นจริงทันที
+            var gen = setup.Gen;
+            var finished = await _mainThread.WaitUntilAsync(
+                () => !_stateProvider.GetPlayer().IsAutoMoving || _autoMove.MoveGeneration != gen,
+                MoveTimeoutSeconds);
+
+            // ---- Phase 3 (main thread): จบการเดินแบบไหน ปฏิบัติตามนั้น ----
+            return await _mainThread.EnqueueAsync(() =>
+            {
+                if (!finished || _autoMove.MoveGeneration != gen)
+                {
+                    // ถูก supersede (redirect/cancel กลางทาง) หรือ timeout —
+                    // ห้าม commit โซน: การเดินปัจจุบันไม่ใช่ของ request นี้แล้ว
+                    // (timeout: ปลด lock ไม่งั้นผู้เล่นค้าง — movement งดรับ input ตลอดไป)
+                    if (!finished)
+                    {
+                        var stuck = _stateProvider.GetPlayer();
+                        stuck.IsAutoMoving = false;
+                        stuck.Activity = NpcActivityState.Idle;
+                    }
+                    return new MoveToLocationResponse { Success = false, FailureReason = finished ? "superseded" : "move_timeout" };
+                }
+
+                var player = _stateProvider.GetPlayer();
+                player.CurrentLocationId = request.LocationId;
+
+                // Lab B: publish เพื่อให้ Visual layer (ChibiSpawnerView / WorldItemSystem)
+                // เปลี่ยนฉากหลังเดินถึงจริงเท่านั้น — ไม่ใช่ตอนเริ่มเดิน
+                _playerLocationPublisher.Publish(new PlayerLocationChangedMessage
+                {
+                    OldLocationId = setup.OldLocationId,
+                    NewLocationId = request.LocationId
+                });
 
                 return new MoveToLocationResponse { Success = true };
+            });
+        }
+    }
+
+    /// <summary>
+    /// cancel_move (MCP): ยกเลิกการเดินอัตโนมัติที่กำลังรันอยู่ทันที — หยุดตรงนั้น
+    /// (ไม่เปลี่ยนตำแหน่ง/โซน) ปลดล็อกคีย์บอร์ดเฟรมถัดไป; ผู้เล่นยังอยู่โซนเดิม
+    /// จนกว่าจะสั่ง move ใหม่ ผ่าน PlayerAutoMoveSystem.Cancel (generation bump →
+    /// waiter ของ move_to_location ที่ยังค้างจะได้ superseded เอง)
+    /// </summary>
+    public class CancelMoveHandler : IAsyncRequestHandler<CancelMoveRequest, CancelMoveResponse>
+    {
+        private readonly PlayerAutoMoveSystem _autoMove;
+        private readonly McpMainThreadDispatcher _mainThread;
+
+        public CancelMoveHandler(PlayerAutoMoveSystem autoMove, McpMainThreadDispatcher mainThread)
+        {
+            _autoMove = autoMove;
+            _mainThread = mainThread;
+        }
+
+        public async UniTask<CancelMoveResponse> InvokeAsync(CancelMoveRequest request, CancellationToken cancellationToken = default)
+        {
+            // Cancel แตะ Unity state (IsAutoMoving/Activity) — marshal ไป main thread
+            // ตามธรรมเนียม handler อื่น (Test C fix: handler invoke บน TCP thread)
+            return await _mainThread.EnqueueAsync(() =>
+            {
+                var cancelled = _autoMove.Cancel();
+                return new CancelMoveResponse
+                {
+                    Success = cancelled,
+                    FailureReason = cancelled ? "" : "not_moving",
+                };
             });
         }
     }

@@ -67,7 +67,14 @@ implement แล้ว) เทียบกับแผนใน game_design_doc.
 - **CraftCard** — ใช้เมื่อมีวัตถุดิบครบตาม recipe (เช่น ปลาดิบ → ปลาย่าง); ถ้า fail จะบอก
   เหตุผล machine-readable (`missing_ingredients`, `missing_tool`, `wrong_location`)
 - **MoveToLocation** — ใช้ย้ายโซนเพื่อหา loot ใหม่หรือตาม/หลีก NPC; ผิดกฎการเดินทางจะได้
-  `not_connected`
+  `not_connected` — **เดินจริง** (2026-09-12, ไม่ teleport): response กลับหลังเดินถึง
+  (~ระยะทาง/3.5 วิ); สั่งซ้ำระหว่างเดิน = redirect ทันที คำสั่งเก่าคืน `superseded`
+  (ไม่ commit โซน); ปลายทางถูก clamp เข้า WorldBounds; หมดเวลา 30 วิ = `move_timeout`
+  (สถาปัตยกรรม: [[player-auto-move-system]])
+- **CancelMove** — ยกเลิกการเดินอัตโนมัติทันทีโดยไม่ต้องสั่งปลายทางใหม่ (2026-09-12);
+  กำลังเดิน = หยุดตรงนั้น คืน `Move cancelled` + ตำแหน่ง/โซนเดิม (คีย์บอร์ดกลับมาเฟรมถัดไป,
+  คำสั่ง move ที่ถูกยกเลิกคืน `superseded`); ไม่ได้เดินอยู่ = คืน `not_moving` (ไม่ใช่ error);
+  ใช้เมื่อเปลี่ยนใจกลางทาง เช่น เห็นศพ/โดนเห็น แล้วอยากหยุดเพื่อสังเกตการณ์
 - **UseCard** — ใช้เมื่อ stat ต่ำ (ดูจาก GetGameState); การ์ดอาหารสุกให้ค่ามากกว่าของดิบ;
   การ์ด weapon (เช่น `knife_basic`) ต้องส่ง `targetId` — ล้มเหลวแบบการ์ดไม่หายถ้า target
   ไม่อยู่โซนเดียวกัน (`target_not_same_location`), มีคนเห็น (`witnessed`), ตายไปแล้ว

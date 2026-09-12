@@ -6,7 +6,9 @@
         "UnityEditor.TestRunner",
         "Marooned.Game",
         "Luban.Runtime",
-        "VContainer"
+        "VContainer",
+        "MessagePipe",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -44,7 +44,13 @@ View อ่าน state ตรงทุกเฟรม (บทเรียน La
    │    - WASD/Arrows → MoveAxis (Vector2 raw)
    │    - E/Space → InteractPressed (edge-triggered, ConsumeInteractPressed)
    ▼
+[Logic] PlayerAutoMoveSystem.Tick(dt)   (plain C# singleton — MCP Auto-Move, 2026-09-12)
+   │    - !IsAutoMoving → return ทันที (โหมดนี้ไม่ทำงาน = คีย์บอร์ดคุมตามปกติ)
+   │    - เดิน PositionX/Y เข้าหา TargetX/Y (Speed=3.5, ถึง ≤0.1 ปิด flag เอง)
+   │    - รายละเอียดเต็ม: [[player-auto-move-system]]
+   ▼
 [Logic] PlayerMovementSystem.Tick(dt)   (plain C# singleton, no MonoBehaviour)
+   │    - guard ต้น Tick: IsAutoMoving = true → return (คีย์บอร์ดแย่ง control ไม่ได้)
    │    - เพิ่ม PositionX/Y ใน PlayerSurvivalState (Speed=3.5, clamp bounds ±11/±3.5..5)
    │    - ตั้ง FacingRight ตามแกน x, Activity = Traveling/Idle
    │    - ❌ ไม่ publish message ทุกเฟรม
@@ -71,11 +77,14 @@ View อ่าน state ตรงทุกเฟรม (บทเรียน La
 ```csharp
 builder.Register<PlayerInputService>(Lifetime.Singleton).AsSelf();
 builder.Register<PlayerMovementSystem>(Lifetime.Singleton).AsSelf();
+builder.Register<PlayerAutoMoveSystem>(Lifetime.Singleton).AsSelf(); // MCP Auto-Move (2026-09-12)
 builder.Register<ItemPickupSystem>(Lifetime.Singleton).AsSelf();
 builder.RegisterEntryPoint<WorldItemSystem>(Lifetime.Singleton).AsSelf(); // IInitializable
 ```
-Tick order ใน `GameTickDriver.Update()`: input → survival → movement → pickup →
-npcDirector → worldEvent (input ต้องมาก่อนเพื่อให้เฟรมเดียวกันอ่านค่าล่าสุด)
+Tick order ใน `GameTickDriver.Update()`: input → survival → **auto-move** →
+movement → pickup → … (auto-move อยู่ก่อน movement เพื่อให้เฟรมที่ปิด
+IsAutoMoving คีย์บอร์ดกลับมาทำงานได้ทันทีในเฟรมเดียวกัน — ลำดับเต็มปัจจุบัน
+ดู [[player-auto-move-system]])
 
 ## Scene Wiring (SampleScene)
 - `GameLifetimeScope/GameManager/PlayerCharacter` — PlayerCharacterView,
@@ -85,10 +94,12 @@ npcDirector → worldEvent (input ต้องมาก่อนเพื่อ�
   CollegeStudentChibi] เวียนตามเลขท้าย npc id (npc_01→[0], npc_02→[1], ...)
   ดูรายละเอียด state-name mapping ต่อ prefab ใน [[chibi-visual-system]]
 
-## Shared State (PlayerSurvivalState — Key 11–14)
-`PositionX`, `PositionY`, `FacingRight`, `Activity` — เพิ่มใน `Shared/` แล้วรัน
-`./sync-shared.sh` (Unity + McpBridge ได้ไฟล์เดียวกัน) — `McpBridge` เลยอ่าน
-ตำแหน่ง/activity ผู้เล่นผ่าน get_game_state ได้ทันที
+## Shared State (PlayerSurvivalState — Key 11–17)
+Key 11–14: `PositionX`, `PositionY`, `FacingRight`, `Activity` — Key 15–17
+(2026-09-12): `TargetX`, `TargetY`, `IsAutoMoving` (จุดหมาย + flag ของ
+auto-move — ตั้งโดย MoveToLocationHandler, อ่านโดย PlayerAutoMoveSystem) —
+เพิ่มใน `Shared/` แล้วรัน `./sync-shared.sh` (Unity + McpBridge ได้ไฟล์เดียวกัน)
+— `McpBridge` เลยอ่านตำแหน่ง/activity ผู้เล่นผ่าน get_game_state ได้ทันที
 
 ## Design Decisions
 - **Top-down lite:** ขึ้น/ลงใช้ anim walk เดิม (ไม่มี 4-dir sprite) — flip เฉพาะซ้าย/ขวา
@@ -97,10 +108,12 @@ npcDirector → worldEvent (input ต้องมาก่อนเพื่อ�
   `ItemPickedUpMessage` เป็น discrete event จึงผ่าน MessagePipe
 - **item id ต้องมีใน CardDefs:** `TryAdd` เช็คทุกครั้ง — id mock หลุดตาราง = เก็บไม่ได้ (log warning)
 
-## ⚠️ Design Direction Note (รอแก้ GDD)
+## ⚠️ Design Direction Note (✅ แก้ GDD แล้ว 2026-09-12)
 เกมขยับทิศไปทาง **walking sandbox** (Don't Starve-like: เดินอิสระ + เก็บทรัพยากร
 รายชิ้นตามโซน) จากเดิมที่ผู้เล่นนั่งนิ่ง explore ด้วยการ์ด — zone-based loot table
-คือก้าวแรกของทิศทางนี้ **GDD revision = TODO** (ยังไม่แก้ GDD ณ วันที่เอกสารนี้)
+คือก้าวแรกของทิศทางนี้ **GDD แก้แล้ว**: Design Pivot Log 2026-09-12 (MCP
+Auto-Move) + §2.2 การควบคุม 2 ช่องทาง + §6.1 move_to_location contract —
+สรุปการตัดสินใจอยู่ใน [[player-auto-move-system]]
 
 ## Test Evidence (Play Mode 2026-09-06 — LabB3PlayModeSelfTest mode=1)
 ```

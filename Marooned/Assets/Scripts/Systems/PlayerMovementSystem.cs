@@ -31,6 +31,10 @@ namespace Marooned.Systems
     /// ผ่าน GameTickDriver เดิม) — เก็บ WorldX/WorldY ใน PlayerSurvivalState
     /// (PositionX/PositionY) ไม่มีการ publish message ทุกเฟรม — View อ่าน state
     /// ตรงผ่าน GameStateProvider (บทเรียน Lab 13: ของที่ต่อเนื่องเรียกตรง)
+    ///
+    /// Auto-Move (MoveToLocation fix): ขณะ IsAutoMoving = true ระบบนี้ return
+    /// ทันที — การควบคุมย้ายไปอยู่กับ PlayerAutoMoveSystem จนกว่าจะถึงปลายทาง
+    /// (Test C: กด WASD ระหว่างเดินอัตโนมัติ → ไม่ตอบสนอง)
     /// </summary>
     public class PlayerMovementSystem
     {
@@ -60,6 +64,10 @@ namespace Marooned.Systems
 
         public void Tick(float deltaSeconds)
         {
+            // Auto-Move กำลังควบคุมตัวละครอยู่ — คีย์บอร์ดห้ามแย่ง control
+            // (PlayerInputService ยัง Tick ปกติ — แค่ค่า MoveAxis ไม่ถูกใช้ตอนนี้)
+            if (_player.IsAutoMoving) return;
+
             var axis = _input.MoveAxis;
 
             if (axis.sqrMagnitude > 0.001f)

@@ -193,7 +193,7 @@ build ฝั่ง Unity ของ MessagePipe แทน `ValueTask<T>` ด้�
 | `GetGameStateHandler` | GameStateProvider | — |
 | `GetVisibleNpcsHandler` | DeductionSystem | กรองผ่าน `GetObservableNpcsAt` เสมอ |
 | `GetClueBoardHandler` | GameStateProvider | คืน `CollectedClueCardIds` |
-| `MoveToLocationHandler` | LubanDataService | ตรวจ `ConnectedLocationIds` ก่อนย้าย |
+| `MoveToLocationHandler` | LubanDataService + PlayerAutoMoveSystem | 3 เฟส (2026-09-12): ตรวจ `ConnectedLocationIds` → ตั้ง TargetX/Y + IsAutoMoving → รอเดินถึงจริง (WaitUntilAsync) แล้วค่อยเปลี่ยนโซน + publish — ไม่ใช่ teleport (ดู [[player-auto-move-system]]) |
 | `UseCardHandler` | CardInventorySystem | apply `StatEffect` (Hunger/Thirst/Mood/Fatigue) |
 | `CallMeetingHandler` | DeductionSystem | Lab A: แค่ snapshot คนที่มองเห็น (`McpRequestHandlers.cs:194-200`) |
 
@@ -262,7 +262,7 @@ Canonical source คือ `Shared/*.cs` ที่ root เท่านั้น
 | ไฟล์ | Type | บทบาท |
 | --- | --- | --- |
 | `Shared/CardDef.cs` | `CardDef`, enum `CardCategory` | นิยามการ์ด (StatEffect / ActionPenalty เป็น Dictionary) |
-| `Shared/PlayerSurvivalState.cs` | `PlayerSurvivalState` [MessagePackObject] | Stat 4 ค่า + Inventory + ActiveConditionCardIds + CollectedClueCardIds + WrongAccusations + Avatar |
+| `Shared/PlayerSurvivalState.cs` | `PlayerSurvivalState` [MessagePackObject] | Stat 4 ค่า + Inventory + ActiveConditionCardIds + CollectedClueCardIds + WrongAccusations + Avatar + ตำแหน่งโลก Key 11-14 (PositionX/Y, FacingRight, Activity) + Auto-Move Key 15-17 (TargetX/Y, IsAutoMoving) |
 | `Shared/NpcState.cs` | `NpcState` + **`NpcObservableView`**, enums `NpcRole`/`NpcActivityState` | Ground truth (ห้าม serialize ออก) vs safe view |
 | `Shared/LocationDef.cs` | `LocationDef`, `RecipeDef` | Map node (LootTable, Capacity, ConnectedLocationIds) + recipe |
 | `Shared/ClueDef.cs` | `ClueDef`, `IllnessDef`, `WorldEventDef`, enum `ClueReliability` | เบาะแส / โรค / event |
@@ -487,6 +487,12 @@ namespace Marooned.Core
             });
 
             // --- Gameplay subsystems ---
+            // ⚠️ SNAPSHOT Lab A — ปัจจุบัน (2026-09-12) มี registration เพิ่มอีกมาก:
+            // player system (PlayerInputService/PlayerMovementSystem/PlayerAutoMoveSystem/
+            // ItemPickupSystem/WorldItemSystem/McpMainThreadDispatcher), NPC AI +
+            // movement + zone transition + survival, BiomeScatter/NodeHarvest,
+            // handler เพิ่ม UseCard/CallMeeting/HarvestNode + UI CardHand —
+            // ดูไฟล์จริง Core/GameLifetimeScope.cs เสมอ
             builder.Register<SurvivalStatSystem>(Lifetime.Singleton).AsSelf();
             builder.Register<CardInventorySystem>(Lifetime.Singleton).AsSelf();
             builder.Register<CraftingSystem>(Lifetime.Singleton).AsSelf();
@@ -1299,6 +1305,10 @@ namespace Marooned.Systems
 
     public class MoveToLocationHandler : IAsyncRequestHandler<MoveToLocationRequest, MoveToLocationResponse>
     {
+        // ⚠️ SNAPSHOT 2026-09-12 — ตอนนี้ handler เป็น 3 เฟส (ตั้งเป้า → รอเดินถึง
+        // → เปลี่ยนโซน+publish) และ inject WorldBounds/McpMainThreadDispatcher/
+        // IPublisher<PlayerLocationChangedMessage> เพิ่ม — snippet จริงล่าสุด
+        // ในไฟล์ McpRequestHandlers.cs / doc [[player-auto-move-system]]
         private readonly GameStateProvider _stateProvider;
         private readonly LubanDataService _data;
 
@@ -1322,7 +1332,7 @@ namespace Marooned.Systems
                 return UniTask.FromResult(new MoveToLocationResponse { Success = false, FailureReason = "not_connected" });
             }
 
-            _stateProvider.GetPlayer().CurrentLocationId = request.LocationId;
+            _stateProvider.GetPlayer().CurrentLocationId = request.LocationId; // ⚠️ เก่า: ตอนนี้เปลี่ยนโซนหลังเดินถึงเท่านั้น
             return UniTask.FromResult(new MoveToLocationResponse { Success = true });
         }
     }    /// <summary>
@@ -1497,7 +1507,7 @@ namespace Marooned.Shared
 }
 ```
 
-#### Shared/PlayerSurvivalState.cs (32 บรรทัด)
+#### Shared/PlayerSurvivalState.cs (snapshot ตอน Key 0-10 — ปัจจุบันถึง Key 17)
 **Path:** `Shared/PlayerSurvivalState.cs` (copy: `Marooned/Assets/Scripts/Shared/PlayerSurvivalState.cs`, `McpBridge/Shared/PlayerSurvivalState.cs`)
 
 ```csharp
@@ -1531,6 +1541,11 @@ namespace Marooned.Shared
         [Key(9)] public int WrongAccusations = 0;
 
         [Key(10)] public ChibiAppearance Avatar = new();
+
+        // ---- (เพิ่มหลัง snapshot นี้ — ดู [[player-auto-move-system]]) ----
+        // Lab B Phase 3: [Key(11-13)] PositionX / PositionY / FacingRight
+        //                [Key(14)] Activity
+        // Auto-Move 2026-09-12: [Key(15-17)] TargetX / TargetY / IsAutoMoving
     }
 }
 ```

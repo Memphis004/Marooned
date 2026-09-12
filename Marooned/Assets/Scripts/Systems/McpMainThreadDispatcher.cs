@@ -54,6 +54,29 @@ namespace Marooned.Systems
             return tcs.Task;
         }
 
+        /// <summary>
+        /// รอจนกว่า predicate เป็นจริง (poll ทุกเฟรมผ่าน PlayerLoop) — ใช้โดย MCP
+        /// handler ที่ต้องรอเกมดำเนินการจริง เช่น MoveToLocation รอผู้เล่นเดินถึง
+        /// จุดหมาย (PlayerAutoMoveSystem ปิด IsAutoMoving เมื่อถึงปลายทาง)
+        ///
+        /// คืน false ถ้าหมดเวลา timeout (วินาที) — กัน handler ค้างตลอดไป
+        /// เรียกได้ทั้งจาก main thread และ TCP background thread:
+        /// UniTask.Yield(PlayerLoopTiming.Update) จะกลับมาทำงานบน Unity player
+        /// loop (main thread) ให้เอง จึงอ่าน state ได้ปลอดภัยทุกเฟรม
+        /// จับเวลาด้วย Stopwatch (wall-clock) แทน Time.deltaTime เพราะ loop body
+        /// อาจรับ continuation บน main thread ก็จริง แต่ caller ฝั่ง TCP thread
+        /// ไม่ควรแตะ UnityEngine.Time โดยตรง
+        /// </summary>
+        public async UniTask<bool> WaitUntilAsync(Func<bool> predicate, float timeout = 30f)
+        {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            while (!predicate() && stopwatch.Elapsed.TotalSeconds < timeout)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+            return predicate();
+        }
+
         internal void Drain()
         {
             while (_queue.TryDequeue(out var work))

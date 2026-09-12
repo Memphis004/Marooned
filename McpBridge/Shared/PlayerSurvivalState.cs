@@ -37,5 +37,13 @@ namespace Marooned.Shared
 
         /// <summary>activity ปัจจุบันของผู้เล่น (Idle/Walking...) — ใช้เลือก animation (TODO: ย้ายไป enum ของ player เอง)</summary>
         [Key(14)] public NpcActivityState Activity = NpcActivityState.Idle;
+
+        // ---- Added Auto-Move (MoveToLocation): จุดหมาย + flag ของระบบเดินอัตโนมัติ ----
+        /// <summary>จุดหมายการเดินอัตโนมัติ (world unit) — ตั้งโดย MoveToLocationHandler, อ่านโดย PlayerAutoMoveSystem</summary>
+        [Key(15)] public float TargetX;
+        [Key(16)] public float TargetY;
+
+        /// <summary>true = กำลังเดินอัตโนมัติหา TargetX/Y — PlayerMovementSystem งดรับคีย์บอร์ดขณะนี้ (Test C)</summary>
+        [Key(17)] public bool IsAutoMoving;
     }
 }

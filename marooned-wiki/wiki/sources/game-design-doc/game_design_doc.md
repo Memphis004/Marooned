@@ -19,6 +19,24 @@
 - Physical Pickup: ผู้เล่นต้องเดินไปเก็บของด้วยตัวเอง
 - Multiplayer-Ready Architecture: ระบบหลังบ้านรองรับหลาย Player (Dictionary-based GameStateProvider)
 
+### พบวันที่ 2026-09-12 — MCP Auto-Move: AI สั่งเดินได้จริง (ไม่ Teleport)
+
+**เหตุผลที่เปลี่ยน:**
+- AI VTuber สั่ง `move_to_location` แล้วตัวละคร teleport ทันที (โซนเปลี่ยนแต่
+  PositionX/Y นิ่ง) — ขัดกับหลัก Walking Sandbox ที่วางไว้เมื่อ 2026-09-06 เพราะ
+  การเดินคือประสบการณ์หลักของเกม ไม่ใช่แค่ผลลัพธ์
+- จังหวะการเล่าเรื่องของ VTuber ต้องตรงกับบนจอ: ตอนเดิน = กำลังเดินจริง,
+  ถึงโซนใหม่ = เดินถึงจริงแล้ว (ดู [[player-auto-move-system]])
+
+**การตัดสินใจ (ตกลงแล้ว):**
+- การควบคุมผู้เล่นมี **2 ช่องทาง**: คีย์บอร์ด (WASD) และคำสั่ง MCP auto-move —
+  แต่ต่อเฟรมมี "ผู้เขียนตำแหน่งเดียว" ผ่าน flag `IsAutoMoving` (ระหว่าง auto-move
+  คีย์บอร์ดถูกล็อก, auto-move จบคีย์บอร์ดกลับมาทันทีในเฟรมเดียวกัน)
+- **โซนเปลี่ยนเมื่อเดินถึงเท่านั้น**: `CurrentLocationId` + biome + chibi ต้อง
+  รอจน Position เข้าใกล้ปลายทาง ≤ 0.1 unit แล้วค่อยเปลี่ยน — ห้ามเปลี่ยนก่อนเดิน
+- **Response ของ `move_to_location` กลับหลังเดินถึง** — เวลาเดินเป็นของเกม
+  (ระยะทาง / ความเร็ว 3.5) ไม่ใช่หน้าที่ของ proxy หน่วงแทน
+
 ---
 
 ## 1. แนวคิดเกม
@@ -59,6 +77,15 @@
 
 ### 2.2 Exploration & Zone-based Loot (Walking Sandbox)
 - **แผนที่เป็น 2D Sandbox แบบ Real-time** — ผู้เล่นควบคุม Chibi Character เดินไปมาด้วย WASD/Keyboard (ไม่ใช่คลิกเลือกโซน)
+- **การควบคุม 2 ช่องทาง (ตัดสินใจแล้ว 2026-09-12):**
+  - **ช่องทางที่ 1 — คีย์บอร์ด (WASD):** ผู้เล่นมนุษย์ขับตรง ๆ (PlayerMovementSystem)
+  - **ช่องทางที่ 2 — MCP Auto-Move:** AI VTuber สั่ง `move_to_location` →
+    PlayerAutoMoveSystem เดินเข้าหาโซนเป้าหมายด้วยความเร็วเดิม (3.5 unit/วิ)
+    ตามเส้นตรงไปยัง WorldX/WorldY ของโซน
+  - **กันชนสองช่องทาง:** ต่อเฟรมมีผู้ควบคุมเดียว — ระหว่าง auto-move คีย์บอร์ด
+    ไม่มีผล (IsAutoMoving lock), พอถึงปลายทางคีย์บอร์ดกลับมาทำงานทันที
+  - **โซนเปลี่ยนเมื่อเดินถึงเท่านั้น** — biome/ไอเท็มบนพื้น/chibi NPC เปลี่ยน
+    หลังเดินถึงจริง ไม่ใช่ตอนเริ่มออกเดินทาง (รายละเอียด: [[player-auto-move-system]])
 - แผนที่แบ่งเป็น Location Zone แต่ละโซนมี **Loot Table (Luban table)** กำหนดว่ามีไอเท็มอะไรวางอยู่บนพื้น + weight
   - Beach → มะพร้าว, น้ำขวด
   - Jungle → เถาวัลย์, พืชสมุนไพร
@@ -263,7 +290,8 @@ public class ClueDef
 | `pickup_item` | Action (ใหม่) | เก็บไอเท็มจากพื้น (Physical Pickup) | ใช้เมื่ออยู่ใกล้ไอเท็มบนพื้น |
 | `craft_card` | Action | ใช้ recipe คราฟไอเท็ม, คืนผลสำเร็จ/ล้มเหลว | — |
 | `use_card` | Action | กินอาหาร/ดื่มน้ำ/ใช้ยา **หรือใช้ Weapon โจมตี NPC** | Weapon ต้องระบุ targetId + ผ่าน No Witness check |
-| `move_to_location` | Action | ย้ายไป location ที่เชื่อมต่อถึง (Walking) | — |
+| `move_to_location` | Action | **เดิน**ไปยัง location ที่เชื่อมต่อถึง (auto-move ความเร็ว 3.5) — response กลับ**หลังเดินถึง** (~ระยะทาง/3.5 วิ), โซน/biome/chibi เปลี่ยนตอนถึง; สั่งซ้ำระหว่างเดิน = **redirect ทันที** (คำสั่งเก่าคืน superseded ไม่ commit โซน); ปฏิเสธ unknown_location / not_connected โดยไม่เริ่มเดิน; หมดเวลา 30 วิ คืน move_timeout | ตัดสินใจแล้ว 2026-09-12 (ดู [[player-auto-move-system]]) |
+| `cancel_move` | Action | ยกเลิกการเดินอัตโนมัติทันที **โดยไม่ต้องสั่งปลายทางใหม่** — กำลังเดิน = หยุดตรงนั้น (ตำแหน่ง/โซนเดิม, คีย์บอร์ดกลับมาเฟรมถัดไป, คำสั่ง move ที่ถูกยกเลิกคืน superseded); ไม่ได้เดิน = คืน `not_moving` (ไม่ใช่ error); ใช้เมื่อเปลี่ยนใจกลางทาง เช่น เห็นศพ/โดนเห็น แล้วต้องการหยุดสังเกต | ตัดสินใจแล้ว 2026-09-12 (ดู [[player-auto-move-system]]) |
 | `talk_to_npc` / `observe_npc` | Action/Query | สังเกตพฤติกรรม NPC เพื่อเก็บข้อมูลเชิงสังคม | — |
 | `await_next_event` | Request-Response (คงแบบเดิมจาก Lab 6) | รอ event ถัดไป (survival หรือ social) แบบไม่ block TCP | — |
 | `report_body` / `call_meeting` | Action | เริ่ม Meeting Phase หลังพบศพ/สงสัย | — |
@@ -305,6 +333,9 @@ Call สำหรับ in-process logic ตาม lesson จาก Lab 13):
 - `ConditionOverlayView` — แสดง illness/injury card เป็น overlay บน Chibi (ใช้ `ChibiAnimatedRenderer` ตัวเดิม, เพิ่ม layer สำหรับคราบเลือด/ผ้าพันแผล)
 - `MovementController` (ใหม่) — WASD movement สำหรับ Chibi Character
   - เดินไปมาบน 2D sandbox
+  - **Auto-Move indicator** — เมื่อ AI VTuber สั่ง `move_to_location` ให้เห็น
+    สถานะเดินอัตโนมัติ (Activity = Traveling บนจอแล้ว; แสดง target marker เพิ่ม
+    เป็น optional) — ช่วงนี้คีย์บอร์ดไม่มีผลจนถึงปลายทาง
   - ปุ่ม Interact สำหรับ pickup ไอเท็ม
   - ปุ่ม Attack สำหรับใช้ Weapon
 

@@ -220,6 +220,9 @@
   },
   "active": "4bbfc2c89fb272ed",
   "lastOpenFiles": [
+    "wiki/sources/bug-log/2026-09-12-movetolocation-teleport.md",
+    "wiki/sources/bug-log",
+    "wiki/sources/architecture/player-auto-move-system.md",
     "wiki/sources/architecture/player-system.md",
     "wiki/sources/devlog-history/2026-09-11-devlog.md",
     "wiki/sources/code-snippets/InnocentUtilityAI.cs.md",
@@ -244,8 +247,6 @@
     "wiki/sources/architecture/mcp-bridge.md",
     "wiki/sources/code-snippets/NpcCharacterView.cs.md",
     "wiki/sources/code-snippets/SurvivalStatSystem.cs.md",
-    "wiki/sources/mechanics/exploration.md",
-    "wiki/sources/game-design-doc/game_design_doc.md",
     "sources",
     "wiki/sources/devlog-history",
     "wiki/sources/architecture/mcp-bridge.md.tmp.3148.f45e9b0bb1dd",
@@ -254,7 +255,6 @@
     "wiki/sources/code-snippets/UIRoot.cs.md.tmp",
     "wiki/sources/code-snippets/SurvivalStatSystem.cs.md.tmp",
     "wiki/sources/code-snippets/NpcDirectorSystem.cs.md.tmp",
-    "wiki/sources/code-snippets/MeetingVoteView.cs.md.tmp",
-    "wiki/sources/code-snippets/MeetingVotePresenter.cs.md.tmp"
+    "wiki/sources/code-snippets/MeetingVoteView.cs.md.tmp"
   ]
 }

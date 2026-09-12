@@ -1,4 +1,4 @@
-=== DebugOverlay_ToggleOnOff — 10:15:18 ===
+=== DebugOverlay_ToggleOnOff — 13:56:58 ===
 [A] F12/Toggle -> ON — overlay แสดงตาราง Id|Role|Loc|Pos|Act|Hunger|AI
 [A] overlay ค้างเปิด 2 วิ ขณะเกม tick ต่อ — ไม่มี error
 [A] F12/Toggle -> OFF

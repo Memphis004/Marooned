@@ -1,0 +1,4 @@
+=== Cancel_StopsWalk_AndUnlocksKeyboard — 13:56:43 ===
+[cancel] stopped at (1.65,0.82), keyboard moved +1.76 in 0.5s → PASS
+
+RESULT: PASS
