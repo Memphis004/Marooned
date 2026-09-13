@@ -125,7 +125,7 @@ namespace Marooned.Core
             labelGo.transform.localPosition = new Vector3(0f, 0.85f, 0f);
             _label = labelGo.AddComponent<TextMeshPro>();
             _label.font = WorldItemSystem.LoadLabelFont();
-            _label.fontSize = 4; // TMP world-space ใช้เลขเล็กกว่า TextMesh มาก
+            _label.fontSize = 6;
             _label.alignment = TextAlignmentOptions.Center;
             RefreshLabelText();
         }

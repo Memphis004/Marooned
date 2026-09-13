@@ -90,12 +90,14 @@ namespace Marooned.UI.Views
             rt.anchorMax = new Vector2(0.5f, 1f);
             rt.pivot = new Vector2(0.5f, 1f);
             rt.anchoredPosition = new Vector2(0f, -20f);
-            rt.sizeDelta = new Vector2(600f, 44f);
+            rt.sizeDelta = new Vector2(800f, 70f);
 
             var tmpText = go.GetComponent<TextMeshProUGUI>();
             var font = WorldItemSystem.LoadLabelFont();
             if (font != null) tmpText.font = font;
-            tmpText.fontSize = 28;
+            tmpText.enableAutoSizing = true;
+            tmpText.fontSizeMin = 24;
+            tmpText.fontSizeMax = 48;
             tmpText.alignment = TextAlignmentOptions.Center;
             tmpText.color = Color.white;
             go.GetComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.85f); // outline กันพื้นหลังสว่าง

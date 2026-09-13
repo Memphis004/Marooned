@@ -106,7 +106,7 @@ namespace Marooned.Core
             var label = labelGo.AddComponent<TextMeshPro>();
             label.text = $"→ {displayName}";
             label.font = WorldItemSystem.LoadLabelFont();
-            label.fontSize = 4; // TMP world-space ใช้เลขเล็กกว่า TextMesh มาก
+            label.fontSize = 6;
             label.alignment = TextAlignmentOptions.Center;
         }
 
