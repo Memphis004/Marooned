@@ -15,11 +15,13 @@
 | **4** | **Clue System v2** | ⚪ วางแผน | Instance model + Generation pipeline (ศพ = interactable node yield clue) + graph data + incidental hooks |
 | **5** | **Clue Board Graph View** | ⚪ วางแผน | UI แบบ Node-Graph (Thought Cloud reframe) + MCP tool `get_clue_graph` สำหรับให้ AI infer ความสัมพันธ์ของเบาะแส |
 | **6** | **Accuse() → TryEliminate Merge** | ⚪ วางแผน | รวมเส้นทางกำจัด NPC ให้ใช้ pipeline เดียวกับ #4 (รองรับการ spawn clue จากกรณีที่ accuse ผิด/ถูก) |
-| **7** | **Meeting Phase State Machine** | ⚪ วางแผน | Core deduction loop: หยุดเกมชั่วคราว, นำเสนอเบาะแส, โหวต |
-| **8** | **Alibi System + UI** | ⚪ วางแผน | บันทึก SightingLog (ใครเห็นใคร ที่ไหน เมื่อไหร่) + UI สำหรับ Meeting/Accusation |
-| **9** | **AwaitNextEvent Timeout** | ⚪ วางแผน | จัดการ TimeoutSeconds เพื่อให้ AI VTuber ไม่ hang รอ event ตอนจบ Meeting Phase |
-| **10**| **Task System (Avalon-lite)** | ⚪ วางแผน | ใช้ Meeting state machine (#7) pause โลก + Clue pipeline (#4) ส่งผล sabotage เป็น behavioral clue (ทำหลัง #7-8 เสร็จ) |
-| **11**| **Polish: Durability & Collision**| 🔄 แทรกได้อิสระ | Killer weapon durability, Movement collision/world bounds check (ทำแทรกเมื่อระบบหลักนิ่ง) |
+| **7** | **Vision-based No-Witness + WeatherSystem (mechanic only)** | ⚪ วางแผน | ปรับปรุงกฏ No-Witness เพิ่มระบบ Vision-based และ WeatherSystem เข้ามา |
+| **8** | **Day/Night Cycle** | ⚪ วางแผน | ระบบเวลากลางวัน กลางคืน |
+| **9** | **Meeting Phase State Machine** | ⚪ วางแผน | Core deduction loop: หยุดเกมชั่วคราว, นำเสนอเบาะแส, โหวต |
+| **10** | **Alibi System + UI** | ⚪ วางแผน | บันทึก SightingLog (ใครเห็นใคร ที่ไหน เมื่อไหร่) + UI สำหรับ Meeting/Accusation |
+| **11** | **AwaitNextEvent Timeout** | ⚪ วางแผน | จัดการ TimeoutSeconds เพื่อให้ AI VTuber ไม่ hang รอ event ตอนจบ Meeting Phase |
+| **12**| **Task System (Avalon-lite)** | ⚪ วางแผน | ใช้ Meeting state machine (#7) pause โลก + Clue pipeline (#4) ส่งผล sabotage เป็น behavioral clue (ทำหลัง #7-8 เสร็จ) |
+| **13**| **Polish: Durability & Collision, Visual fog-of-war/weather particles**| 🔄 แทรกได้อิสระ | Killer weapon durability, Movement collision/world bounds check (ทำแทรกเมื่อระบบหลักนิ่ง) |
 
 ---
 
