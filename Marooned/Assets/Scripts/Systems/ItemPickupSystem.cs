@@ -52,8 +52,17 @@ namespace Marooned.Systems
 
             if (Mode == PickupMode.InteractKey)
             {
-                // edge-triggered: กด 1 ครั้ง = พยายามเก็บ 1 ครั้ง
-                if (!_input.ConsumeInteractPressed()) return;
+                // Peek ก่อน — ถ้าไม่มีการกดปุ่ม ไม่ต้องทำอะไรต่อ
+                if (!_input.IsInteractPressed) return;
+
+                // เช็คว่ามีไอเท็มอยู่ในระยะจริงไหม "ก่อน" ตัดสินใจกินปุ่ม —
+                // ถ้าไม่มี ปล่อยปุ่มผ่านไปให้ NodeHarvestSystem (Tick ถัดไปในเฟรม
+                // เดียวกัน) มีโอกาสได้ใช้ ป้องกัน bug เดิม: WorldItemSystem ยังมี
+                // ของเหลืออยู่ในโซน (ActiveItems.Count > 0) แต่ผู้เล่นยืนใกล้ node
+                // ไม่ใกล้ไอเท็มบนพื้น → ปุ่ม E ถูกกินทิ้งฟรีไม่ได้ผลอะไรเลย
+                if (!_worldItems.TryGetNearest(position, PickupRadius, out _)) return;
+
+                _input.ConsumeInteractPressed(); // ยืนยันว่าจะใช้ปุ่มนี้จริง ค่อยกิน
                 if (TryPickupNearest(position))
                     Debug.Log($"[ItemPickupSystem] เก็บ (InteractKey) รอบตัวผู้เล่น @ {player.CurrentLocationId}");
             }

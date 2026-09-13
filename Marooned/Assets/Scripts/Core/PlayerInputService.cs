@@ -20,6 +20,11 @@ namespace Marooned.Core
         private bool _interactPressed;
         private bool _testOverride;
 
+        /// <summary>แอบดูว่ามีการกด interact ค้างอยู่หรือไม่ (ไม่เคลียร์ค่า) —
+        /// ใช้เมื่อต้องเช็คเงื่อนไขก่อนตัดสินใจว่าจะ "กิน" ปุ่มนี้จริงหรือไม่
+        /// (กันสองระบบแย่งกันกิน edge-trigger เดียวกันในเฟรมเดียว)</summary>
+        public bool IsInteractPressed => _interactPressed;
+
         /// <summary>เรียกทุกเฟรมจาก GameTickDriver — อ่านคีย์บอร์ดเข้า state ภายใน</summary>
         public void Tick()
         {
