@@ -32,11 +32,13 @@
 | 4 | Clue System v2 | ⚪ วางแผน |
 | 5 | Clue Board Graph View | ⚪ วางแผน |
 | 6 | Accuse() → TryEliminate Merge | ⚪ วางแผน |
-| 7 | Meeting Phase State Machine | ⚪ วางแผน |
-| 8 | Alibi System + UI | ⚪ วางแผน |
-| 9 | AwaitNextEvent Timeout | ⚪ วางแผน |
-| 10 | Task System (Avalon-lite) | ⚪ วางแผน |
-| 11 | Polish: Durability & Collision | 🔄 แทรกได้อิสระ |
+| 7 | Vision-based No-Witness + WeatherSystem (mechanic only) | ⚪ วางแผน |
+| 8 | Day/Night Cycle  | ⚪ วางแผน |
+| 9 | Meeting Phase State Machine | ⚪ วางแผน |
+| 10 | Alibi System + UI | ⚪ วางแผน |
+| 11 | AwaitNextEvent Timeout | ⚪ วางแผน |
+| 12 | Task System (Avalon-lite) | ⚪ วางแผน |
+| 13 | Polish: Durability & Collision, visual fog-of-war/weather particles | 🔄 แทรกได้อิสระ |
 
 รายละเอียดเต็ม + กฎการอัปเดต roadmap → [Marooned Development Roadmap.md](marooned-wiki/wiki/sources/Marooned%20Development%20Roadmap.md)
 
